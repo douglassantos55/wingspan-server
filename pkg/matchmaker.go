@@ -22,14 +22,23 @@ func (m *Matchmaker) Add(socket *Socket) string {
 	m.elements[socket] = m.queue.PushBack(socket)
 
 	if m.queue.Len() == m.players {
-		players := make([]*Socket, m.players)
+		players := make([]*Socket, 0)
 		for i := 0; i < m.players; i++ {
 			player := m.queue.Remove(m.queue.Front()).(*Socket)
 			delete(m.elements, player)
 			players = append(players, player)
 		}
-		return m.createMatch(players)
+
+		matchId := m.createMatch(players)
+		for _, player := range players {
+			if player != socket {
+				go player.Send(matchId)
+			}
+		}
+
+		return matchId
 	}
+
 	return ""
 }
 

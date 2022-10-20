@@ -25,10 +25,14 @@ func TestMatchmaker(t *testing.T) {
 		p2 := pkg.NewSocket()
 
 		matchmaker.Add(p1)
-		res := matchmaker.Add(p2)
+		matchId := matchmaker.Add(p2)
 
-		if res == "" {
-			t.Fatal("Expected response, got nothing")
+		if matchId == "" {
+			t.Fatal("Expected match ID, got nothing")
+		}
+
+		if res := <-p1.Outgoing; res != matchId {
+			t.Errorf("Expected %v, got %v", matchId, res)
 		}
 	})
 
