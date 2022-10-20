@@ -1,10 +1,42 @@
 package pkg
 
-import "container/list"
+import (
+	"container/list"
+
+	"github.com/google/uuid"
+)
+
+type Match struct {
+	ID        uuid.UUID
+	players   []*Socket
+	confirmed []*Socket
+}
+
+func (m *Match) Accept(socket *Socket) bool {
+	found := false
+
+	for _, player := range m.players {
+		if player == socket {
+			found = true
+		}
+	}
+
+	if !found {
+		return false
+	}
+
+	m.confirmed = append(m.confirmed, socket)
+	if len(m.confirmed) >= len(m.players) {
+		return true
+	}
+
+	return false
+}
 
 type Matchmaker struct {
 	queue    *list.List
 	players  int
+	matches  map[string]*Match
 	elements map[*Socket]*list.Element
 }
 
@@ -12,6 +44,7 @@ func NewMatchmaker(numPlayers int) *Matchmaker {
 	return &Matchmaker{
 		queue:    list.New(),
 		players:  numPlayers,
+		matches:  make(map[string]*Match),
 		elements: make(map[*Socket]*list.Element),
 	}
 }
@@ -52,6 +85,22 @@ func (m *Matchmaker) Remove(socket *Socket) bool {
 	return ok
 }
 
+func (m *Matchmaker) Accept(socket *Socket, matchId string) string {
+	match, ok := m.matches[matchId]
+	if ok {
+		if match.Accept(socket) {
+			delete(m.matches, matchId)
+			return "aoeusnth"
+		}
+	}
+	return ""
+}
+
 func (m *Matchmaker) createMatch(players []*Socket) string {
-	return "aoeuaoeua"
+	match := &Match{
+		ID:      uuid.New(),
+		players: players,
+	}
+	m.matches[match.ID.String()] = match
+	return match.ID.String()
 }
