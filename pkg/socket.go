@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"io"
-	"io/ioutil"
 	"log"
 
 	"github.com/gorilla/websocket"
@@ -29,9 +28,8 @@ func NewSocket(conn *websocket.Conn) *Socket {
 
 	go func() {
 		for {
-			data, err := ioutil.ReadAll(socket)
+			data, err := io.ReadAll(socket)
 			if err != nil {
-				log.Printf("Could not read message: %v", err)
 				continue
 			}
 

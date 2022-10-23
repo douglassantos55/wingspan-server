@@ -1,14 +1,29 @@
 package pkg
 
-import "github.com/google/uuid"
+import (
+	"encoding/json"
+	"errors"
+	"io"
+
+	"github.com/google/uuid"
+)
+
+var (
+	ErrMatchNotFound  = errors.New("Match not found")
+	ErrPlayerNotFound = errors.New("Player not present in any matches")
+)
 
 type Match struct {
 	ID        uuid.UUID
-	players   []*Socket
-	confirmed []*Socket
+	players   []io.Writer
+	confirmed []io.Writer
 }
 
-func (m *Match) Accept(socket *Socket) bool {
+func (m *Match) Ready() bool {
+	return len(m.confirmed) == len(m.players)
+}
+
+func (m *Match) Accept(socket io.Writer) error {
 	found := false
 
 	for _, player := range m.players {
@@ -18,39 +33,56 @@ func (m *Match) Accept(socket *Socket) bool {
 	}
 
 	if !found {
-		return false
+		return ErrPlayerNotFound
 	}
 
 	m.confirmed = append(m.confirmed, socket)
-	if len(m.confirmed) >= len(m.players) {
-		return true
+
+	data, err := json.Marshal(Response{Type: WaitOtherPlayers})
+	if err != nil {
+		return err
 	}
 
-	return false
+	if _, err := socket.Write(data); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type Matchmaker struct {
 	matches map[string]*Match
 }
 
-func NewMatchmaker(numPlayers int) *Matchmaker {
+func NewMatchmaker() *Matchmaker {
 	return &Matchmaker{
 		matches: make(map[string]*Match),
 	}
 }
 
-func (m *Matchmaker) Accept(socket *Socket, matchId string) string {
+func (m *Matchmaker) Accept(socket io.Writer, matchId string) (*Message, error) {
 	match, ok := m.matches[matchId]
-	if ok {
-		if match.Accept(socket) {
-			delete(m.matches, matchId)
-			return "aoeusnth"
-		}
+	if !ok {
+		return nil, ErrMatchNotFound
 	}
-	return ""
+
+	if err := match.Accept(socket); err != nil {
+		return nil, err
+	}
+
+	if match.Ready() {
+		delete(m.matches, matchId)
+
+		return &Message{
+			Method: "Game.Create",
+			Params: match.confirmed,
+		}, nil
+	}
+
+	return nil, nil
 }
 
-func (m *Matchmaker) CreateMatch(players []*Socket) string {
+func (m *Matchmaker) CreateMatch(players []io.Writer) string {
 	match := &Match{
 		ID:      uuid.New(),
 		players: players,

@@ -1,9 +1,10 @@
 package pkg
 
 const (
-	Error        = "error"
-	MatchFound   = "match_found"
-	WaitForMatch = "wait_for_match"
+	Error            = "error"
+	MatchFound       = "match_found"
+	WaitForMatch     = "wait_for_match"
+	WaitOtherPlayers = "wait_other_players"
 )
 
 type Response struct {
