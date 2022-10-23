@@ -1,10 +1,17 @@
 package pkg
 
 const (
-	MatchFound = "match_found"
+	Error        = "error"
+	MatchFound   = "match_found"
+	WaitForMatch = "wait_for_match"
 )
 
-type Message struct {
+type Response struct {
 	Type    string
 	Payload any
+}
+
+type Message struct {
+	Method string
+	Params any
 }
