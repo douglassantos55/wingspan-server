@@ -2,7 +2,8 @@ package pkg
 
 import (
 	"bytes"
-	"encoding/gob"
+	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 
@@ -32,12 +33,8 @@ func NewSocket(conn *websocket.Conn) *Socket {
 			if err != nil {
 				continue
 			}
-
-			buf := bytes.NewBuffer(data)
-			decoder := gob.NewDecoder(buf)
-
 			var message Message
-			if err := decoder.Decode(&message); err != nil {
+			if err := json.Unmarshal(data, &message); err != nil {
 				log.Printf("Could not decode message: %v", message)
 				continue
 			}
@@ -48,16 +45,14 @@ func NewSocket(conn *websocket.Conn) *Socket {
 	go func() {
 		for {
 			response := <-socket.Outgoing
-
-			buf := bytes.Buffer{}
-			encoder := gob.NewEncoder(&buf)
-
-			if err := encoder.Encode(response); err != nil {
+			fmt.Printf("response: %v\n", response)
+			data, err := json.Marshal(response)
+			if err != nil {
 				log.Printf("Could not encode response: %v", response)
 				continue
 			}
 
-			if _, err := socket.Write(buf.Bytes()); err != nil {
+			if _, err := socket.Write(data); err != nil {
 				log.Printf("Could not write response: %v", response)
 				continue
 			}
@@ -68,15 +63,26 @@ func NewSocket(conn *websocket.Conn) *Socket {
 }
 
 func (s *Socket) Write(data []byte) (int, error) {
-	if err := s.conn.WriteJSON(data); err != nil {
+	var response Response
+	if err := json.Unmarshal(data, &response); err != nil {
+		return 0, err
+	}
+	if err := s.conn.WriteJSON(response); err != nil {
 		return 0, err
 	}
 	return len(data), nil
 }
 
 func (s *Socket) Read(data []byte) (int, error) {
-	if err := s.conn.ReadJSON(&data); err != nil {
+	var message Message
+	if err := s.conn.ReadJSON(&message); err != nil {
 		return 0, err
 	}
-	return len(data), nil
+
+	encoding, err := json.Marshal(message)
+	if err != nil {
+		return 0, err
+	}
+
+	return copy(data, encoding), io.EOF
 }
