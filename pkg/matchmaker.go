@@ -51,17 +51,17 @@ func (m *Match) Accept(socket io.Writer) error {
 }
 
 type Matchmaker struct {
-	matches map[string]*Match
+	matches map[io.Writer]*Match
 }
 
 func NewMatchmaker() *Matchmaker {
 	return &Matchmaker{
-		matches: make(map[string]*Match),
+		matches: make(map[io.Writer]*Match),
 	}
 }
 
-func (m *Matchmaker) Accept(socket io.Writer, matchId string) (*Message, error) {
-	match, ok := m.matches[matchId]
+func (m *Matchmaker) Accept(socket io.Writer) (*Message, error) {
+	match, ok := m.matches[socket]
 	if !ok {
 		return nil, ErrMatchNotFound
 	}
@@ -71,7 +71,7 @@ func (m *Matchmaker) Accept(socket io.Writer, matchId string) (*Message, error) 
 	}
 
 	if match.Ready() {
-		delete(m.matches, matchId)
+		delete(m.matches, socket)
 
 		return &Message{
 			Method: "Game.Create",
@@ -82,11 +82,33 @@ func (m *Matchmaker) Accept(socket io.Writer, matchId string) (*Message, error) 
 	return nil, nil
 }
 
-func (m *Matchmaker) CreateMatch(players []io.Writer) string {
+func (m *Matchmaker) Deny(socket io.Writer) (*Message, error) {
+	match, ok := m.matches[socket]
+	if !ok {
+		return nil, ErrMatchNotFound
+	}
+
+	data, err := json.Marshal(Response{Type: MatchDeclined})
+	if err != nil {
+		return nil, err
+	}
+
+	for _, player := range match.players {
+		if n, err := player.Write(data); n > 0 && err != nil {
+			return nil, err
+		}
+	}
+
+	return nil, nil
+}
+
+func (m *Matchmaker) CreateMatch(players []io.Writer) (*Message, error) {
 	match := &Match{
 		ID:      uuid.New(),
 		players: players,
 	}
-	m.matches[match.ID.String()] = match
-	return match.ID.String()
+	for _, player := range players {
+		m.matches[player] = match
+	}
+	return nil, nil
 }

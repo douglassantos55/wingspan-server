@@ -5,6 +5,7 @@ const (
 	MatchFound       = "match_found"
 	WaitForMatch     = "wait_for_match"
 	WaitOtherPlayers = "wait_other_players"
+	MatchDeclined    = "match_denied"
 )
 
 type Response struct {
