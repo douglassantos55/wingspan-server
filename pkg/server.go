@@ -45,7 +45,7 @@ func (s *Server) Listen(addr string) {
 	s.server.ListenAndServe()
 }
 
-func (s *Server) handleMessage(socket *Socket, message Message) {
+func (s *Server) handleMessage(socket *Sockt, message Message) {
 	reply, err := s.Dispatch(socket, message)
 	if err != nil {
 		socket.Outgoing <- Response{
@@ -73,7 +73,7 @@ func (s *Server) Serve(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *Server) Dispatch(socket *Socket, message Message) (*Message, error) {
+func (s *Server) Dispatch(socket *Sockt, message Message) (*Message, error) {
 	parts := strings.Split(message.Method, ".")
 	service, ok := s.services[parts[0]]
 	if !ok {

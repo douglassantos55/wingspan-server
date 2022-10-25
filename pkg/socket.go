@@ -9,18 +9,20 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type Socket struct {
+type Socket interface {
+	io.ReadWriter
+	// Helper to send responses instead of handling io
+	Send(response Response) (int, error)
+}
+
+type Sockt struct {
 	conn     *websocket.Conn
 	Incoming chan Message
 	Outgoing chan Response
 }
 
-func NewTestSocket() io.ReadWriter {
-	return &bytes.Buffer{}
-}
-
-func NewSocket(conn *websocket.Conn) *Socket {
-	socket := &Socket{
+func NewSocket(conn *websocket.Conn) *Sockt {
+	socket := &Sockt{
 		conn:     conn,
 		Incoming: make(chan Message),
 		Outgoing: make(chan Response),
@@ -44,7 +46,15 @@ func NewSocket(conn *websocket.Conn) *Socket {
 	return socket
 }
 
-func (s *Socket) Write(data []byte) (int, error) {
+func (s *Sockt) Send(response Response) (int, error) {
+	data, err := json.Marshal(response)
+	if err != nil {
+		return 0, err
+	}
+	return s.Write(data)
+}
+
+func (s *Sockt) Write(data []byte) (int, error) {
 	var response Response
 	if err := json.Unmarshal(data, &response); err != nil {
 		return 0, err
@@ -55,7 +65,7 @@ func (s *Socket) Write(data []byte) (int, error) {
 	return len(data), nil
 }
 
-func (s *Socket) Read(data []byte) (int, error) {
+func (s *Sockt) Read(data []byte) (int, error) {
 	var message Message
 	if err := s.conn.ReadJSON(&message); err != nil {
 		return 0, err
@@ -67,4 +77,30 @@ func (s *Socket) Read(data []byte) (int, error) {
 	}
 
 	return copy(data, encoding), io.EOF
+}
+
+type TestSocket struct {
+	buf *bytes.Buffer
+}
+
+func NewTestSocket() *TestSocket {
+	return &TestSocket{
+		buf: new(bytes.Buffer),
+	}
+}
+
+func (t *TestSocket) Read(p []byte) (int, error) {
+	return t.buf.Read(p)
+}
+
+func (t *TestSocket) Write(p []byte) (int, error) {
+	return t.buf.Write(p)
+}
+
+func (t *TestSocket) Send(response Response) (int, error) {
+	data, err := json.Marshal(response)
+	if err != nil {
+		return 0, err
+	}
+	return t.Write(data)
 }

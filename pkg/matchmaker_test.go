@@ -15,7 +15,7 @@ func TestMatchmaker(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		matchmaker.CreateMatch([]io.Writer{p1, p2})
+		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
 		reply, err := matchmaker.Accept(p1)
 
 		if err != nil {
@@ -45,7 +45,7 @@ func TestMatchmaker(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		matchmaker.CreateMatch([]io.Writer{p1, p2})
+		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
 
 		matchmaker.Accept(p1)
 		reply, err := matchmaker.Accept(p2)
@@ -64,7 +64,7 @@ func TestMatchmaker(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		matchmaker.CreateMatch([]io.Writer{p1, p2})
+		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
 
 		if _, err := matchmaker.Deny(p1); err != nil {
 			t.Errorf("Expected no error, got %v", err)

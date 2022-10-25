@@ -1,9 +1,7 @@
 package pkg
 
 import (
-	"encoding/json"
 	"errors"
-	"io"
 
 	"github.com/google/uuid"
 )
@@ -15,15 +13,15 @@ var (
 
 type Match struct {
 	ID        uuid.UUID
-	players   []io.Writer
-	confirmed []io.Writer
+	players   []Socket
+	confirmed []Socket
 }
 
 func (m *Match) Ready() bool {
 	return len(m.confirmed) == len(m.players)
 }
 
-func (m *Match) Accept(socket io.Writer) error {
+func (m *Match) Accept(socket Socket) error {
 	found := false
 
 	for _, player := range m.players {
@@ -37,13 +35,9 @@ func (m *Match) Accept(socket io.Writer) error {
 	}
 
 	m.confirmed = append(m.confirmed, socket)
+	response := Response{Type: WaitOtherPlayers}
 
-	data, err := json.Marshal(Response{Type: WaitOtherPlayers})
-	if err != nil {
-		return err
-	}
-
-	if _, err := socket.Write(data); err != nil {
+	if _, err := socket.Send(response); err != nil {
 		return err
 	}
 
@@ -51,16 +45,16 @@ func (m *Match) Accept(socket io.Writer) error {
 }
 
 type Matchmaker struct {
-	matches map[io.Writer]*Match
+	matches map[Socket]*Match
 }
 
 func NewMatchmaker() *Matchmaker {
 	return &Matchmaker{
-		matches: make(map[io.Writer]*Match),
+		matches: make(map[Socket]*Match),
 	}
 }
 
-func (m *Matchmaker) Accept(socket io.Writer) (*Message, error) {
+func (m *Matchmaker) Accept(socket Socket) (*Message, error) {
 	match, ok := m.matches[socket]
 	if !ok {
 		return nil, ErrMatchNotFound
@@ -82,19 +76,15 @@ func (m *Matchmaker) Accept(socket io.Writer) (*Message, error) {
 	return nil, nil
 }
 
-func (m *Matchmaker) Deny(socket io.Writer) (*Message, error) {
+func (m *Matchmaker) Deny(socket Socket) (*Message, error) {
 	match, ok := m.matches[socket]
 	if !ok {
 		return nil, ErrMatchNotFound
 	}
 
-	data, err := json.Marshal(Response{Type: MatchDeclined})
-	if err != nil {
-		return nil, err
-	}
-
+	response := Response{Type: MatchDeclined}
 	for _, player := range match.players {
-		if n, err := player.Write(data); n > 0 && err != nil {
+		if n, err := player.Send(response); n > 0 && err != nil {
 			return nil, err
 		}
 	}
@@ -102,7 +92,7 @@ func (m *Matchmaker) Deny(socket io.Writer) (*Message, error) {
 	return nil, nil
 }
 
-func (m *Matchmaker) CreateMatch(players []io.Writer) (*Message, error) {
+func (m *Matchmaker) CreateMatch(players []Socket) (*Message, error) {
 	match := &Match{
 		ID:      uuid.New(),
 		players: players,

@@ -13,7 +13,7 @@ import (
 type FakeMatchmaker struct {
 }
 
-func (f *FakeMatchmaker) CreateMatch(socket *pkg.Socket, players []io.Writer) (*pkg.Message, error) {
+func (f *FakeMatchmaker) CreateMatch(socket *pkg.Sockt, players []io.Writer) (*pkg.Message, error) {
 	for _, player := range players {
 		data, err := json.Marshal(pkg.Response{Type: "fake_match_created"})
 		if err != nil {
