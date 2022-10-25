@@ -1,8 +1,6 @@
 package pkg_test
 
 import (
-	"encoding/json"
-	"io"
 	"testing"
 
 	"git.internal.com/wingspan/pkg"
@@ -22,13 +20,8 @@ func TestQueue(t *testing.T) {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
-		data, err := io.ReadAll(socket)
+		response, err := socket.Receive()
 		if err != nil {
-			t.Fatalf("Failed to read data: %v", err)
-		}
-
-		var response pkg.Response
-		if err := json.Unmarshal(data, &response); err != nil {
 			t.Fatalf("Could not parse response: %v", err)
 		}
 		if response.Type != pkg.WaitForMatch {

@@ -1,8 +1,6 @@
 package pkg_test
 
 import (
-	"encoding/json"
-	"io"
 	"testing"
 	"time"
 
@@ -10,16 +8,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-type FakeMatchmaker struct {
-}
+type FakeMatchmaker struct{}
 
-func (f *FakeMatchmaker) CreateMatch(socket *pkg.Sockt, players []io.Writer) (*pkg.Message, error) {
+func (f *FakeMatchmaker) CreateMatch(socket *pkg.Sockt, players []pkg.Socket) (*pkg.Message, error) {
+	response := pkg.Response{Type: "fake_match_created"}
 	for _, player := range players {
-		data, err := json.Marshal(pkg.Response{Type: "fake_match_created"})
-		if err != nil {
-			return nil, err
-		}
-		if n, err := player.Write(data); n > 0 && err != nil {
+		if n, err := player.Send(response); n > 0 && err != nil {
 			return nil, err
 		}
 	}

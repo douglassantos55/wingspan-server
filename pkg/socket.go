@@ -13,6 +13,8 @@ type Socket interface {
 	io.ReadWriter
 	// Helper to send responses instead of handling io
 	Send(response Response) (int, error)
+	// Helper to receive responses instead of handling io
+	Receive() (*Response, error)
 }
 
 type Sockt struct {
@@ -52,6 +54,18 @@ func (s *Sockt) Send(response Response) (int, error) {
 		return 0, err
 	}
 	return s.Write(data)
+}
+
+func (s *Sockt) Receive() (*Response, error) {
+	data, err := io.ReadAll(s)
+	if err != nil {
+		return nil, err
+	}
+	var response *Response
+	if err := json.Unmarshal(data, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
 }
 
 func (s *Sockt) Write(data []byte) (int, error) {
@@ -103,4 +117,16 @@ func (t *TestSocket) Send(response Response) (int, error) {
 		return 0, err
 	}
 	return t.Write(data)
+}
+
+func (t *TestSocket) Receive() (*Response, error) {
+	data, err := io.ReadAll(t)
+	if err != nil {
+		return nil, err
+	}
+	var response *Response
+	if err := json.Unmarshal(data, &response); err != nil {
+		return nil, err
+	}
+	return response, nil
 }

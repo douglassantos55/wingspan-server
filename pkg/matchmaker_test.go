@@ -1,8 +1,6 @@
 package pkg_test
 
 import (
-	"encoding/json"
-	"io"
 	"testing"
 
 	"git.internal.com/wingspan/pkg"
@@ -25,13 +23,8 @@ func TestMatchmaker(t *testing.T) {
 			t.Errorf("Expected no response, got %v", reply)
 		}
 
-		data, err := io.ReadAll(p1)
+		response, err := p1.Receive()
 		if err != nil {
-			t.Fatalf("Could not read data from socket: %v", err)
-		}
-
-		var response pkg.Response
-		if err := json.Unmarshal(data, &response); err != nil {
 			t.Fatalf("Could not parse response: %v", err)
 		}
 		if response.Type != pkg.WaitOtherPlayers {
@@ -71,26 +64,18 @@ func TestMatchmaker(t *testing.T) {
 		}
 
 		// Check p1
-		data, err := io.ReadAll(p1)
+		response, err := p1.Receive()
 		if err != nil {
 			t.Fatalf("Could not read data from socket: %v", err)
-		}
-
-		var response pkg.Response
-		if err := json.Unmarshal(data, &response); err != nil {
-			t.Fatalf("Could not parse response: %v", err)
 		}
 		if response.Type != pkg.MatchDeclined {
 			t.Errorf("Expected type %v, got %v", pkg.MatchDeclined, response.Type)
 		}
 
 		// Check p2
-		data, err = io.ReadAll(p2)
+		response, err = p2.Receive()
 		if err != nil {
 			t.Fatalf("Could not read data from socket: %v", err)
-		}
-		if err := json.Unmarshal(data, &response); err != nil {
-			t.Fatalf("Could not parse response: %v", err)
 		}
 		if response.Type != pkg.MatchDeclined {
 			t.Errorf("Expected type %v, got %v", pkg.MatchDeclined, response.Type)
