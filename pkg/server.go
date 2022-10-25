@@ -95,6 +95,12 @@ func (s *Server) Dispatch(socket *Sockt, message Message) (*Message, error) {
 		params = append(params, reflect.ValueOf(message.Params))
 	}
 
+	inputCount := method.Type.NumIn()
+	for i := 0; i < inputCount-len(params); i++ {
+		value := reflect.New(method.Type.In(len(params) + i))
+		params = append(params, value.Elem())
+	}
+
 	var err error
 
 	returnValues := method.Func.Call(params)
