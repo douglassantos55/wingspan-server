@@ -3,7 +3,6 @@ package pkg
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 
@@ -39,23 +38,6 @@ func NewSocket(conn *websocket.Conn) *Socket {
 				continue
 			}
 			socket.Incoming <- message
-		}
-	}()
-
-	go func() {
-		for {
-			response := <-socket.Outgoing
-			fmt.Printf("response: %v\n", response)
-			data, err := json.Marshal(response)
-			if err != nil {
-				log.Printf("Could not encode response: %v", response)
-				continue
-			}
-
-			if _, err := socket.Write(data); err != nil {
-				log.Printf("Could not write response: %v", response)
-				continue
-			}
 		}
 	}()
 

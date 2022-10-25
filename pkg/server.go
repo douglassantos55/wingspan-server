@@ -22,20 +22,41 @@ type Service struct {
 }
 
 type Server struct {
+	server   *http.Server
 	upgrader *websocket.Upgrader
 	services map[string]*Service
 }
 
 func NewServer() *Server {
 	return &Server{
+		server:   new(http.Server),
 		upgrader: new(websocket.Upgrader),
 		services: make(map[string]*Service),
 	}
 }
 
+func (s *Server) Close() {
+	s.server.Close()
+}
+
 func (s *Server) Listen(addr string) {
-	http.HandleFunc("/", s.Serve)
-	http.ListenAndServe(addr, nil)
+	s.server.Addr = addr
+	s.server.Handler = http.HandlerFunc(s.Serve)
+	s.server.ListenAndServe()
+}
+
+func (s *Server) handleMessage(socket *Socket, message Message) {
+	reply, err := s.Dispatch(socket, message)
+	if err != nil {
+		socket.Outgoing <- Response{
+			Type:    Error,
+			Payload: err.Error(),
+		}
+		return
+	}
+	if reply != nil {
+		s.handleMessage(socket, *reply)
+	}
 }
 
 func (s *Server) Serve(w http.ResponseWriter, r *http.Request) {
@@ -47,18 +68,8 @@ func (s *Server) Serve(w http.ResponseWriter, r *http.Request) {
 	defer c.Close()
 	socket := NewSocket(c)
 
-	for {
-		message := <-socket.Incoming
-		reply, err := s.Dispatch(socket, message)
-		if err != nil {
-			socket.Outgoing <- Response{
-				Type:    Error,
-				Payload: err.Error(),
-			}
-		}
-		if reply != nil {
-			socket.Incoming <- *reply
-		}
+	for message := range socket.Incoming {
+		s.handleMessage(socket, message)
 	}
 }
 
@@ -75,12 +86,24 @@ func (s *Server) Dispatch(socket *Socket, message Message) (*Message, error) {
 		return nil, ErrMethodNotFound
 	}
 
-	method.Func.Call([]reflect.Value{
+	params := []reflect.Value{
 		reflect.ValueOf(service.recv),
 		reflect.ValueOf(socket),
-	})
+	}
 
-	return nil, nil
+	if message.Params != nil {
+		params = append(params, reflect.ValueOf(message.Params))
+	}
+
+	var err error
+
+	returnValues := method.Func.Call(params)
+	reply := returnValues[0].Interface().(*Message)
+	if returnValues[1].Interface() != nil {
+		err = returnValues[1].Interface().(error)
+	}
+
+	return reply, err
 }
 
 func (s *Server) Register(name string, service any) error {
