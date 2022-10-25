@@ -27,18 +27,24 @@ func NewQueue(maxPlayers int) *Queue {
 	}
 }
 
-func (q *Queue) Add(socket Socket) (*Message, error) {
+func (q *Queue) Add(socket Socket, sockets []Socket) (*Message, error) {
 	q.mutex.Lock()
 	defer q.mutex.Unlock()
 
-	if _, ok := q.sockets[socket]; ok {
-		return nil, ErrAlreadyInQueue
+	if len(sockets) == 0 {
+		sockets = append(sockets, socket)
 	}
 
-	q.sockets[socket] = q.players.PushBack(socket)
+	for _, player := range sockets {
+		if _, ok := q.sockets[player]; !ok {
+			q.sockets[player] = q.players.PushBack(player)
 
-	if _, err := socket.Send(Response{Type: WaitForMatch}); err != nil {
-		return nil, err
+			if _, err := player.Send(Response{Type: WaitForMatch}); err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, ErrAlreadyInQueue
+		}
 	}
 
 	if q.players.Len() >= q.maxPlayers {

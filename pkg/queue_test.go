@@ -11,7 +11,7 @@ func TestQueue(t *testing.T) {
 		queue := pkg.NewQueue(2)
 		socket := pkg.NewTestSocket()
 
-		reply, err := queue.Add(socket)
+		reply, err := queue.Add(socket, nil)
 
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
@@ -33,8 +33,8 @@ func TestQueue(t *testing.T) {
 		queue := pkg.NewQueue(5)
 		socket := pkg.NewTestSocket()
 
-		queue.Add(socket)
-		_, err := queue.Add(socket)
+		queue.Add(socket, nil)
+		_, err := queue.Add(socket, nil)
 
 		if err == nil {
 			t.Fatal("Expected error, got nothing")
@@ -48,7 +48,7 @@ func TestQueue(t *testing.T) {
 		queue := pkg.NewQueue(5)
 		socket := pkg.NewTestSocket()
 
-		queue.Add(socket)
+		queue.Add(socket, nil)
 
 		if _, err := queue.Remove(socket); err != nil {
 			t.Errorf("Expected no error, got %v", err)
@@ -73,8 +73,8 @@ func TestQueue(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		queue.Add(p1)
-		reply, err := queue.Add(p2)
+		queue.Add(p1, nil)
+		reply, err := queue.Add(p2, nil)
 
 		if err != nil {
 			t.Fatalf("Expected no error, got %v", err)
@@ -91,11 +91,30 @@ func TestQueue(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		queue.Add(p1)
-		queue.Add(p2)
+		queue.Add(p1, nil)
+		queue.Add(p2, nil)
 
 		if _, err := queue.Remove(p1); err == nil {
 			t.Error("Expected error trying to remove socket which is not queued")
+		}
+	})
+
+	t.Run("queue in batch", func(t *testing.T) {
+		queue := pkg.NewQueue(2)
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		reply, err := queue.Add(nil, []pkg.Socket{p1, p2})
+
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if reply == nil {
+			t.Fatal("Expected reply")
+		}
+		if reply.Method != "Matchmaker.CreateMatch" {
+			t.Errorf("Expected method %v, got %v", "Matchmaker.CreateMatch", reply.Method)
 		}
 	})
 }
