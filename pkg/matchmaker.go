@@ -7,6 +7,7 @@ import (
 )
 
 var (
+	ErrNoPlayers      = errors.New("No players informed")
 	ErrMatchNotFound  = errors.New("Match not found")
 	ErrPlayerNotFound = errors.New("Player not present in any matches")
 )
@@ -100,14 +101,16 @@ func (m *Matchmaker) Decline(socket Socket) (*Message, error) {
 }
 
 func (m *Matchmaker) CreateMatch(players []Socket) (*Message, error) {
-	match := &Match{
-		players: players,
+	if len(players) == 0 {
+		return nil, ErrNoPlayers
 	}
 
+	match := &Match{players: players}
 	for _, player := range players {
 		m.matches.Store(player, match)
 	}
 
+	// Decline automatically after timeout
 	go func() {
 		<-time.After(m.timeout)
 		m.declineMatch(match)

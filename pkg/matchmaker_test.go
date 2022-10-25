@@ -199,4 +199,27 @@ func TestMatchmaker(t *testing.T) {
 			t.Errorf("Expected error %v, got %v", pkg.ErrMatchNotFound, err)
 		}
 	})
+
+	t.Run("create without players", func(t *testing.T) {
+		matchmaker := pkg.NewMatchmaker(time.Second)
+		_, err := matchmaker.CreateMatch([]pkg.Socket{})
+
+		if err == nil {
+			t.Fatal("Expected error trying to create match without players")
+		}
+		if err != pkg.ErrNoPlayers {
+			t.Errorf("Expected error \"%v\", got \"%v\"", pkg.ErrNoPlayers, err)
+		}
+	})
+
+	t.Run("concurrency", func(t *testing.T) {
+		matchmaker := pkg.NewMatchmaker(time.Microsecond)
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		go matchmaker.CreateMatch([]pkg.Socket{p1, p2})
+		go matchmaker.Accept(p1)
+		go matchmaker.Decline(p2)
+	})
 }
