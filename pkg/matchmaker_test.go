@@ -24,7 +24,7 @@ func TestMatchmaker(t *testing.T) {
 			t.Errorf("Expected no response, got %v", reply)
 		}
 
-		response, err := p1.Receive()
+		response, err := p1.GetResponse()
 		if err != nil {
 			t.Fatalf("Could not parse response: %v", err)
 		}
@@ -50,6 +50,12 @@ func TestMatchmaker(t *testing.T) {
 		if reply.Method != "Game.Create" {
 			t.Errorf("Expected method %v, got %v", "Game.Create", reply.Method)
 		}
+
+		params := reply.Params.([]pkg.Socket)
+		expected := []pkg.Socket{p1, p2}
+		if !reflect.DeepEqual(params, expected) {
+			t.Errorf("Expected %v, got %v", expected, params)
+		}
 	})
 
 	t.Run("deny match", func(t *testing.T) {
@@ -65,7 +71,7 @@ func TestMatchmaker(t *testing.T) {
 		}
 
 		// Check p1
-		response, err := p1.Receive()
+		response, err := p1.GetResponse()
 		if err != nil {
 			t.Fatalf("Could not read data from socket: %v", err)
 		}
@@ -74,7 +80,7 @@ func TestMatchmaker(t *testing.T) {
 		}
 
 		// Check p2
-		response, err = p2.Receive()
+		response, err = p2.GetResponse()
 		if err != nil {
 			t.Fatalf("Could not read data from socket: %v", err)
 		}

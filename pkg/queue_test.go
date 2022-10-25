@@ -20,7 +20,7 @@ func TestQueue(t *testing.T) {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
-		response, err := socket.Receive()
+		response, err := socket.GetResponse()
 		if err != nil {
 			t.Fatalf("Could not parse response: %v", err)
 		}

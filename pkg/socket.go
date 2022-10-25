@@ -106,7 +106,7 @@ func (t *TestSocket) Send(response Response) (int, error) {
 }
 
 // Helper to receive responses instead of handling io
-func (t *TestSocket) Receive() (*Response, error) {
+func (t *TestSocket) GetResponse() (*Response, error) {
 	data, err := io.ReadAll(t)
 	if err != nil {
 		return nil, err
