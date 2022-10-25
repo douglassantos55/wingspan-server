@@ -82,14 +82,22 @@ func (m *Matchmaker) Deny(socket Socket) (*Message, error) {
 		return nil, ErrMatchNotFound
 	}
 
-	response := Response{Type: MatchDeclined}
+	var err error
 	for _, player := range match.players {
-		if _, err := player.Send(response); err != nil {
-			return nil, err
+		delete(m.matches, player)
+		if _, e := player.Send(Response{Type: MatchDeclined}); e != nil {
+			err = e
 		}
 	}
 
-	return nil, nil
+	if len(match.confirmed) > 0 {
+		return &Message{
+			Method: "Queue.Add",
+			Params: match.confirmed,
+		}, nil
+	}
+
+	return nil, err
 }
 
 func (m *Matchmaker) CreateMatch(players []Socket) (*Message, error) {

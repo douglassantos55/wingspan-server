@@ -1,6 +1,7 @@
 package pkg_test
 
 import (
+	"reflect"
 	"testing"
 
 	"git.internal.com/wingspan/pkg"
@@ -92,6 +93,73 @@ func TestMatchmaker(t *testing.T) {
 		}
 		if err != pkg.ErrMatchNotFound {
 			t.Errorf("Expected error %v, got %v", pkg.ErrMatchNotFound, err)
+		}
+	})
+
+	t.Run("removes match when denied", func(t *testing.T) {
+		matchmaker := pkg.NewMatchmaker()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
+		matchmaker.Deny(p2)
+
+		_, err := matchmaker.Accept(p1)
+		if err == nil {
+			t.Fatal("Expected error")
+		}
+		if err != pkg.ErrMatchNotFound {
+			t.Errorf("Expected error %v, got %v", pkg.ErrMatchNotFound, err)
+		}
+	})
+
+	t.Run("multiple matches", func(t *testing.T) {
+		matchmaker := pkg.NewMatchmaker()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
+
+		p3 := pkg.NewTestSocket()
+		p4 := pkg.NewTestSocket()
+		matchmaker.CreateMatch([]pkg.Socket{p3, p4})
+
+		matchmaker.Deny(p2)
+		if _, err := matchmaker.Accept(p1); err == nil {
+			t.Error("Expected error")
+		}
+
+		matchmaker.Accept(p3)
+		reply, _ := matchmaker.Accept(p4)
+		if reply == nil {
+			t.Fatal("Expected reply")
+		}
+		if reply.Method != "Game.Create" {
+			t.Errorf("Expected method %v, got %v", "Game.Create", reply.Method)
+		}
+	})
+
+	t.Run("confirmed are requeued", func(t *testing.T) {
+		matchmaker := pkg.NewMatchmaker()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
+		matchmaker.Accept(p2)
+		reply, _ := matchmaker.Deny(p1)
+		if reply == nil {
+			t.Fatal("expected reply")
+		}
+		if reply.Method != "Queue.Add" {
+			t.Errorf("Expected method %v, got %v", "Queue.Add", reply.Method)
+		}
+
+		expected := []pkg.Socket{p2}
+		params := reply.Params.([]pkg.Socket)
+		if !reflect.DeepEqual(params, expected) {
+			t.Errorf("Expected %v, got %v", expected, params)
 		}
 	})
 }
