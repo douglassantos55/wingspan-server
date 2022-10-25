@@ -84,7 +84,7 @@ func (m *Matchmaker) Deny(socket Socket) (*Message, error) {
 
 	response := Response{Type: MatchDeclined}
 	for _, player := range match.players {
-		if n, err := player.Send(response); n > 0 && err != nil {
+		if _, err := player.Send(response); err != nil {
 			return nil, err
 		}
 	}

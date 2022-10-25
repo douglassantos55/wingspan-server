@@ -37,7 +37,7 @@ func (q *Queue) Add(socket Socket) (*Message, error) {
 
 	q.sockets[socket] = q.players.PushBack(socket)
 
-	if n, err := socket.Send(Response{Type: WaitForMatch}); n > 0 && err != nil {
+	if _, err := socket.Send(Response{Type: WaitForMatch}); err != nil {
 		return nil, err
 	}
 

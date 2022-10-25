@@ -13,7 +13,7 @@ type FakeMatchmaker struct{}
 func (f *FakeMatchmaker) CreateMatch(socket *pkg.Sockt, players []pkg.Socket) (*pkg.Message, error) {
 	response := pkg.Response{Type: "fake_match_created"}
 	for _, player := range players {
-		if n, err := player.Send(response); n > 0 && err != nil {
+		if _, err := player.Send(response); err != nil {
 			return nil, err
 		}
 	}
