@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -81,6 +82,7 @@ func (s *Sockt) Read(data []byte) (int, error) {
 
 type TestSocket struct {
 	buf *bytes.Buffer
+	mut sync.Mutex
 }
 
 func NewTestSocket() *TestSocket {
@@ -90,10 +92,16 @@ func NewTestSocket() *TestSocket {
 }
 
 func (t *TestSocket) Read(p []byte) (int, error) {
+	t.mut.Lock()
+	defer t.mut.Unlock()
+
 	return t.buf.Read(p)
 }
 
 func (t *TestSocket) Write(p []byte) (int, error) {
+	t.mut.Lock()
+	defer t.mut.Unlock()
+
 	return t.buf.Write(p)
 }
 

@@ -3,13 +3,14 @@ package pkg_test
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"git.internal.com/wingspan/pkg"
 )
 
 func TestMatchmaker(t *testing.T) {
 	t.Run("accept match", func(t *testing.T) {
-		matchmaker := pkg.NewMatchmaker()
+		matchmaker := pkg.NewMatchmaker(time.Second)
 
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
@@ -34,7 +35,7 @@ func TestMatchmaker(t *testing.T) {
 	})
 
 	t.Run("start game", func(t *testing.T) {
-		matchmaker := pkg.NewMatchmaker()
+		matchmaker := pkg.NewMatchmaker(time.Second)
 
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
@@ -59,14 +60,14 @@ func TestMatchmaker(t *testing.T) {
 	})
 
 	t.Run("deny match", func(t *testing.T) {
-		matchmaker := pkg.NewMatchmaker()
+		matchmaker := pkg.NewMatchmaker(time.Second)
 
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
 		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
 
-		if _, err := matchmaker.Deny(p1); err != nil {
+		if _, err := matchmaker.Decline(p1); err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
@@ -90,10 +91,10 @@ func TestMatchmaker(t *testing.T) {
 	})
 
 	t.Run("deny not in match", func(t *testing.T) {
-		matchmaker := pkg.NewMatchmaker()
+		matchmaker := pkg.NewMatchmaker(time.Second)
 		p1 := pkg.NewTestSocket()
 
-		_, err := matchmaker.Deny(p1)
+		_, err := matchmaker.Decline(p1)
 		if err == nil {
 			t.Fatal("Expected error, got nothing")
 		}
@@ -103,13 +104,13 @@ func TestMatchmaker(t *testing.T) {
 	})
 
 	t.Run("removes match when denied", func(t *testing.T) {
-		matchmaker := pkg.NewMatchmaker()
+		matchmaker := pkg.NewMatchmaker(time.Second)
 
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
 		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
-		matchmaker.Deny(p2)
+		matchmaker.Decline(p2)
 
 		_, err := matchmaker.Accept(p1)
 		if err == nil {
@@ -121,7 +122,7 @@ func TestMatchmaker(t *testing.T) {
 	})
 
 	t.Run("multiple matches", func(t *testing.T) {
-		matchmaker := pkg.NewMatchmaker()
+		matchmaker := pkg.NewMatchmaker(time.Second)
 
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
@@ -131,7 +132,7 @@ func TestMatchmaker(t *testing.T) {
 		p4 := pkg.NewTestSocket()
 		matchmaker.CreateMatch([]pkg.Socket{p3, p4})
 
-		matchmaker.Deny(p2)
+		matchmaker.Decline(p2)
 		if _, err := matchmaker.Accept(p1); err == nil {
 			t.Error("Expected error")
 		}
@@ -147,14 +148,14 @@ func TestMatchmaker(t *testing.T) {
 	})
 
 	t.Run("confirmed are requeued", func(t *testing.T) {
-		matchmaker := pkg.NewMatchmaker()
+		matchmaker := pkg.NewMatchmaker(time.Second)
 
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
 		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
 		matchmaker.Accept(p2)
-		reply, _ := matchmaker.Deny(p1)
+		reply, _ := matchmaker.Decline(p1)
 		if reply == nil {
 			t.Fatal("expected reply")
 		}
@@ -166,6 +167,36 @@ func TestMatchmaker(t *testing.T) {
 		params := reply.Params.([]pkg.Socket)
 		if !reflect.DeepEqual(params, expected) {
 			t.Errorf("Expected %v, got %v", expected, params)
+		}
+	})
+
+	t.Run("declines after timeout", func(t *testing.T) {
+		matchmaker := pkg.NewMatchmaker(time.Millisecond)
+
+		players := []pkg.Socket{
+			pkg.NewTestSocket(),
+			pkg.NewTestSocket(),
+		}
+
+		matchmaker.CreateMatch(players)
+		time.Sleep(2 * time.Millisecond)
+
+		for _, player := range players {
+			response, err := player.(*pkg.TestSocket).GetResponse()
+			if err != nil {
+				t.Fatalf("Expected no error, got %v", err)
+			}
+			if response.Type != pkg.MatchDeclined {
+				t.Errorf("Expected response %v, got %v", pkg.MatchDeclined, response.Type)
+			}
+		}
+
+		_, err := matchmaker.Decline(players[0])
+		if err == nil {
+			t.Error("Expected error")
+		}
+		if err != pkg.ErrMatchNotFound {
+			t.Errorf("Expected error %v, got %v", pkg.ErrMatchNotFound, err)
 		}
 	})
 }

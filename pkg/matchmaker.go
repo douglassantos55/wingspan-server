@@ -2,8 +2,8 @@ package pkg
 
 import (
 	"errors"
-
-	"github.com/google/uuid"
+	"sync"
+	"time"
 )
 
 var (
@@ -12,7 +12,6 @@ var (
 )
 
 type Match struct {
-	ID        uuid.UUID
 	players   []Socket
 	confirmed []Socket
 }
@@ -45,27 +44,30 @@ func (m *Match) Accept(socket Socket) error {
 }
 
 type Matchmaker struct {
-	matches map[Socket]*Match
+	timeout time.Duration
+	matches *sync.Map
 }
 
-func NewMatchmaker() *Matchmaker {
+func NewMatchmaker(timeout time.Duration) *Matchmaker {
 	return &Matchmaker{
-		matches: make(map[Socket]*Match),
+		timeout: timeout,
+		matches: new(sync.Map),
 	}
 }
 
 func (m *Matchmaker) Accept(socket Socket) (*Message, error) {
-	match, ok := m.matches[socket]
+	value, ok := m.matches.Load(socket)
 	if !ok {
 		return nil, ErrMatchNotFound
 	}
 
+	match := value.(*Match)
 	if err := match.Accept(socket); err != nil {
 		return nil, err
 	}
 
 	if match.Ready() {
-		delete(m.matches, socket)
+		m.matches.Delete(socket)
 
 		return &Message{
 			Method: "Game.Create",
@@ -76,18 +78,15 @@ func (m *Matchmaker) Accept(socket Socket) (*Message, error) {
 	return nil, nil
 }
 
-func (m *Matchmaker) Deny(socket Socket) (*Message, error) {
-	match, ok := m.matches[socket]
+func (m *Matchmaker) Decline(socket Socket) (*Message, error) {
+	value, ok := m.matches.Load(socket)
 	if !ok {
 		return nil, ErrMatchNotFound
 	}
 
-	var err error
-	for _, player := range match.players {
-		delete(m.matches, player)
-		if _, e := player.Send(Response{Type: MatchDeclined}); e != nil {
-			err = e
-		}
+	match := value.(*Match)
+	if err := m.declineMatch(match); err != nil {
+		return nil, err
 	}
 
 	if len(match.confirmed) > 0 {
@@ -97,16 +96,33 @@ func (m *Matchmaker) Deny(socket Socket) (*Message, error) {
 		}, nil
 	}
 
-	return nil, err
+	return nil, nil
 }
 
 func (m *Matchmaker) CreateMatch(players []Socket) (*Message, error) {
 	match := &Match{
-		ID:      uuid.New(),
 		players: players,
 	}
+
 	for _, player := range players {
-		m.matches[player] = match
+		m.matches.Store(player, match)
 	}
+
+	go func() {
+		<-time.After(m.timeout)
+		m.declineMatch(match)
+	}()
+
 	return nil, nil
+}
+
+func (m *Matchmaker) declineMatch(match *Match) error {
+	var err error
+	for _, player := range match.players {
+		m.matches.Delete(player)
+		if _, e := player.Send(Response{Type: MatchDeclined}); e != nil {
+			err = e
+		}
+	}
+	return err
 }
