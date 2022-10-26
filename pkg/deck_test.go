@@ -18,7 +18,7 @@ func TestDeck(t *testing.T) {
 		deck := pkg.NewDeck(10)
 
 		initialLen := deck.Len()
-		bird, err := deck.Draw()
+		bird, err := deck.Draw(1)
 
 		if err != nil {
 			t.Fatalf("Expected bird, got error %v", err)
@@ -33,13 +33,13 @@ func TestDeck(t *testing.T) {
 
 	t.Run("draw empty", func(t *testing.T) {
 		deck := pkg.NewDeck(0)
-		_, err := deck.Draw()
+		_, err := deck.Draw(1)
 
 		if err == nil {
 			t.Fatal("Expected error, got nothing")
 		}
-		if err != pkg.ErrEmptyDeck {
-			t.Errorf("Expected error \"%v\", got \"%v\"", pkg.ErrEmptyDeck, err)
+		if err != pkg.ErrNotEnoughCards {
+			t.Errorf("Expected error \"%v\", got \"%v\"", pkg.ErrNotEnoughCards, err)
 		}
 	})
 }
