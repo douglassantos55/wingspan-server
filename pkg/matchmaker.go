@@ -13,15 +13,22 @@ var (
 )
 
 type Match struct {
+	mutex     sync.Mutex
 	players   []Socket
 	confirmed []Socket
 }
 
 func (m *Match) Ready() bool {
+    m.mutex.Lock()
+    defer m.mutex.Unlock()
+
 	return len(m.confirmed) == len(m.players)
 }
 
 func (m *Match) Accept(socket Socket) error {
+    m.mutex.Lock()
+    defer m.mutex.Unlock()
+
 	found := false
 
 	for _, player := range m.players {
