@@ -33,6 +33,27 @@ func (p *Player) GainFood(qty int) {
 	}
 }
 
+func (p *Player) KeepBirds(birdIds []int) error {
+	cardsToRemove := make([]int, 0)
+	for k := range p.birds {
+		for _, id := range birdIds {
+			if k == id {
+				continue
+			}
+			if _, ok := p.birds[id]; !ok {
+				return ErrBirdCardNotFound
+			}
+			cardsToRemove = append(cardsToRemove, k)
+		}
+	}
+
+	for _, id := range cardsToRemove {
+		delete(p.birds, id)
+	}
+
+	return nil
+}
+
 func (p *Player) GetFood() []Food {
 	return p.food
 }

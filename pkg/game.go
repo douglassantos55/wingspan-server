@@ -1,13 +1,24 @@
 package pkg
 
-import "sync"
+import (
+	"errors"
+	"sync"
+)
+
+var (
+	ErrBirdCardNotFound = errors.New("Bird card not found")
+)
 
 type Game struct {
-	deck    *BirdDeck
+	deck    Deck
 	players *sync.Map
 }
 
 func NewGame(sockets []Socket) (*Game, error) {
+	if len(sockets) == 0 {
+		return nil, ErrNoPlayers
+	}
+
 	players := new(sync.Map)
 	deck := NewDeck(MAX_DECK_SIZE)
 
@@ -28,11 +39,6 @@ func NewGame(sockets []Socket) (*Game, error) {
 }
 
 func (g *Game) Start() {
-	initialBirds := make([]*Bird, 0)
-	for i := 0; i < INITIAL_BIRDS; i++ {
-		initialBirds = append(initialBirds, &Bird{ID: i})
-	}
-
 	g.players.Range(func(key, value any) bool {
 		socket := key.(Socket)
 		player := value.(*Player)
@@ -49,15 +55,20 @@ func (g *Game) Start() {
 	})
 }
 
-func (g *Game) ChooseBirds(socket Socket, birds []int) error {
-	_, ok := g.players.Load(socket)
+func (g *Game) ChooseBirds(socket Socket, birdsToKeep []int) error {
+	value, ok := g.players.Load(socket)
 	if !ok {
 		return ErrGameNotFound
 	}
 
+	player := value.(*Player)
+	if err := player.KeepBirds(birdsToKeep); err != nil {
+		return err
+	}
+
 	_, err := socket.Send(Response{
 		Type:    DiscardFood,
-		Payload: len(birds),
+		Payload: len(birdsToKeep),
 	})
 
 	return err
