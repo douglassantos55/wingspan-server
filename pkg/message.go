@@ -15,7 +15,8 @@ const (
 	WaitForMatch     = "wait_for_match"
 	WaitOtherPlayers = "wait_other_players"
 	MatchDeclined    = "match_denied"
-	GameStart        = "game_start"
+	ChooseCards      = "choose_cards"
+	DiscardFood      = "discard_food"
 )
 
 type Response struct {

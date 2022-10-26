@@ -1,10 +1,17 @@
 package pkg
 
-import "sync"
+import (
+	"errors"
+	"sync"
+)
 
 const (
 	INITIAL_BIRDS = 5
 	INITIAL_FOOD  = 5
+)
+
+var (
+	ErrGameNotFound = errors.New("You're probably not playing any games")
 )
 
 type GameManager struct {
@@ -12,23 +19,33 @@ type GameManager struct {
 }
 
 func NewGameManager() *GameManager {
-	return &GameManager{}
+	return &GameManager{
+		games: new(sync.Map),
+	}
 }
 
 func (g *GameManager) Create(players []Socket) (*Message, error) {
-	initialBirds := make([]*Bird, 0)
-	for i := 0; i < INITIAL_BIRDS; i++ {
-		initialBirds = append(initialBirds, &Bird{ID: i})
+	game, err := NewGame(players)
+	if err != nil {
+		return nil, err
 	}
 
 	for _, player := range players {
-		player.Send(Response{
-			Type: GameStart,
-			Payload: StartingResources{
-				Birds: initialBirds,
-				Food:  make([]Food, INITIAL_FOOD),
-			},
-		})
+		g.games.Store(player, game)
 	}
+
+	game.Start()
+	return nil, nil
+}
+
+func (g *GameManager) ChooseBirds(socket Socket, birds []int) (*Message, error) {
+	value, ok := g.games.Load(socket)
+	if !ok {
+		return nil, ErrGameNotFound
+	}
+
+	game := value.(*Game)
+	game.ChooseBirds(socket, birds)
+
 	return nil, nil
 }
