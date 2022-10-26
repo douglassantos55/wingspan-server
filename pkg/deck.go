@@ -43,7 +43,7 @@ func (d *BirdDeck) Draw(qty int) ([]*Bird, error) {
 
 	cards := make([]*Bird, 0)
 	for i := 0; i < qty; i++ {
-		value := d.cards.Remove(d.cards.Front())
+		value := d.cards.Remove(d.cards.Back())
 		card, ok := value.(*Bird)
 		if !ok {
 			return nil, ErrUnexpectedValue
