@@ -49,10 +49,10 @@ func TestGameManager(t *testing.T) {
 		}
 
 		if len(payload.Birds) != pkg.INITIAL_BIRDS {
-			t.Errorf("EXpected %v birds, got %v", pkg.INITIAL_BIRDS, len(payload.Birds))
+			t.Errorf("Expected %v birds, got %v", pkg.INITIAL_BIRDS, len(payload.Birds))
 		}
-		if len(payload.Food) != pkg.INITIAL_FOOD {
-			t.Errorf("EXpected %v food, got %v", pkg.INITIAL_FOOD, len(payload.Food))
+		if payload.Food.Len() != pkg.INITIAL_FOOD {
+			t.Errorf("Expected %v food, got %v", pkg.INITIAL_FOOD, payload.Food.Len())
 		}
 
 		seenBirds := make(map[*pkg.Bird]bool)
