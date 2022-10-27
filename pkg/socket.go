@@ -102,6 +102,9 @@ func (t *TestSocket) Write(p []byte) (int, error) {
 	t.mut.Lock()
 	defer t.mut.Unlock()
 
+	// overwrites previous message so it's easier to test
+	t.buf.Reset()
+
 	return t.buf.Write(p)
 }
 

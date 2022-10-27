@@ -15,6 +15,7 @@ var (
 
 type Game struct {
 	deck    Deck
+	turns   *RingBuffer
 	players *sync.Map
 }
 
@@ -43,6 +44,7 @@ func NewGame(sockets []Socket) (*Game, error) {
 	return &Game{
 		deck:    deck,
 		players: players,
+		turns:   NewRingBuffer(len(sockets)),
 	}, nil
 }
 
@@ -89,4 +91,47 @@ func (g *Game) ChooseBirds(socket Socket, birdsToKeep []int) error {
 	})
 
 	return err
+}
+
+func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) error {
+	value, ok := g.players.Load(socket)
+	if !ok {
+		return ErrGameNotFound
+	}
+
+	player := value.(*Player)
+	if err := player.DiscardFood(foodType, qty); err != nil {
+		return err
+	}
+
+	g.turns.Push(socket)
+
+	if g.turns.Full() {
+		return g.StartTurn()
+	} else {
+		socket.Send(Response{
+			Type: WaitOtherPlayers,
+		})
+	}
+	return nil
+}
+
+func (g *Game) StartTurn() error {
+	socket := g.turns.Pop().(Socket)
+	_, ok := g.players.Load(socket)
+	if !ok {
+		return ErrGameNotFound
+	}
+
+	g.players.Range(func(key, _ any) bool {
+		s := key.(Socket)
+		if s == socket {
+			s.Send(Response{Type: StartTurn})
+		} else {
+			s.Send(Response{Type: WaitTurn})
+		}
+		return true
+	})
+
+	return nil
 }

@@ -108,4 +108,107 @@ func TestGame(t *testing.T) {
 		assertResponse(t, p1, pkg.GameCanceled)
 		assertResponse(t, p2, pkg.GameCanceled)
 	})
+
+	t.Run("discard food no game", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+		game, _ := pkg.NewGame([]pkg.Socket{p1})
+		err := game.DiscardFood(p2, pkg.Fish, 1)
+
+		if err == nil {
+			t.Fatal("expected error, got nothing")
+		}
+		if err != pkg.ErrGameNotFound {
+			t.Errorf("expected error \"%v\", got \"%v\"", pkg.ErrGameNotFound, err)
+		}
+	})
+
+	t.Run("discard food", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		game, _ := pkg.NewGame([]pkg.Socket{p1})
+		game.Start(time.Second)
+
+		response := assertResponse(t, p1, pkg.ChooseCards)
+
+		var payload pkg.StartingResources
+		pkg.ParsePayload(response.Payload, &payload)
+
+		keys := make([]pkg.FoodType, 0, len(payload.Food))
+		for ft := range payload.Food {
+			keys = append(keys, ft)
+		}
+
+		foodType := keys[0]
+		if err := game.DiscardFood(p1, foodType, payload.Food[foodType]); err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		foodType = keys[1]
+		if err := game.DiscardFood(p1, foodType, payload.Food[foodType]+1); err == nil {
+			t.Error("expected error, got nothing")
+		}
+	})
+
+	t.Run("discard timeout", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2})
+		game.Start(time.Millisecond)
+
+		response, _ := p1.GetResponse()
+		var payload pkg.StartingResources
+		pkg.ParsePayload(response.Payload, &payload)
+
+		keys := make([]pkg.FoodType, 0, len(payload.Food))
+		for ft := range payload.Food {
+			keys = append(keys, ft)
+		}
+
+		if err := game.DiscardFood(p1, keys[0], 1); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		time.Sleep(2 * time.Millisecond)
+
+		assertResponse(t, p1, pkg.GameCanceled)
+		assertResponse(t, p2, pkg.GameCanceled)
+	})
+
+	t.Run("discard turn start", func(t *testing.T) {
+		players := []pkg.Socket{
+			pkg.NewTestSocket(),
+			pkg.NewTestSocket(),
+			pkg.NewTestSocket(),
+			pkg.NewTestSocket(),
+		}
+
+		game, _ := pkg.NewGame(players)
+		game.Start(time.Second)
+
+		// Discard food for both players
+		for _, player := range players {
+			response, _ := player.(*pkg.TestSocket).GetResponse()
+
+			var payload pkg.StartingResources
+			pkg.ParsePayload(response.Payload, &payload)
+
+			keys := make([]pkg.FoodType, 0, len(payload.Food))
+			for ft := range payload.Food {
+				keys = append(keys, ft)
+			}
+
+			if err := game.DiscardFood(player, keys[0], 1); err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
+		}
+
+		// check turn responses
+		for i, player := range players {
+			if i == 0 {
+				assertResponse(t, player.(*pkg.TestSocket), pkg.StartTurn)
+			} else {
+				assertResponse(t, player.(*pkg.TestSocket), pkg.WaitTurn)
+			}
+		}
+	})
 }

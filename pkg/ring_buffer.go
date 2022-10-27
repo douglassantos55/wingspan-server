@@ -21,6 +21,7 @@ func (r *RingBuffer) Push(value any) {
 
 func (r *RingBuffer) Pop() any {
 	value := r.values[r.head]
+	r.values[r.head] = nil
 	r.head = (r.head + 1) % len(r.values)
 	return value
 }
