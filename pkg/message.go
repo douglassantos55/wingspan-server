@@ -17,6 +17,7 @@ const (
 	MatchDeclined    = "match_denied"
 	ChooseCards      = "choose_cards"
 	DiscardFood      = "discard_food"
+	GameCanceled     = "game_canceled"
 )
 
 type Response struct {

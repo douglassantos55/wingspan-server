@@ -3,6 +3,7 @@ package pkg
 import (
 	"errors"
 	"sync"
+	"time"
 )
 
 const (
@@ -34,7 +35,7 @@ func (g *GameManager) Create(players []Socket) (*Message, error) {
 		g.games.Store(player, game)
 	}
 
-	game.Start()
+	game.Start(time.Minute)
 	return nil, nil
 }
 

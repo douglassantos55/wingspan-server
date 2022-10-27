@@ -3,6 +3,7 @@ package pkg
 import (
 	"errors"
 	"sync"
+	"time"
 )
 
 var (
@@ -38,7 +39,7 @@ func NewGame(sockets []Socket) (*Game, error) {
 	}, nil
 }
 
-func (g *Game) Start() {
+func (g *Game) Start(timeout time.Duration) {
 	g.players.Range(func(key, value any) bool {
 		socket := key.(Socket)
 		player := value.(*Player)
@@ -53,6 +54,15 @@ func (g *Game) Start() {
 
 		return true
 	})
+
+	go func() {
+		<-time.After(timeout)
+		g.players.Range(func(key, _ any) bool {
+			socket := key.(Socket)
+			socket.Send(Response{Type: GameCanceled})
+			return true
+		})
+	}()
 }
 
 func (g *Game) ChooseBirds(socket Socket, birdsToKeep []int) error {
