@@ -1,15 +1,13 @@
 package pkg
 
-import "math/rand"
-
 type Player struct {
-	food  []Food
+	food  Food
 	birds map[int]*Bird
 }
 
 func NewPlayer(socket Socket) *Player {
 	return &Player{
-		food:  make([]Food, 0),
+		food:  Food{},
 		birds: make(map[int]*Bird),
 	}
 }
@@ -25,12 +23,12 @@ func (p *Player) Draw(deck Deck, qty int) error {
 	return nil
 }
 
-func (p *Player) GainFood(qty int) {
-	for i := 0; i < qty; i++ {
-		random := rand.Intn(5)
-		food := Food{Type: FoodType(random)}
-		p.food = append(p.food, food)
-	}
+func (p *Player) GainFood(foodType FoodType, qty int) {
+	p.food.Increment(foodType, qty)
+}
+
+func (p *Player) DiscardFood(foodType FoodType, qty int) error {
+	return p.food.Decrement(foodType, qty)
 }
 
 func (p *Player) KeepBirds(birdIds []int) error {
@@ -54,7 +52,7 @@ func (p *Player) KeepBirds(birdIds []int) error {
 	return nil
 }
 
-func (p *Player) GetFood() []Food {
+func (p *Player) GetFood() Food {
 	return p.food
 }
 

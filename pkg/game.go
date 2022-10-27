@@ -2,11 +2,14 @@ package pkg
 
 import (
 	"errors"
+	"math/rand"
 	"sync"
 	"time"
 )
 
 var (
+	ErrFoodNotFound     = errors.New("Food not found")
+	ErrNotEnoughFood    = errors.New("Not enough food")
 	ErrBirdCardNotFound = errors.New("Bird card not found")
 )
 
@@ -25,7 +28,11 @@ func NewGame(sockets []Socket) (*Game, error) {
 
 	for _, socket := range sockets {
 		player := NewPlayer(socket)
-		player.GainFood(INITIAL_FOOD)
+
+		for i := 0; i < INITIAL_FOOD; i++ {
+			foodType := FoodType(rand.Intn(FOOD_TYPE_COUNT))
+			player.GainFood(foodType, 1)
+		}
 
 		if err := player.Draw(deck, INITIAL_BIRDS); err != nil {
 			return nil, err

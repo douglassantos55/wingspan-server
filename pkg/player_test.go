@@ -42,23 +42,11 @@ func TestPlayer(t *testing.T) {
 		socket := pkg.NewTestSocket()
 		player := pkg.NewPlayer(socket)
 
-		player.GainFood(10)
-
-		equal := 0
-		var prev pkg.Food
-		for _, food := range player.GetFood() {
-			if food == prev {
-				equal++
-			}
-		}
-
-		if equal == len(player.GetFood()) {
-			t.Error("Should be random")
-		}
+		player.GainFood(pkg.Invertebrate, 10)
 
 		food := player.GetFood()
-		if len(food) != 10 {
-			t.Errorf("Expected %v food, got %v", 10, len(food))
+		if food.Len() != 10 {
+			t.Errorf("Expected %v food, got %v", 10, food.Len())
 		}
 	})
 
@@ -88,6 +76,55 @@ func TestPlayer(t *testing.T) {
 
 		if err := player.KeepBirds([]int{9, 8, 7, 6, 5}); err != nil {
 			t.Errorf("Expected no error, got %v", err)
+		}
+	})
+
+	t.Run("discard food not found", func(t *testing.T) {
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+
+		player.GainFood(pkg.Fruit, 2)
+		player.GainFood(pkg.Seed, 1)
+		player.GainFood(pkg.Fish, 3)
+
+		err := player.DiscardFood(pkg.Invertebrate, 2)
+		if err == nil {
+			t.Fatal("Expected error, got nothing")
+		}
+		if err != pkg.ErrFoodNotFound {
+			t.Errorf("Expected error \"%v\", got \"%v\"", pkg.ErrFoodNotFound, err)
+		}
+	})
+
+	t.Run("discard food more than exists", func(t *testing.T) {
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+
+		player.GainFood(pkg.Fruit, 2)
+		player.GainFood(pkg.Seed, 1)
+		player.GainFood(pkg.Fish, 3)
+
+		err := player.DiscardFood(pkg.Fruit, 5)
+		if err == nil {
+			t.Fatal("Expected error, got nothing")
+		}
+		if err != pkg.ErrNotEnoughFood {
+			t.Errorf("Expected error \"%v\", got \"%v\"", pkg.ErrNotEnoughFood, err)
+		}
+	})
+
+	t.Run("discard food", func(t *testing.T) {
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+
+		player.GainFood(pkg.Seed, 1)
+		if err := player.DiscardFood(pkg.Seed, 1); err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		// make sure food is removed
+		err := player.DiscardFood(pkg.Seed, 1)
+		if err == nil {
+			t.Error("Expected error got nothing")
+		}
+		if err != pkg.ErrFoodNotFound {
+			t.Errorf("Expected error \"%v\", got \"%v\"", pkg.ErrFoodNotFound, err)
 		}
 	})
 }
