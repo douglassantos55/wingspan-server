@@ -19,15 +19,22 @@ type Match struct {
 }
 
 func (m *Match) Ready() bool {
-    m.mutex.Lock()
-    defer m.mutex.Unlock()
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
 	return len(m.confirmed) == len(m.players)
 }
 
+func (m *Match) Confirmed() int {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	return len(m.confirmed)
+}
+
 func (m *Match) Accept(socket Socket) error {
-    m.mutex.Lock()
-    defer m.mutex.Unlock()
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
 
 	found := false
 
@@ -97,7 +104,7 @@ func (m *Matchmaker) Decline(socket Socket) (*Message, error) {
 		return nil, err
 	}
 
-	if len(match.confirmed) > 0 {
+	if match.Confirmed() > 0 {
 		return &Message{
 			Method: "Queue.Add",
 			Params: match.confirmed,
