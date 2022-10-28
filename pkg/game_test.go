@@ -100,9 +100,6 @@ func TestGame(t *testing.T) {
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2})
 
 		game.Start(time.Millisecond)
-		p1.GetResponse()
-		p2.GetResponse()
-
 		time.Sleep(2 * time.Millisecond)
 
 		assertResponse(t, p1, pkg.GameCanceled)
@@ -209,6 +206,15 @@ func TestGame(t *testing.T) {
 			} else {
 				assertResponse(t, player.(*pkg.TestSocket), pkg.WaitTurn)
 			}
+		}
+	})
+
+	t.Run("start turn no player ready", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		game, _ := pkg.NewGame([]pkg.Socket{p1})
+
+		if err := game.StartTurn(); err == nil {
+			t.Error("Expected error got nothing")
 		}
 	})
 }

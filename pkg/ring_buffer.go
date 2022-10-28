@@ -1,6 +1,9 @@
 package pkg
 
+import "sync"
+
 type RingBuffer struct {
+	mutex  sync.Mutex
 	values []any
 	head   int
 	tail   int
@@ -14,12 +17,18 @@ func NewRingBuffer(size int) *RingBuffer {
 }
 
 func (r *RingBuffer) Push(value any) {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
 	r.len++
 	r.values[r.tail] = value
 	r.tail = r.len % len(r.values)
 }
 
 func (r *RingBuffer) Pop() any {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
 	value := r.values[r.head]
 	r.values[r.head] = nil
 	r.head = (r.head + 1) % len(r.values)
@@ -27,6 +36,9 @@ func (r *RingBuffer) Pop() any {
 }
 
 func (r *RingBuffer) Peek() any {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
 	if r.head == r.tail {
 		return nil
 	}
@@ -34,7 +46,10 @@ func (r *RingBuffer) Peek() any {
 }
 
 func (r *RingBuffer) Full() bool {
-	return r.head == r.tail
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	return r.len > 0 && r.head == r.tail
 }
 
 func (r *RingBuffer) expand() {

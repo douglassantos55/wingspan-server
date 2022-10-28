@@ -8,6 +8,7 @@ import (
 )
 
 var (
+	ErrNoPlayerReady    = errors.New("No player ready")
 	ErrFoodNotFound     = errors.New("Food not found")
 	ErrNotEnoughFood    = errors.New("Not enough food")
 	ErrBirdCardNotFound = errors.New("Bird card not found")
@@ -66,11 +67,13 @@ func (g *Game) Start(timeout time.Duration) {
 
 	go func() {
 		<-time.After(timeout)
-		g.players.Range(func(key, _ any) bool {
-			socket := key.(Socket)
-			socket.Send(Response{Type: GameCanceled})
-			return true
-		})
+		if !g.turns.Full() {
+			g.players.Range(func(key, _ any) bool {
+				socket := key.(Socket)
+				socket.Send(Response{Type: GameCanceled})
+				return true
+			})
+		}
 	}()
 }
 
@@ -117,8 +120,12 @@ func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) error {
 }
 
 func (g *Game) StartTurn() error {
-	socket := g.turns.Pop().(Socket)
-	_, ok := g.players.Load(socket)
+	socket, ok := g.turns.Pop().(Socket)
+	if !ok {
+		return ErrNoPlayerReady
+	}
+
+	_, ok = g.players.Load(socket)
 	if !ok {
 		return ErrGameNotFound
 	}
