@@ -39,9 +39,6 @@ func (r *RingBuffer) Peek() any {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	if r.head == r.tail {
-		return nil
-	}
 	return r.values[r.head]
 }
 

@@ -26,7 +26,7 @@ func NewGameManager() *GameManager {
 }
 
 func (g *GameManager) Create(players []Socket) (*Message, error) {
-	game, err := NewGame(players)
+	game, err := NewGame(players, time.Minute)
 	if err != nil {
 		return nil, err
 	}

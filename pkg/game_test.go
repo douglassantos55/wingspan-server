@@ -9,7 +9,7 @@ import (
 
 func TestGame(t *testing.T) {
 	t.Run("create without players", func(t *testing.T) {
-		_, err := pkg.NewGame([]pkg.Socket{})
+		_, err := pkg.NewGame([]pkg.Socket{}, time.Second)
 
 		if err == nil {
 			t.Fatal("Expected error, got nothing")
@@ -21,7 +21,7 @@ func TestGame(t *testing.T) {
 
 	t.Run("create", func(t *testing.T) {
 		socket := pkg.NewTestSocket()
-		game, err := pkg.NewGame([]pkg.Socket{socket})
+		game, err := pkg.NewGame([]pkg.Socket{socket}, time.Second)
 
 		if err != nil {
 			t.Errorf("Expected no error, got %v", err)
@@ -33,7 +33,7 @@ func TestGame(t *testing.T) {
 
 	t.Run("start", func(t *testing.T) {
 		socket := pkg.NewTestSocket()
-		game, _ := pkg.NewGame([]pkg.Socket{socket})
+		game, _ := pkg.NewGame([]pkg.Socket{socket}, time.Second)
 
 		game.Start(time.Second)
 		response := assertResponse(t, socket, pkg.ChooseCards)
@@ -55,7 +55,7 @@ func TestGame(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		game, _ := pkg.NewGame([]pkg.Socket{p1})
+		game, _ := pkg.NewGame([]pkg.Socket{p1}, time.Second)
 		err := game.ChooseBirds(p2, []int{0})
 
 		if err == nil {
@@ -68,7 +68,7 @@ func TestGame(t *testing.T) {
 
 	t.Run("choose invalid cards", func(t *testing.T) {
 		p1 := pkg.NewTestSocket()
-		game, _ := pkg.NewGame([]pkg.Socket{p1})
+		game, _ := pkg.NewGame([]pkg.Socket{p1}, time.Second)
 
 		err := game.ChooseBirds(p1, []int{9999})
 		if err == nil {
@@ -81,7 +81,7 @@ func TestGame(t *testing.T) {
 
 	t.Run("choose cards", func(t *testing.T) {
 		p1 := pkg.NewTestSocket()
-		game, _ := pkg.NewGame([]pkg.Socket{p1})
+		game, _ := pkg.NewGame([]pkg.Socket{p1}, time.Second)
 
 		// keep just one
 		if err := game.ChooseBirds(p1, []int{169}); err != nil {
@@ -97,7 +97,7 @@ func TestGame(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		game, _ := pkg.NewGame([]pkg.Socket{p1, p2})
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
 
 		game.Start(time.Millisecond)
 		time.Sleep(2 * time.Millisecond)
@@ -109,7 +109,7 @@ func TestGame(t *testing.T) {
 	t.Run("discard food no game", func(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
-		game, _ := pkg.NewGame([]pkg.Socket{p1})
+		game, _ := pkg.NewGame([]pkg.Socket{p1}, time.Second)
 		err := game.DiscardFood(p2, pkg.Fish, 1)
 
 		if err == nil {
@@ -122,7 +122,7 @@ func TestGame(t *testing.T) {
 
 	t.Run("discard food", func(t *testing.T) {
 		p1 := pkg.NewTestSocket()
-		game, _ := pkg.NewGame([]pkg.Socket{p1})
+		game, _ := pkg.NewGame([]pkg.Socket{p1}, time.Second)
 		game.Start(time.Second)
 
 		response := assertResponse(t, p1, pkg.ChooseCards)
@@ -149,7 +149,7 @@ func TestGame(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		game, _ := pkg.NewGame([]pkg.Socket{p1, p2})
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
 		game.Start(time.Millisecond)
 
 		response, _ := p1.GetResponse()
@@ -179,7 +179,7 @@ func TestGame(t *testing.T) {
 			pkg.NewTestSocket(),
 		}
 
-		game, _ := pkg.NewGame(players)
+		game, _ := pkg.NewGame(players, time.Second)
 		game.Start(time.Second)
 
 		// Discard food for both players
@@ -211,10 +211,29 @@ func TestGame(t *testing.T) {
 
 	t.Run("start turn no player ready", func(t *testing.T) {
 		p1 := pkg.NewTestSocket()
-		game, _ := pkg.NewGame([]pkg.Socket{p1})
+		game, _ := pkg.NewGame([]pkg.Socket{p1}, time.Second)
 
 		if err := game.StartTurn(); err == nil {
 			t.Error("Expected error got nothing")
 		}
+	})
+
+	t.Run("turn timeout", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, 2*time.Millisecond)
+
+		if err := game.DiscardFood(p1, 0, 0); err != nil {
+			t.Fatalf("expected no error, got \"%v\"", err)
+		}
+		if err := game.DiscardFood(p2, 1, 0); err != nil {
+			t.Fatalf("expected no error, got \"%v\"", err)
+		}
+
+		time.Sleep(3 * time.Millisecond)
+
+		assertResponse(t, p1, pkg.WaitTurn)
+		assertResponse(t, p2, pkg.StartTurn)
 	})
 }

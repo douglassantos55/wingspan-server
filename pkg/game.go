@@ -15,12 +15,13 @@ var (
 )
 
 type Game struct {
-	deck    Deck
-	turns   *RingBuffer
-	players *sync.Map
+	deck         Deck
+	turnDuration time.Duration
+	turns        *RingBuffer
+	players      *sync.Map
 }
 
-func NewGame(sockets []Socket) (*Game, error) {
+func NewGame(sockets []Socket, turnDuration time.Duration) (*Game, error) {
 	if len(sockets) == 0 {
 		return nil, ErrNoPlayers
 	}
@@ -43,9 +44,10 @@ func NewGame(sockets []Socket) (*Game, error) {
 	}
 
 	return &Game{
-		deck:    deck,
-		players: players,
-		turns:   NewRingBuffer(len(sockets)),
+		deck:         deck,
+		turnDuration: turnDuration,
+		players:      players,
+		turns:        NewRingBuffer(len(sockets)),
 	}, nil
 }
 
@@ -120,7 +122,7 @@ func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) error {
 }
 
 func (g *Game) StartTurn() error {
-	socket, ok := g.turns.Pop().(Socket)
+	socket, ok := g.turns.Peek().(Socket)
 	if !ok {
 		return ErrNoPlayerReady
 	}
@@ -140,5 +142,15 @@ func (g *Game) StartTurn() error {
 		return true
 	})
 
+	go func() {
+		<-time.After(g.turnDuration)
+		g.EndTurn()
+		g.StartTurn()
+	}()
+
 	return nil
+}
+
+func (g *Game) EndTurn() {
+	g.turns.Push(g.turns.Pop())
 }
