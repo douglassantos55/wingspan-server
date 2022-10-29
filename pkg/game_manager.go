@@ -64,3 +64,17 @@ func (g *GameManager) DiscardFood(socket Socket, foodType FoodType, qty int) (*M
 
 	return nil, nil
 }
+
+func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
+	value, ok := g.games.Load(socket)
+	if !ok {
+		return nil, ErrGameNotFound
+	}
+
+	game := value.(*Game)
+
+	game.EndTurn()
+	game.StartTurn()
+
+	return nil, nil
+}

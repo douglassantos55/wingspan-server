@@ -107,4 +107,27 @@ func TestGameManager(t *testing.T) {
 		assertResponse(t, p1, pkg.StartTurn)
 		assertResponse(t, p2, pkg.WaitTurn)
 	})
+
+	t.Run("end turn", func(t *testing.T) {
+		manager := pkg.NewGameManager()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		manager.Create([]pkg.Socket{p1, p2})
+
+		if _, err := manager.DiscardFood(p1, 0, 0); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if _, err := manager.DiscardFood(p2, 0, 0); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		if _, err := manager.EndTurn(p1); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		assertResponse(t, p1, pkg.WaitTurn)
+		assertResponse(t, p2, pkg.StartTurn)
+	})
 }
