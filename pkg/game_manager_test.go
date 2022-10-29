@@ -92,4 +92,19 @@ func TestGameManager(t *testing.T) {
 			t.Errorf("Expected %v, got %v", len(chosenBirds), amountToDiscard)
 		}
 	})
+
+	t.Run("discard food", func(t *testing.T) {
+		manager := pkg.NewGameManager()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		manager.Create([]pkg.Socket{p1, p2})
+
+		manager.DiscardFood(p1, 0, 0)
+		manager.DiscardFood(p2, 1, 0)
+
+		assertResponse(t, p1, pkg.StartTurn)
+		assertResponse(t, p2, pkg.WaitTurn)
+	})
 }

@@ -50,3 +50,17 @@ func (g *GameManager) ChooseBirds(socket Socket, birds []int) (*Message, error) 
 
 	return nil, nil
 }
+
+func (g *GameManager) DiscardFood(socket Socket, foodType FoodType, qty int) (*Message, error) {
+	value, ok := g.games.Load(socket)
+	if !ok {
+		return nil, ErrGameNotFound
+	}
+
+	game := value.(*Game)
+	if err := game.DiscardFood(socket, foodType, qty); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
