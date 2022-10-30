@@ -143,21 +143,19 @@ func TestGameManager(t *testing.T) {
 		assertResponse(t, p2, pkg.StartTurn)
 	})
 
-	/*
-		t.Run("concurrency", func(t *testing.T) {
-			manager := pkg.NewGameManager()
+	t.Run("concurrency", func(t *testing.T) {
+		manager := pkg.NewGameManager()
 
-			p1 := pkg.NewTestSocket()
-			p2 := pkg.NewTestSocket()
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
 
-			go manager.Create([]pkg.Socket{p1})
-			go manager.Create([]pkg.Socket{p2})
+		go manager.Create([]pkg.Socket{p1})
+		go manager.Create([]pkg.Socket{p2})
 
-			go manager.ChooseBirds(p1, []int{0})
-			go manager.ChooseBirds(p2, []int{0})
+		go manager.ChooseBirds(p1, []int{0})
+		go manager.ChooseBirds(p2, []int{0})
 
-			go manager.DiscardFood(p1, pkg.Invertebrate, 0)
-			go manager.DiscardFood(p2, pkg.Invertebrate, 0)
-		})
-	*/
+		go manager.DiscardFood(p1, pkg.Invertebrate, 0)
+		go manager.DiscardFood(p2, pkg.Invertebrate, 0)
+	})
 }
