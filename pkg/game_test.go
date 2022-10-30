@@ -223,6 +223,7 @@ func TestGame(t *testing.T) {
 		p2 := pkg.NewTestSocket()
 
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, 2*time.Millisecond)
+		game.Start(time.Second)
 
 		if err := game.DiscardFood(p1, 1, 0); err != nil {
 			t.Fatalf("expected no error, got \"%v\"", err)
