@@ -34,7 +34,7 @@ type Message struct {
 
 type StartingResources struct {
 	Birds []*Bird
-	Food  Food
+	Food  map[FoodType]int
 }
 
 func ParsePayload(payload any, dest any) error {

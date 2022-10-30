@@ -46,9 +46,8 @@ func TestGame(t *testing.T) {
 		if len(payload.Birds) != pkg.INITIAL_BIRDS {
 			t.Errorf("expected %v cards, got %v", pkg.INITIAL_BIRDS, len(payload.Birds))
 		}
-		if payload.Food.Len() != pkg.INITIAL_FOOD {
-			t.Errorf("expected %v food, got %v", pkg.INITIAL_FOOD, payload.Food.Len())
-		}
+
+		assertFoodQty(t, payload.Food, pkg.INITIAL_FOOD)
 	})
 
 	t.Run("choose no player", func(t *testing.T) {

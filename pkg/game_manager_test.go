@@ -7,7 +7,9 @@ import (
 )
 
 func assertResponse(t testing.TB, socket *pkg.TestSocket, expected string) pkg.Response {
+	t.Helper()
 	response, err := socket.GetResponse()
+
 	if err != nil {
 		t.Fatalf("Failed reading response: %v", err)
 	}
@@ -15,6 +17,17 @@ func assertResponse(t testing.TB, socket *pkg.TestSocket, expected string) pkg.R
 		t.Errorf("Expected response %v, got %v", expected, response.Type)
 	}
 	return *response
+}
+
+func assertFoodQty(t testing.TB, food map[pkg.FoodType]int, expected int) {
+	t.Helper()
+	total := 0
+	for _, amount := range food {
+		total += amount
+	}
+	if total != expected {
+		t.Errorf("expected %v food, got %v", expected, total)
+	}
 }
 
 func TestGameManager(t *testing.T) {
@@ -51,9 +64,8 @@ func TestGameManager(t *testing.T) {
 		if len(payload.Birds) != pkg.INITIAL_BIRDS {
 			t.Errorf("Expected %v birds, got %v", pkg.INITIAL_BIRDS, len(payload.Birds))
 		}
-		if payload.Food.Len() != pkg.INITIAL_FOOD {
-			t.Errorf("Expected %v food, got %v", pkg.INITIAL_FOOD, payload.Food.Len())
-		}
+
+		assertFoodQty(t, payload.Food, pkg.INITIAL_FOOD)
 
 		seenBirds := make(map[*pkg.Bird]bool)
 		for _, bird := range payload.Birds {
@@ -130,4 +142,22 @@ func TestGameManager(t *testing.T) {
 		assertResponse(t, p1, pkg.WaitTurn)
 		assertResponse(t, p2, pkg.StartTurn)
 	})
+
+	/*
+		t.Run("concurrency", func(t *testing.T) {
+			manager := pkg.NewGameManager()
+
+			p1 := pkg.NewTestSocket()
+			p2 := pkg.NewTestSocket()
+
+			go manager.Create([]pkg.Socket{p1})
+			go manager.Create([]pkg.Socket{p2})
+
+			go manager.ChooseBirds(p1, []int{0})
+			go manager.ChooseBirds(p2, []int{0})
+
+			go manager.DiscardFood(p1, pkg.Invertebrate, 0)
+			go manager.DiscardFood(p2, pkg.Invertebrate, 0)
+		})
+	*/
 }

@@ -1,14 +1,16 @@
 package pkg
 
+import "sync"
+
 type Player struct {
-	food  Food
-	birds map[int]*Bird
+	food  *sync.Map
+	birds *sync.Map
 }
 
 func NewPlayer(socket Socket) *Player {
 	return &Player{
-		food:  Food{},
-		birds: make(map[int]*Bird),
+		food:  new(sync.Map),
+		birds: new(sync.Map),
 	}
 }
 
@@ -18,48 +20,75 @@ func (p *Player) Draw(deck Deck, qty int) error {
 		return err
 	}
 	for _, card := range cards {
-		p.birds[card.ID] = card
+		p.birds.Store(card.ID, card)
 	}
 	return nil
 }
 
 func (p *Player) GainFood(foodType FoodType, qty int) {
-	p.food.Increment(foodType, qty)
+	if actual, ok := p.food.LoadOrStore(foodType, qty); ok {
+		p.food.Store(foodType, actual.(int)+qty)
+	}
 }
 
 func (p *Player) DiscardFood(foodType FoodType, qty int) error {
-	return p.food.Decrement(foodType, qty)
-}
-
-func (p *Player) KeepBirds(birdIds []int) error {
-	cardsToRemove := make([]int, 0)
-	for k := range p.birds {
-		for _, id := range birdIds {
-			if k == id {
-				continue
-			}
-			if _, ok := p.birds[id]; !ok {
-				return ErrBirdCardNotFound
-			}
-			cardsToRemove = append(cardsToRemove, k)
-		}
+	actual, ok := p.food.Load(foodType)
+	if !ok {
+		return ErrFoodNotFound
 	}
 
-	for _, id := range cardsToRemove {
-		delete(p.birds, id)
+	if actual.(int) < qty {
+		return ErrNotEnoughFood
+	}
+
+	v := actual.(int) - qty
+	if v <= 0 {
+		p.food.Delete(foodType)
+	} else {
+		p.food.Store(foodType, v)
 	}
 
 	return nil
 }
 
-func (p *Player) GetFood() Food {
-	return p.food
+func (p *Player) KeepBirds(birdIds []int) error {
+	cardsToRemove := make([]int, 0)
+
+	for _, bird := range p.GetBirdCards() {
+		for _, id := range birdIds {
+			if bird.ID == id {
+				continue
+			}
+			if _, ok := p.birds.Load(id); !ok {
+				return ErrBirdCardNotFound
+			}
+			cardsToRemove = append(cardsToRemove, bird.ID)
+		}
+	}
+
+	for _, id := range cardsToRemove {
+		p.birds.Delete(id)
+	}
+
+	return nil
+}
+
+func (p *Player) GetFood() map[FoodType]int {
+	food := make(map[FoodType]int)
+
+	p.food.Range(func(key, value any) bool {
+		food[key.(FoodType)] = value.(int)
+		return true
+	})
+
+	return food
 }
 
 func (p *Player) GetBirdCards() []*Bird {
 	cards := make([]*Bird, 0)
-	for _, card := range p.birds {
-		cards = append(cards, card)
-	}
+	p.birds.Range(func(_, value any) bool {
+		cards = append(cards, value.(*Bird))
+		return true
+	})
 	return cards
 }

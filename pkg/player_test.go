@@ -43,11 +43,7 @@ func TestPlayer(t *testing.T) {
 		player := pkg.NewPlayer(socket)
 
 		player.GainFood(pkg.Invertebrate, 10)
-
-		food := player.GetFood()
-		if food.Len() != 10 {
-			t.Errorf("Expected %v food, got %v", 10, food.Len())
-		}
+		assertFoodQty(t, player.GetFood(), 10)
 	})
 
 	t.Run("keep birds", func(t *testing.T) {
