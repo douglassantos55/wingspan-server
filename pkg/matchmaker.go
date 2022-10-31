@@ -13,42 +13,36 @@ var (
 )
 
 type Match struct {
-	mutex     sync.Mutex
-	players   []Socket
-	confirmed []Socket
+	players   *sync.Map
+	confirmed *RingBuffer
+}
+
+func NewMatch(players []Socket) *Match {
+	sockets := new(sync.Map)
+	for _, socket := range players {
+		sockets.Store(socket, true)
+	}
+
+	return &Match{
+		players:   sockets,
+		confirmed: NewRingBuffer(len(players)),
+	}
 }
 
 func (m *Match) Ready() bool {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	return len(m.confirmed) == len(m.players)
+	return m.confirmed.Full()
 }
 
 func (m *Match) Confirmed() int {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	return len(m.confirmed)
+	return m.confirmed.Len()
 }
 
 func (m *Match) Accept(socket Socket) error {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	found := false
-
-	for _, player := range m.players {
-		if player == socket {
-			found = true
-		}
-	}
-
-	if !found {
+	if _, ok := m.players.Load(socket); !ok {
 		return ErrPlayerNotFound
 	}
 
-	m.confirmed = append(m.confirmed, socket)
+	m.confirmed.Push(socket)
 	response := Response{Type: WaitOtherPlayers}
 
 	if _, err := socket.Send(response); err != nil {
@@ -119,7 +113,7 @@ func (m *Matchmaker) CreateMatch(players []Socket) (*Message, error) {
 		return nil, ErrNoPlayers
 	}
 
-	match := &Match{players: players}
+	match := NewMatch(players)
 	for _, player := range players {
 		m.matches.Store(player, match)
 	}
@@ -134,12 +128,12 @@ func (m *Matchmaker) CreateMatch(players []Socket) (*Message, error) {
 }
 
 func (m *Matchmaker) declineMatch(match *Match) error {
-	var err error
-	for _, player := range match.players {
+	match.players.Range(func(key, _ any) bool {
+		player := key.(Socket)
 		m.matches.Delete(player)
-		if _, e := player.Send(Response{Type: MatchDeclined}); e != nil {
-			err = e
-		}
-	}
-	return err
+		player.Send(Response{Type: MatchDeclined})
+		return true
+	})
+
+	return nil
 }

@@ -52,10 +52,15 @@ func TestMatchmaker(t *testing.T) {
 			t.Errorf("Expected method %v, got %v", "Game.Create", reply.Method)
 		}
 
-		params := reply.Params.([]pkg.Socket)
+		confirmed := []pkg.Socket{}
 		expected := []pkg.Socket{p1, p2}
-		if !reflect.DeepEqual(params, expected) {
-			t.Errorf("Expected %v, got %v", expected, params)
+		param := reply.Params.(*pkg.RingBuffer)
+		for param.Peek() != nil {
+			confirmed = append(confirmed, param.Pop().(pkg.Socket))
+		}
+
+		if !reflect.DeepEqual(confirmed, expected) {
+			t.Errorf("Expected %v, got %v", expected, confirmed)
 		}
 	})
 
@@ -163,10 +168,16 @@ func TestMatchmaker(t *testing.T) {
 			t.Errorf("Expected method %v, got %v", "Queue.Add", reply.Method)
 		}
 
+		confirmed := []pkg.Socket{}
 		expected := []pkg.Socket{p2}
-		params := reply.Params.([]pkg.Socket)
-		if !reflect.DeepEqual(params, expected) {
-			t.Errorf("Expected %v, got %v", expected, params)
+
+		params := reply.Params.(*pkg.RingBuffer)
+		for params.Peek() != nil {
+			confirmed = append(confirmed, params.Pop().(pkg.Socket))
+		}
+
+		if !reflect.DeepEqual(confirmed, expected) {
+			t.Errorf("Expected %v, got %v", expected, confirmed)
 		}
 	})
 
@@ -221,5 +232,20 @@ func TestMatchmaker(t *testing.T) {
 		go matchmaker.CreateMatch([]pkg.Socket{p1, p2})
 		go matchmaker.Accept(p1)
 		go matchmaker.Decline(p2)
+	})
+
+	t.Run("match concurrency", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		match := pkg.NewMatch([]pkg.Socket{p1, p2})
+
+		go match.Ready()
+
+		go match.Accept(p1)
+		go match.Accept(p2)
+
+		go match.Confirmed()
+		go match.Ready()
 	})
 }
