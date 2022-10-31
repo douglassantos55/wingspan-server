@@ -1,7 +1,6 @@
 package pkg
 
 import (
-	"container/list"
 	"errors"
 	"sync"
 )
@@ -20,38 +19,32 @@ type Deck interface {
 
 type BirdDeck struct {
 	mutex sync.Mutex
-	cards *list.List
+	cards *RingBuffer
 }
 
 func NewDeck(size int) *BirdDeck {
-	list := list.New()
+	buf := NewRingBuffer(size)
 	for i := 0; i < size; i++ {
-		list.PushBack(&Bird{ID: i})
+		buf.Push(&Bird{ID: i})
 	}
 
 	return &BirdDeck{
-		cards: list,
+		cards: buf,
 	}
 }
 
 func (d *BirdDeck) Len() int {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
-
 	return d.cards.Len()
 }
 
 func (d *BirdDeck) Draw(qty int) ([]*Bird, error) {
-	d.mutex.Lock()
-	defer d.mutex.Unlock()
-
 	if d.cards.Len() < qty {
 		return nil, ErrNotEnoughCards
 	}
 
 	cards := make([]*Bird, 0)
 	for i := 0; i < qty; i++ {
-		value := d.cards.Remove(d.cards.Back())
+		value := d.cards.Pop()
 		card, ok := value.(*Bird)
 		if !ok {
 			return nil, ErrUnexpectedValue

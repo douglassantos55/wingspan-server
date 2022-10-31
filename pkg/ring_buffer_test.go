@@ -67,4 +67,15 @@ func TestRingBuffer(t *testing.T) {
 			t.Errorf("Expected %v, got %v", expected, values)
 		}
 	})
+
+	t.Run("len", func(t *testing.T) {
+		buf := pkg.NewRingBuffer(10)
+		buf.Push(1)
+		buf.Push(1)
+		buf.Push(1)
+
+		if buf.Len() != 3 {
+			t.Errorf("Expected len %v, got %v", 3, buf.Len())
+		}
+	})
 }

@@ -114,7 +114,10 @@ func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) error {
 	g.turns.Push(socket)
 
 	if g.turns.Full() {
+		g.mutex.Lock()
 		g.timer.Stop()
+		g.mutex.Unlock()
+
 		return g.StartTurn()
 	} else {
 		socket.Send(Response{

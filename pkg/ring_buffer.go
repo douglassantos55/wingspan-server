@@ -16,6 +16,13 @@ func NewRingBuffer(size int) *RingBuffer {
 	}
 }
 
+func (r *RingBuffer) Len() int {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	return r.len
+}
+
 func (r *RingBuffer) Push(value any) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
@@ -29,8 +36,10 @@ func (r *RingBuffer) Pop() any {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	r.len--
-	r.tail = r.len % len(r.values)
+	if r.len > 0 {
+		r.len--
+		r.tail = r.len % len(r.values)
+	}
 
 	value := r.values[r.tail]
 	r.values[r.tail] = nil
