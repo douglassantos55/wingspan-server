@@ -123,4 +123,25 @@ func TestPlayer(t *testing.T) {
 			t.Errorf("Expected error \"%v\", got \"%v\"", pkg.ErrFoodNotFound, err)
 		}
 	})
+
+	t.Run("concurrency", func(t *testing.T) {
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+
+		go player.GainFood(pkg.Seed, 1)
+		go player.GainFood(pkg.Fruit, 1)
+
+		go player.DiscardFood(pkg.Seed, 1)
+		go player.DiscardFood(pkg.Fruit, 1)
+
+		deck := pkg.NewDeck(50)
+
+		go player.Draw(deck, 1)
+		go player.Draw(deck, 1)
+
+		go player.KeepBirds([]int{0})
+		go player.KeepBirds([]int{1})
+
+		go player.GetFood()
+		go player.GetBirdCards()
+	})
 }
