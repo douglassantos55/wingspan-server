@@ -3,6 +3,7 @@ package pkg
 import (
 	"container/list"
 	"errors"
+	"sync"
 )
 
 const MAX_DECK_SIZE = 170
@@ -18,6 +19,7 @@ type Deck interface {
 }
 
 type BirdDeck struct {
+	mutex sync.Mutex
 	cards *list.List
 }
 
@@ -33,10 +35,16 @@ func NewDeck(size int) *BirdDeck {
 }
 
 func (d *BirdDeck) Len() int {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
 	return d.cards.Len()
 }
 
 func (d *BirdDeck) Draw(qty int) ([]*Bird, error) {
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+
 	if d.cards.Len() < qty {
 		return nil, ErrNotEnoughCards
 	}

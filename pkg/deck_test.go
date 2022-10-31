@@ -42,4 +42,12 @@ func TestDeck(t *testing.T) {
 			t.Errorf("Expected error \"%v\", got \"%v\"", pkg.ErrNotEnoughCards, err)
 		}
 	})
+
+	t.Run("concurrency", func(t *testing.T) {
+		deck := pkg.NewDeck(10)
+
+		go deck.Draw(1)
+		go deck.Draw(1)
+		go deck.Len()
+	})
 }
