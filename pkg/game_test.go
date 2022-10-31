@@ -236,4 +236,21 @@ func TestGame(t *testing.T) {
 		assertResponse(t, p1, pkg.WaitTurn)
 		assertResponse(t, p2, pkg.StartTurn)
 	})
+
+	t.Run("concurrency", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+
+		game.Start(time.Millisecond)
+
+		go game.ChooseBirds(p1, []int{0})
+		go game.ChooseBirds(p2, []int{0})
+
+		go game.DiscardFood(p1, 0, 0)
+		go game.DiscardFood(p2, 0, 0)
+
+		go game.StartTurn()
+		go game.EndTurn()
+	})
 }
