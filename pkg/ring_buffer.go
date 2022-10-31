@@ -29,9 +29,23 @@ func (r *RingBuffer) Pop() any {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
+	r.len--
+	r.tail = r.len % len(r.values)
+
+	value := r.values[r.tail]
+	r.values[r.tail] = nil
+
+	return value
+}
+
+func (r *RingBuffer) Dequeue() any {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
 	value := r.values[r.head]
 	r.values[r.head] = nil
 	r.head = (r.head + 1) % len(r.values)
+
 	return value
 }
 

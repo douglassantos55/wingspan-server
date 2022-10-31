@@ -178,8 +178,8 @@ func TestGame(t *testing.T) {
 			pkg.NewTestSocket(),
 		}
 
-		game, _ := pkg.NewGame(players, time.Second)
-		game.Start(time.Second)
+		game, _ := pkg.NewGame(players, time.Minute)
+		game.Start(time.Minute)
 
 		// Discard food for both players
 		for _, player := range players {

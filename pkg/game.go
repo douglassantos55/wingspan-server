@@ -161,5 +161,5 @@ func (g *Game) EndTurn() {
 	defer g.mutex.Unlock()
 
 	g.timer.Stop()
-	g.turns.Push(g.turns.Pop())
+	g.turns.Push(g.turns.Dequeue())
 }
