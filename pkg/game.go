@@ -98,37 +98,36 @@ func (g *Game) ChooseBirds(socket Socket, birdsToKeep []int) error {
 	return err
 }
 
-func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) error {
+// Discards food and returns whether every player is ready
+func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) (bool, error) {
 	value, ok := g.players.Load(socket)
 	if !ok {
-		return ErrGameNotFound
+		return false, ErrGameNotFound
 	}
 
 	player := value.(*Player)
 	if err := player.DiscardFood(foodType, qty); err != nil {
-		return err
+		return false, err
 	}
 
 	g.turns.Push(socket)
 
 	g.mutex.Lock()
+	defer g.mutex.Unlock()
+
 	if g.firstPlayer == nil {
 		g.firstPlayer = socket
 	}
-	g.mutex.Unlock()
 
 	if g.turns.Full() {
-		g.mutex.Lock()
 		g.timer.Stop()
-		g.mutex.Unlock()
-
-		return g.StartTurn()
 	} else {
 		socket.Send(Response{
 			Type: WaitOtherPlayers,
 		})
 	}
-	return nil
+
+	return g.turns.Full(), nil
 }
 
 func (g *Game) StartTurn() error {

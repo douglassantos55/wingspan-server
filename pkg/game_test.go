@@ -109,7 +109,7 @@ func TestGame(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 		game, _ := pkg.NewGame([]pkg.Socket{p1}, time.Second)
-		err := game.DiscardFood(p2, pkg.Fish, 1)
+		_, err := game.DiscardFood(p2, pkg.Fish, 1)
 
 		if err == nil {
 			t.Fatal("expected error, got nothing")
@@ -135,11 +135,11 @@ func TestGame(t *testing.T) {
 		}
 
 		foodType := keys[0]
-		if err := game.DiscardFood(p1, foodType, payload.Food[foodType]); err != nil {
+		if _, err := game.DiscardFood(p1, foodType, payload.Food[foodType]); err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
 		foodType = keys[1]
-		if err := game.DiscardFood(p1, foodType, payload.Food[foodType]+1); err == nil {
+		if _, err := game.DiscardFood(p1, foodType, payload.Food[foodType]+1); err == nil {
 			t.Error("expected error, got nothing")
 		}
 	})
@@ -160,7 +160,7 @@ func TestGame(t *testing.T) {
 			keys = append(keys, ft)
 		}
 
-		if err := game.DiscardFood(p1, keys[0], 1); err != nil {
+		if _, err := game.DiscardFood(p1, keys[0], 1); err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
 
@@ -193,10 +193,12 @@ func TestGame(t *testing.T) {
 				keys = append(keys, ft)
 			}
 
-			if err := game.DiscardFood(player, keys[0], 1); err != nil {
+			if _, err := game.DiscardFood(player, keys[0], 1); err != nil {
 				t.Fatalf("expected no error, got %v", err)
 			}
 		}
+
+		game.StartTurn()
 
 		// check turn responses
 		for i, player := range players {
@@ -224,20 +226,21 @@ func TestGame(t *testing.T) {
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, 2*time.Millisecond)
 		game.Start(time.Second)
 
-		if err := game.DiscardFood(p1, 3, 0); err != nil {
+		if _, err := game.DiscardFood(p1, 3, 0); err != nil {
 			t.Fatalf("expected no error, got \"%v\"", err)
 		}
-		if err := game.DiscardFood(p2, 1, 0); err != nil {
+		if _, err := game.DiscardFood(p2, 1, 0); err != nil {
 			t.Fatalf("expected no error, got \"%v\"", err)
 		}
 
+		game.StartTurn()
 		time.Sleep(3 * time.Millisecond)
 
 		assertResponse(t, p1, pkg.WaitTurn)
 		assertResponse(t, p2, pkg.StartTurn)
 	})
 
-	t.Run("round", func(t *testing.T) {
+	t.Run("round end", func(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
@@ -246,6 +249,8 @@ func TestGame(t *testing.T) {
 
 		game.DiscardFood(p1, 0, 0)
 		game.DiscardFood(p2, 0, 0)
+
+		game.StartTurn()
 
 		assertResponse(t, p1, pkg.StartTurn)
 		assertResponse(t, p2, pkg.WaitTurn)

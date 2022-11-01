@@ -58,8 +58,14 @@ func (g *GameManager) DiscardFood(socket Socket, foodType FoodType, qty int) (*M
 	}
 
 	game := value.(*Game)
-	if err := game.DiscardFood(socket, foodType, qty); err != nil {
+	ready, err := game.DiscardFood(socket, foodType, qty)
+
+	if err != nil {
 		return nil, err
+	}
+
+	if ready {
+		game.StartTurn()
 	}
 
 	return nil, nil
