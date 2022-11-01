@@ -16,6 +16,8 @@ var (
 
 type Game struct {
 	mutex        sync.Mutex
+	round        int
+	firstPlayer  Socket
 	deck         Deck
 	timer        *time.Timer
 	turnDuration time.Duration
@@ -73,11 +75,7 @@ func (g *Game) Start(timeout time.Duration) {
 	defer g.mutex.Unlock()
 
 	g.timer = time.AfterFunc(timeout, func() {
-		g.players.Range(func(key, _ any) bool {
-			socket := key.(Socket)
-			socket.Send(Response{Type: GameCanceled})
-			return true
-		})
+		g.Broadcast(Response{Type: GameCanceled})
 	})
 }
 
@@ -112,6 +110,12 @@ func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) error {
 	}
 
 	g.turns.Push(socket)
+
+	g.mutex.Lock()
+	if g.firstPlayer == nil {
+		g.firstPlayer = socket
+	}
+	g.mutex.Unlock()
 
 	if g.turns.Full() {
 		g.mutex.Lock()
@@ -151,18 +155,29 @@ func (g *Game) StartTurn() error {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
 
-	g.timer = time.AfterFunc(g.turnDuration, func() {
-		g.EndTurn()
-		g.StartTurn()
-	})
+	g.timer = time.AfterFunc(g.turnDuration, g.EndTurn)
 
 	return nil
 }
 
 func (g *Game) EndTurn() {
 	g.mutex.Lock()
-	defer g.mutex.Unlock()
-
 	g.timer.Stop()
+	g.mutex.Unlock()
+
 	g.turns.Push(g.turns.Dequeue())
+
+	if g.turns.Peek() == g.firstPlayer {
+		g.Broadcast(Response{Type: RoundEnded})
+	} else {
+		g.StartTurn()
+	}
+}
+
+func (g *Game) Broadcast(response Response) {
+	g.players.Range(func(key, _ any) bool {
+		socket := key.(Socket)
+		socket.Send(response)
+		return true
+	})
 }

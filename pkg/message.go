@@ -20,6 +20,7 @@ const (
 	GameCanceled     = "game_canceled"
 	StartTurn        = "start_turn"
 	WaitTurn         = "wait_turn"
+	RoundEnded       = "round_ended"
 )
 
 type Response struct {

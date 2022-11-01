@@ -72,9 +72,7 @@ func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 	}
 
 	game := value.(*Game)
-
 	game.EndTurn()
-	game.StartTurn()
 
 	return nil, nil
 }
