@@ -117,4 +117,16 @@ func TestQueue(t *testing.T) {
 			t.Errorf("Expected method %v, got %v", "Matchmaker.CreateMatch", reply.Method)
 		}
 	})
+
+	t.Run("concurrency", func(t *testing.T) {
+		queue := pkg.NewQueue(10)
+
+		p1 := pkg.NewTestSocket()
+
+		go queue.Add(p1, nil)
+		go queue.Remove(p1)
+
+		go queue.Add(pkg.NewTestSocket(), nil)
+		go queue.Remove(pkg.NewTestSocket())
+	})
 }
