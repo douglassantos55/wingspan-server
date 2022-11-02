@@ -193,11 +193,16 @@ func (g *Game) EndTurn() {
 
 func (g *Game) EndRound() {
 	g.mutex.Lock()
-	g.currRound++
-	g.mutex.Unlock()
+	defer g.mutex.Unlock()
 
+	g.currRound++
 	g.turnOrder.Push(g.turnOrder.Dequeue())
+
 	g.Broadcast(Response{Type: RoundEnded})
+
+	if g.currRound >= MAX_ROUNDS {
+		g.Broadcast(Response{Type: GameOver})
+	}
 }
 
 func (g *Game) Broadcast(response Response) {

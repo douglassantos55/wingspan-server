@@ -267,6 +267,33 @@ func TestGame(t *testing.T) {
 		assertResponse(t, p2, pkg.RoundEnded)
 	})
 
+	t.Run("game over", func(t *testing.T) {
+		players := []pkg.Socket{
+			pkg.NewTestSocket(),
+			pkg.NewTestSocket(),
+			pkg.NewTestSocket(),
+		}
+
+		game, _ := pkg.NewGame(players, time.Second)
+		game.Start(time.Second)
+
+		for _, player := range players {
+			game.DiscardFood(player, 0, 0)
+		}
+
+		game.StartRound()
+
+		for i := 0; i < pkg.MAX_ROUNDS; i++ {
+			for j := 0; j < pkg.MAX_TURNS-i; j++ {
+				game.EndTurn()
+			}
+		}
+
+		for _, player := range players {
+			assertResponse(t, player.(*pkg.TestSocket), pkg.GameOver)
+		}
+	})
+
 	t.Run("concurrency", func(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
