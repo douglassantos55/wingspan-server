@@ -8,6 +8,8 @@ import (
 )
 
 var (
+	ErrGameOver         = errors.New("Game over")
+	ErrRoundEnded       = errors.New("Round ended")
 	ErrNoPlayerReady    = errors.New("No player ready")
 	ErrFoodNotFound     = errors.New("Food not found")
 	ErrNotEnoughFood    = errors.New("Not enough food")
@@ -132,14 +134,14 @@ func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) (bool, err
 	return g.turnOrder.Full(), nil
 }
 
-func (g *Game) StartRound() {
+func (g *Game) StartRound() error {
 	g.mutex.Lock()
 
 	g.currTurn = 0
 	g.mutex.Unlock()
 
 	g.firstPlayer = g.turnOrder.Peek().(Socket)
-	g.StartTurn()
+	return g.StartTurn()
 }
 
 func (g *Game) StartTurn() error {
@@ -166,43 +168,46 @@ func (g *Game) StartTurn() error {
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
 
-	g.timer = time.AfterFunc(g.turnDuration, g.EndTurn)
+	g.timer = time.AfterFunc(g.turnDuration, func() {
+		g.EndTurn()
+	})
 
 	return nil
 }
 
-func (g *Game) EndTurn() {
+func (g *Game) EndTurn() error {
 	g.mutex.Lock()
 
 	g.timer.Stop()
-	g.currTurn++
-
 	g.turnOrder.Push(g.turnOrder.Dequeue())
 
 	if g.turnOrder.Peek() == g.firstPlayer {
+		g.currTurn++
+
 		if g.currTurn >= (MAX_TURNS - g.currRound) {
 			g.mutex.Unlock()
-			g.EndRound()
-			return
+			return g.EndRound()
 		}
 	}
 
 	g.mutex.Unlock()
-	g.StartTurn()
+	return g.StartTurn()
 }
 
-func (g *Game) EndRound() {
+func (g *Game) EndRound() error {
 	g.mutex.Lock()
-	defer g.mutex.Unlock()
 
 	g.currRound++
 	g.turnOrder.Push(g.turnOrder.Dequeue())
 
-	g.Broadcast(Response{Type: RoundEnded})
-
 	if g.currRound >= MAX_ROUNDS {
-		g.Broadcast(Response{Type: GameOver})
+		return ErrGameOver
 	}
+
+	g.mutex.Unlock()
+
+	g.StartRound()
+	return ErrRoundEnded
 }
 
 func (g *Game) Broadcast(response Response) {

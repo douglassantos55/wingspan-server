@@ -164,7 +164,7 @@ func TestGame(t *testing.T) {
 			t.Fatalf("expected no error, got %v", err)
 		}
 
-		time.Sleep(2 * time.Millisecond)
+		time.Sleep(3 * time.Millisecond)
 
 		assertResponse(t, p1, pkg.GameCanceled)
 		assertResponse(t, p2, pkg.GameCanceled)
@@ -240,7 +240,7 @@ func TestGame(t *testing.T) {
 		assertResponse(t, p2, pkg.StartTurn)
 	})
 
-	t.Run("round end", func(t *testing.T) {
+	t.Run("round end after turns", func(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
@@ -252,7 +252,7 @@ func TestGame(t *testing.T) {
 
 		game.StartRound()
 
-		for i := 0; i < pkg.MAX_TURNS; i++ {
+		for i := 0; i < 2*pkg.MAX_TURNS; i++ {
 			if i%2 == 0 {
 				assertResponse(t, p1, pkg.StartTurn)
 				assertResponse(t, p2, pkg.WaitTurn)
@@ -260,14 +260,15 @@ func TestGame(t *testing.T) {
 				assertResponse(t, p1, pkg.WaitTurn)
 				assertResponse(t, p2, pkg.StartTurn)
 			}
-			game.EndTurn()
-		}
 
-		assertResponse(t, p1, pkg.RoundEnded)
-		assertResponse(t, p2, pkg.RoundEnded)
+			err := game.EndTurn()
+			if i == 2*pkg.MAX_TURNS-1 && err != pkg.ErrRoundEnded {
+				t.Errorf("expected error %v, got %v", pkg.RoundEnded, err)
+			}
+		}
 	})
 
-	t.Run("game over", func(t *testing.T) {
+	t.Run("game ends after rounds", func(t *testing.T) {
 		players := []pkg.Socket{
 			pkg.NewTestSocket(),
 			pkg.NewTestSocket(),
@@ -285,12 +286,11 @@ func TestGame(t *testing.T) {
 
 		for i := 0; i < pkg.MAX_ROUNDS; i++ {
 			for j := 0; j < pkg.MAX_TURNS-i; j++ {
-				game.EndTurn()
+				err := game.EndTurn()
+				if i == pkg.MAX_ROUNDS-1 && j == pkg.MAX_TURNS-i-1 && err != pkg.ErrGameOver {
+					t.Errorf("expected error %v, got %v", pkg.GameOver, err)
+				}
 			}
-		}
-
-		for _, player := range players {
-			assertResponse(t, player.(*pkg.TestSocket), pkg.GameOver)
 		}
 	})
 
