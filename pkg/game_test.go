@@ -99,7 +99,7 @@ func TestGame(t *testing.T) {
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
 
 		game.Start(time.Millisecond)
-		time.Sleep(2 * time.Millisecond)
+		time.Sleep(3 * time.Millisecond)
 
 		assertResponse(t, p1, pkg.GameCanceled)
 		assertResponse(t, p2, pkg.GameCanceled)
@@ -250,17 +250,18 @@ func TestGame(t *testing.T) {
 		game.DiscardFood(p1, 0, 0)
 		game.DiscardFood(p2, 0, 0)
 
-		game.StartTurn()
+		game.StartRound()
 
-		assertResponse(t, p1, pkg.StartTurn)
-		assertResponse(t, p2, pkg.WaitTurn)
-
-		game.EndTurn()
-
-		assertResponse(t, p1, pkg.WaitTurn)
-		assertResponse(t, p2, pkg.StartTurn)
-
-		game.EndTurn()
+		for i := 0; i < pkg.MAX_TURNS; i++ {
+			if i%2 == 0 {
+				assertResponse(t, p1, pkg.StartTurn)
+				assertResponse(t, p2, pkg.WaitTurn)
+			} else {
+				assertResponse(t, p1, pkg.WaitTurn)
+				assertResponse(t, p2, pkg.StartTurn)
+			}
+			game.EndTurn()
+		}
 
 		assertResponse(t, p1, pkg.RoundEnded)
 		assertResponse(t, p2, pkg.RoundEnded)

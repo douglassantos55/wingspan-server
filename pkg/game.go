@@ -14,14 +14,20 @@ var (
 	ErrBirdCardNotFound = errors.New("Bird card not found")
 )
 
+const (
+	MAX_ROUNDS = 4
+	MAX_TURNS  = 8
+)
+
 type Game struct {
 	mutex        sync.Mutex
-	round        int
+	currRound    int
+	currTurn     int
 	firstPlayer  Socket
 	deck         Deck
 	timer        *time.Timer
 	turnDuration time.Duration
-	turns        *RingBuffer
+	turnOrder    *RingBuffer
 	players      *sync.Map
 }
 
@@ -51,7 +57,7 @@ func NewGame(sockets []Socket, turnDuration time.Duration) (*Game, error) {
 		deck:         deck,
 		turnDuration: turnDuration,
 		players:      players,
-		turns:        NewRingBuffer(len(sockets)),
+		turnOrder:    NewRingBuffer(len(sockets)),
 	}, nil
 }
 
@@ -110,16 +116,12 @@ func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) (bool, err
 		return false, err
 	}
 
-	g.turns.Push(socket)
+	g.turnOrder.Push(socket)
 
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
 
-	if g.firstPlayer == nil {
-		g.firstPlayer = socket
-	}
-
-	if g.turns.Full() {
+	if g.turnOrder.Full() {
 		g.timer.Stop()
 	} else {
 		socket.Send(Response{
@@ -127,11 +129,21 @@ func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) (bool, err
 		})
 	}
 
-	return g.turns.Full(), nil
+	return g.turnOrder.Full(), nil
+}
+
+func (g *Game) StartRound() {
+	g.mutex.Lock()
+
+	g.currTurn = 0
+	g.mutex.Unlock()
+
+	g.firstPlayer = g.turnOrder.Peek().(Socket)
+	g.StartTurn()
 }
 
 func (g *Game) StartTurn() error {
-	socket, ok := g.turns.Peek().(Socket)
+	socket, ok := g.turnOrder.Peek().(Socket)
 	if !ok {
 		return ErrNoPlayerReady
 	}
@@ -161,16 +173,31 @@ func (g *Game) StartTurn() error {
 
 func (g *Game) EndTurn() {
 	g.mutex.Lock()
+
 	g.timer.Stop()
+	g.currTurn++
+
+	g.turnOrder.Push(g.turnOrder.Dequeue())
+
+	if g.turnOrder.Peek() == g.firstPlayer {
+		if g.currTurn >= (MAX_TURNS - g.currRound) {
+			g.mutex.Unlock()
+			g.EndRound()
+			return
+		}
+	}
+
+	g.mutex.Unlock()
+	g.StartTurn()
+}
+
+func (g *Game) EndRound() {
+	g.mutex.Lock()
+	g.currRound++
 	g.mutex.Unlock()
 
-	g.turns.Push(g.turns.Dequeue())
-
-	if g.turns.Peek() == g.firstPlayer {
-		g.Broadcast(Response{Type: RoundEnded})
-	} else {
-		g.StartTurn()
-	}
+	g.turnOrder.Push(g.turnOrder.Dequeue())
+	g.Broadcast(Response{Type: RoundEnded})
 }
 
 func (g *Game) Broadcast(response Response) {
