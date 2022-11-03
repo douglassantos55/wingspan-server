@@ -1,11 +1,30 @@
 package pkg_test
 
 import (
+	"reflect"
 	"testing"
 	"time"
 
 	"git.internal.com/wingspan/pkg"
 )
+
+func discardFood(t testing.TB, player pkg.Socket, game *pkg.Game) {
+	t.Helper()
+
+	response := assertResponse(t, player.(*pkg.TestSocket), pkg.ChooseCards)
+
+	var payload pkg.StartingResources
+	pkg.ParsePayload(response.Payload, &payload)
+
+	keys := []pkg.FoodType{}
+	for k := range payload.Food {
+		keys = append(keys, k)
+	}
+
+	if _, err := game.DiscardFood(player, keys[0], 0); err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
+}
 
 func TestGame(t *testing.T) {
 	t.Run("create without players", func(t *testing.T) {
@@ -331,5 +350,26 @@ func TestGame(t *testing.T) {
 
 		go game.StartTurn()
 		go game.EndTurn()
+	})
+
+	t.Run("resets bird tray when round ends", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		original := game.BirdTray()
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
+
+		if err := game.EndRound(); err != pkg.ErrRoundEnded {
+			t.Fatalf("Expected error \"%v\", got \"%v\"", pkg.ErrRoundEnded, err)
+		}
+
+		if reflect.DeepEqual(original, game.BirdTray()) {
+			t.Errorf("expected %v, got %v", original, game.BirdTray())
+		}
 	})
 }

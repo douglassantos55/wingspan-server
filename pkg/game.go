@@ -17,8 +17,9 @@ var (
 )
 
 const (
-	MAX_ROUNDS = 4
-	MAX_TURNS  = 8
+	MAX_ROUNDS     = 4
+	MAX_TURNS      = 8
+	MAX_BIRDS_TRAY = 3
 )
 
 type Game struct {
@@ -31,6 +32,7 @@ type Game struct {
 	turnDuration time.Duration
 	turnOrder    *RingBuffer
 	players      *sync.Map
+	birdTray     *BirdTray
 }
 
 func NewGame(sockets []Socket, turnDuration time.Duration) (*Game, error) {
@@ -55,10 +57,14 @@ func NewGame(sockets []Socket, turnDuration time.Duration) (*Game, error) {
 		players.Store(socket, player)
 	}
 
+	birdTray := NewBirdTray(MAX_BIRDS_TRAY)
+	birdTray.Refill(deck)
+
 	return &Game{
 		deck:         deck,
 		turnDuration: turnDuration,
 		players:      players,
+		birdTray:     birdTray,
 		turnOrder:    NewRingBuffer(len(sockets)),
 	}, nil
 }
@@ -207,6 +213,8 @@ func (g *Game) EndRound() error {
 	g.mutex.Unlock()
 
 	g.StartRound()
+	g.birdTray.Reset(g.deck)
+
 	return ErrRoundEnded
 }
 
@@ -216,4 +224,8 @@ func (g *Game) Broadcast(response Response) {
 		socket.Send(response)
 		return true
 	})
+}
+
+func (g *Game) BirdTray() []*Bird {
+	return g.birdTray.Birds()
 }
