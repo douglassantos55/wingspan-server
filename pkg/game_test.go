@@ -272,6 +272,10 @@ func TestGame(t *testing.T) {
 				t.Errorf("expected error %v, got %v", pkg.RoundEnded, err)
 			}
 		}
+
+		// verify that the first player changes for the next round
+		assertResponse(t, p1, pkg.WaitTurn)
+		assertResponse(t, p2, pkg.StartTurn)
 	})
 
 	t.Run("game ends after rounds", func(t *testing.T) {
