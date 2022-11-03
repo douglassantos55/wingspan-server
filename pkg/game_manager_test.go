@@ -190,6 +190,14 @@ func TestGameManager(t *testing.T) {
 
 		assertResponse(t, p1, pkg.GameOver)
 		assertResponse(t, p2, pkg.GameOver)
+
+		// checks if game is removed from manager
+		if _, err := manager.EndTurn(p1); err != pkg.ErrGameNotFound {
+			t.Errorf("expected error %v, got %v", pkg.ErrGameNotFound, err)
+		}
+		if _, err := manager.EndTurn(p2); err != pkg.ErrGameNotFound {
+			t.Errorf("expected error %v, got %v", pkg.ErrGameNotFound, err)
+		}
 	})
 
 	t.Run("round end", func(t *testing.T) {

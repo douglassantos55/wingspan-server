@@ -87,6 +87,11 @@ func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 	if err != nil {
 		if err == ErrGameOver {
 			game.Broadcast(Response{Type: GameOver})
+
+			game.players.Range(func(socket, _ any) bool {
+				g.games.Delete(socket.(Socket))
+				return true
+			})
 		}
 		if err == ErrRoundEnded {
 			game.Broadcast(Response{Type: RoundEnded})
