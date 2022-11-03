@@ -372,4 +372,27 @@ func TestGame(t *testing.T) {
 			t.Errorf("expected %v, got %v", original, game.BirdTray())
 		}
 	})
+
+	t.Run("refill bird tray when turn ends", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		original := game.BirdTray()
+		game.DrawFromTray(p1, []int{original[0].ID, original[1].ID})
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
+
+		game.EndTurn()
+
+		if reflect.DeepEqual(game.BirdTray(), original) {
+			t.Error("should change birds in tray")
+		}
+		if len(game.BirdTray()) != pkg.MAX_BIRDS_TRAY {
+			t.Errorf("expected %v, got %v", pkg.MAX_BIRDS_TRAY, len(game.BirdTray()))
+		}
+	})
 }

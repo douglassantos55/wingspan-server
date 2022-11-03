@@ -140,6 +140,26 @@ func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) (bool, err
 	return g.turnOrder.Full(), nil
 }
 
+func (g *Game) DrawFromTray(socket Socket, birdIds []int) error {
+	value, ok := g.players.Load(socket)
+	if !ok {
+		return ErrGameNotFound
+	}
+
+	player := value.(*Player)
+	for _, id := range birdIds {
+		bird, err := g.birdTray.Get(id)
+		if err != nil {
+			return err
+		}
+
+		// add bird to player's hand
+		player.GainBird(bird)
+	}
+
+	return nil
+}
+
 func (g *Game) StartRound() error {
 	g.mutex.Lock()
 
@@ -197,6 +217,11 @@ func (g *Game) EndTurn() error {
 	}
 
 	g.mutex.Unlock()
+
+	if err := g.birdTray.Refill(g.deck); err != nil {
+		return err
+	}
+
 	return g.StartTurn()
 }
 

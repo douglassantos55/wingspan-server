@@ -25,6 +25,12 @@ func (p *Player) Draw(deck Deck, qty int) error {
 	return nil
 }
 
+func (p *Player) GainBird(bird *Bird) {
+	if _, loaded := p.birds.LoadOrStore(bird.ID, bird); loaded {
+		panic("player already has this bird card")
+	}
+}
+
 func (p *Player) GainFood(foodType FoodType, qty int) {
 	if actual, ok := p.food.LoadOrStore(foodType, qty); ok {
 		p.food.Store(foodType, actual.(int)+qty)
