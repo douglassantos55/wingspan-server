@@ -54,6 +54,18 @@ func (t *BirdTray) Refill(source Deck) error {
 	return nil
 }
 
+func (t *BirdTray) Get(id int) (*Bird, error) {
+	value, loaded := t.birds.LoadAndDelete(id)
+	if !loaded {
+		return nil, ErrBirdCardNotFound
+	}
+
+	curr := atomic.LoadInt32(&t.len)
+	atomic.StoreInt32(&t.len, curr-1)
+
+	return value.(*Bird), nil
+}
+
 func (t *BirdTray) Birds() []*Bird {
 	birds := make([]*Bird, 0, atomic.LoadInt32(&t.len))
 	t.birds.Range(func(key, value any) bool {

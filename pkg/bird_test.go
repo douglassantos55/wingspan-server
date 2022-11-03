@@ -16,8 +16,17 @@ func TestBirdTray(t *testing.T) {
 			t.Errorf("expected no error, got \"%v\"", err)
 		}
 
+		curr := tray.Birds()
+		tray.Get(curr[0].ID)
+		tray.Get(curr[1].ID)
+
+		tray.Refill(deck)
+
 		if tray.Len() != 3 {
 			t.Errorf("expected len %v, got %v", 3, tray.Len())
+		}
+		if reflect.DeepEqual(curr, tray.Birds()) {
+			t.Error("expected different birds on tray, got the same")
 		}
 	})
 
