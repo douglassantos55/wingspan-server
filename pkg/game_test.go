@@ -226,7 +226,7 @@ func TestGame(t *testing.T) {
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, 2*time.Millisecond)
 		game.Start(time.Second)
 
-		if _, err := game.DiscardFood(p1, 3, 0); err != nil {
+		if _, err := game.DiscardFood(p1, 0, 0); err != nil {
 			t.Fatalf("expected no error, got \"%v\"", err)
 		}
 		if _, err := game.DiscardFood(p2, 1, 0); err != nil {
@@ -247,10 +247,16 @@ func TestGame(t *testing.T) {
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
 		game.Start(time.Second)
 
-		game.DiscardFood(p1, 0, 0)
-		game.DiscardFood(p2, 0, 0)
+		if _, err := game.DiscardFood(p1, 0, 0); err != nil {
+			t.Fatalf("expected no error got %v", err)
+		}
+		if _, err := game.DiscardFood(p2, 1, 0); err != nil {
+			t.Fatalf("expected no error got %v", err)
+		}
 
-		game.StartRound()
+		if err := game.StartRound(); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
 
 		for i := 0; i < 2*pkg.MAX_TURNS; i++ {
 			if i%2 == 0 {
@@ -279,15 +285,27 @@ func TestGame(t *testing.T) {
 		game.Start(time.Second)
 
 		for _, player := range players {
-			game.DiscardFood(player, 0, 0)
+			response := assertResponse(t, player.(*pkg.TestSocket), pkg.ChooseCards)
+
+			var payload pkg.StartingResources
+			pkg.ParsePayload(response.Payload, &payload)
+
+			keys := []pkg.FoodType{}
+			for k := range payload.Food {
+				keys = append(keys, k)
+			}
+
+			if _, err := game.DiscardFood(player, keys[0], 0); err != nil {
+				t.Fatalf("expected no error, got %v", err)
+			}
 		}
 
 		game.StartRound()
 
 		for i := 0; i < pkg.MAX_ROUNDS; i++ {
-			for j := 0; j < pkg.MAX_TURNS-i; j++ {
+			for j := 0; j < (pkg.MAX_TURNS-i)*3; j++ {
 				err := game.EndTurn()
-				if i == pkg.MAX_ROUNDS-1 && j == pkg.MAX_TURNS-i-1 && err != pkg.ErrGameOver {
+				if i == pkg.MAX_ROUNDS-1 && j == (pkg.MAX_TURNS-i)*3-1 && err != pkg.ErrGameOver {
 					t.Errorf("expected error %v, got %v", pkg.GameOver, err)
 				}
 			}

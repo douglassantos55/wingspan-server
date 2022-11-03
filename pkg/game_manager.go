@@ -46,7 +46,9 @@ func (g *GameManager) ChooseBirds(socket Socket, birds []int) (*Message, error) 
 	}
 
 	game := value.(*Game)
-	game.ChooseBirds(socket, birds)
+	if err := game.ChooseBirds(socket, birds); err != nil {
+		return nil, err
+	}
 
 	return nil, nil
 }
@@ -65,7 +67,9 @@ func (g *GameManager) DiscardFood(socket Socket, foodType FoodType, qty int) (*M
 	}
 
 	if ready {
-		game.StartTurn()
+		if err := game.StartRound(); err != nil {
+			return nil, err
+		}
 	}
 
 	return nil, nil
@@ -78,7 +82,17 @@ func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 	}
 
 	game := value.(*Game)
-	game.EndTurn()
+	err := game.EndTurn()
 
-	return nil, nil
+	if err != nil {
+		if err == ErrGameOver {
+			game.Broadcast(Response{Type: GameOver})
+		}
+		if err == ErrRoundEnded {
+			game.Broadcast(Response{Type: RoundEnded})
+		}
+		return nil, nil
+	}
+
+	return nil, err
 }

@@ -37,7 +37,7 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		manager.Create([]pkg.Socket{p1})
 
-		if _, err := manager.ChooseBirds(p1, []int{4}); err != nil {
+		if _, err := manager.ChooseBirds(p1, []int{169}); err != nil {
 			t.Errorf("Expecte no error, got %v", err)
 		}
 
@@ -157,5 +157,38 @@ func TestGameManager(t *testing.T) {
 
 		go manager.DiscardFood(p1, pkg.Invertebrate, 0)
 		go manager.DiscardFood(p2, pkg.Invertebrate, 0)
+	})
+
+	t.Run("game over", func(t *testing.T) {
+		manager := pkg.NewGameManager()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		manager.Create([]pkg.Socket{p1, p2})
+
+		if _, err := manager.DiscardFood(p1, 3, 0); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if _, err := manager.DiscardFood(p2, 0, 0); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+
+		for i := 0; i < pkg.MAX_ROUNDS; i++ {
+			for j := 0; j < (pkg.MAX_TURNS-i)*2; j++ {
+				if i%2 == 0 {
+					if _, err := manager.EndTurn(p1); err != nil {
+						t.Fatal("could not end turn")
+					}
+				} else {
+					if _, err := manager.EndTurn(p2); err != nil {
+						t.Fatal("could not end turn")
+					}
+				}
+			}
+		}
+
+		assertResponse(t, p1, pkg.GameOver)
+		assertResponse(t, p2, pkg.GameOver)
 	})
 }
