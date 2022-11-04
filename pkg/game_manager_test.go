@@ -236,5 +236,4 @@ func TestGameManager(t *testing.T) {
 		assertResponse(t, p1, pkg.RoundEnded)
 		assertResponse(t, p2, pkg.RoundEnded)
 	})
-
 }
