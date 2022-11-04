@@ -75,6 +75,21 @@ func (g *GameManager) DiscardFood(socket Socket, foodType FoodType, qty int) (*M
 	return nil, nil
 }
 
+// TODO: remove qty and use the player's board to determine how many cards he gets
+func (g *GameManager) DrawFromDeck(socket Socket, qty int) (*Message, error) {
+	value, ok := g.games.Load(socket)
+	if !ok {
+		return nil, ErrGameNotFound
+	}
+
+	game := value.(*Game)
+	if err := game.DrawFromDeck(socket, qty); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
 func (g *GameManager) DrawFromTray(socket Socket, ids []int) (*Message, error) {
 	value, ok := g.games.Load(socket)
 	if !ok {

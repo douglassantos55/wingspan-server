@@ -236,4 +236,20 @@ func TestGameManager(t *testing.T) {
 		assertResponse(t, p1, pkg.RoundEnded)
 		assertResponse(t, p2, pkg.RoundEnded)
 	})
+
+	t.Run("draw from deck", func(t *testing.T) {
+		manager := pkg.NewGameManager()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		manager.Create([]pkg.Socket{p1, p2})
+
+		if _, err := manager.DrawFromDeck(p1, 2); err != nil {
+			t.Fatalf("could not draw from deck: %v", err)
+		}
+
+		assertResponse(t, p1, pkg.BirdsDrawn)
+		assertResponse(t, p2, pkg.BirdsDrawn)
+	})
 }
