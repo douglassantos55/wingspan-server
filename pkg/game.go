@@ -143,6 +143,41 @@ func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) (bool, err
 	return g.turnOrder.Full(), nil
 }
 
+func (g *Game) DrawFromDeck(socket Socket, qty int) error {
+	value, ok := g.players.Load(socket)
+	if !ok {
+		return ErrGameNotFound
+	}
+
+	player := value.(*Player)
+	drawnBirds, err := g.deck.Draw(qty)
+	if err != nil {
+		return err
+	}
+
+	for _, bird := range drawnBirds {
+		player.GainBird(bird)
+	}
+
+	g.players.Range(func(key, _ any) bool {
+		s := key.(Socket)
+		if s == socket {
+			s.Send(Response{
+				Type:    BirdsDrawn,
+				Payload: drawnBirds,
+			})
+		} else {
+			s.Send(Response{
+				Type:    BirdsDrawn,
+				Payload: len(drawnBirds),
+			})
+		}
+		return true
+	})
+
+	return nil
+}
+
 func (g *Game) DrawFromTray(socket Socket, birdIds []int) error {
 	value, ok := g.players.Load(socket)
 	if !ok {

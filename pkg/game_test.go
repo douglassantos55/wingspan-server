@@ -471,4 +471,35 @@ func TestGame(t *testing.T) {
 			t.Errorf("expected len %v, got %v", 2, len(payload))
 		}
 	})
+
+	t.Run("draw from deck", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+
+		if err := game.DrawFromDeck(p1, 2); err != nil {
+			t.Fatalf("could not draw from deck: %v", err)
+		}
+
+		response := assertResponse(t, p1, pkg.BirdsDrawn)
+
+		var payload []*pkg.Bird
+		if err := pkg.ParsePayload(response.Payload, &payload); err != nil {
+			t.Fatalf("could not parse payload: %v", err)
+		}
+
+		if len(payload) != 2 {
+			t.Errorf("expected len %v, got %v", 2, len(payload))
+		}
+
+		response = assertResponse(t, p2, pkg.BirdsDrawn)
+		if response.Payload.(float64) != 2 {
+			t.Errorf("expected len %v, got %v", 2, len(payload))
+		}
+
+		if err := game.DrawFromDeck(p1, pkg.MAX_DECK_SIZE); err == nil {
+			t.Error("should not be able to draw more than in deck")
+		}
+	})
 }
