@@ -8,25 +8,25 @@ import (
 	"git.internal.com/wingspan/pkg"
 )
 
-func discardFood(t testing.TB, player pkg.Socket, game *pkg.Game) {
-	t.Helper()
-
-	response := assertResponse(t, player.(*pkg.TestSocket), pkg.ChooseCards)
-
-	var payload pkg.StartingResources
-	pkg.ParsePayload(response.Payload, &payload)
-
-	keys := []pkg.FoodType{}
-	for k := range payload.Food {
-		keys = append(keys, k)
-	}
-
-	if _, err := game.DiscardFood(player, keys[0], 0); err != nil {
-		t.Fatalf("expected no error, got %v", err)
-	}
-}
-
 func TestGame(t *testing.T) {
+	discardFood := func(t testing.TB, player pkg.Socket, game *pkg.Game) {
+		t.Helper()
+
+		response := assertResponse(t, player.(*pkg.TestSocket), pkg.ChooseCards)
+
+		var payload pkg.StartingResources
+		pkg.ParsePayload(response.Payload, &payload)
+
+		keys := []pkg.FoodType{}
+		for k := range payload.Food {
+			keys = append(keys, k)
+		}
+
+		if _, err := game.DiscardFood(player, keys[0], 0); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	}
+
 	t.Run("create without players", func(t *testing.T) {
 		_, err := pkg.NewGame([]pkg.Socket{}, time.Second)
 
@@ -245,12 +245,8 @@ func TestGame(t *testing.T) {
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, 2*time.Millisecond)
 		game.Start(time.Second)
 
-		if _, err := game.DiscardFood(p1, 0, 0); err != nil {
-			t.Fatalf("expected no error, got \"%v\"", err)
-		}
-		if _, err := game.DiscardFood(p2, 1, 0); err != nil {
-			t.Fatalf("expected no error, got \"%v\"", err)
-		}
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
 
 		game.StartTurn()
 		time.Sleep(3 * time.Millisecond)

@@ -31,6 +31,24 @@ func assertFoodQty(t testing.TB, food map[pkg.FoodType]int, expected int) {
 }
 
 func TestGameManager(t *testing.T) {
+	discardFood := func(t testing.TB, player pkg.Socket, manager *pkg.GameManager) {
+		t.Helper()
+
+		response := assertResponse(t, player.(*pkg.TestSocket), pkg.ChooseCards)
+
+		var payload pkg.StartingResources
+		pkg.ParsePayload(response.Payload, &payload)
+
+		keys := []pkg.FoodType{}
+		for k := range payload.Food {
+			keys = append(keys, k)
+		}
+
+		if _, err := manager.DiscardFood(player, keys[0], 0); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	}
+
 	t.Run("creates game", func(t *testing.T) {
 		manager := pkg.NewGameManager()
 
@@ -113,8 +131,8 @@ func TestGameManager(t *testing.T) {
 
 		manager.Create([]pkg.Socket{p1, p2})
 
-		manager.DiscardFood(p1, 0, 0)
-		manager.DiscardFood(p2, 1, 0)
+		discardFood(t, p1, manager)
+		discardFood(t, p2, manager)
 
 		assertResponse(t, p1, pkg.StartTurn)
 		assertResponse(t, p2, pkg.WaitTurn)
@@ -128,12 +146,8 @@ func TestGameManager(t *testing.T) {
 
 		manager.Create([]pkg.Socket{p1, p2})
 
-		if _, err := manager.DiscardFood(p1, 0, 0); err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
-		if _, err := manager.DiscardFood(p2, 0, 0); err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
+		discardFood(t, p1, manager)
+		discardFood(t, p2, manager)
 
 		if _, err := manager.EndTurn(p1); err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -167,12 +181,8 @@ func TestGameManager(t *testing.T) {
 
 		manager.Create([]pkg.Socket{p1, p2})
 
-		if _, err := manager.DiscardFood(p1, 3, 0); err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
-		if _, err := manager.DiscardFood(p2, 0, 0); err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
+		discardFood(t, p1, manager)
+		discardFood(t, p2, manager)
 
 		for i := 0; i < pkg.MAX_ROUNDS; i++ {
 			for j := 0; j < (pkg.MAX_TURNS-i)*2; j++ {
@@ -208,12 +218,8 @@ func TestGameManager(t *testing.T) {
 
 		manager.Create([]pkg.Socket{p1, p2})
 
-		if _, err := manager.DiscardFood(p1, 3, 0); err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
-		if _, err := manager.DiscardFood(p2, 1, 0); err != nil {
-			t.Fatalf("expected no error, got %v", err)
-		}
+        discardFood(t, p1, manager)
+        discardFood(t, p2, manager)
 
 		for j := 0; j < pkg.MAX_TURNS*2; j++ {
 			if j%2 == 0 {
