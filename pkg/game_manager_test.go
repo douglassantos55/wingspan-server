@@ -218,8 +218,8 @@ func TestGameManager(t *testing.T) {
 
 		manager.Create([]pkg.Socket{p1, p2})
 
-        discardFood(t, p1, manager)
-        discardFood(t, p2, manager)
+		discardFood(t, p1, manager)
+		discardFood(t, p2, manager)
 
 		for j := 0; j < pkg.MAX_TURNS*2; j++ {
 			if j%2 == 0 {

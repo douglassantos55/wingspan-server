@@ -17,9 +17,10 @@ var (
 )
 
 const (
-	MAX_ROUNDS     = 4
-	MAX_TURNS      = 8
-	MAX_BIRDS_TRAY = 3
+	MAX_ROUNDS      = 4
+	MAX_TURNS       = 8
+	MAX_BIRDS_TRAY  = 3
+	MAX_FOOD_FEEDER = 5
 )
 
 type Game struct {
@@ -67,7 +68,7 @@ func NewGame(sockets []Socket, turnDuration time.Duration) (*Game, error) {
 		players:      players,
 		birdTray:     birdTray,
 		turnOrder:    NewRingBuffer(len(sockets)),
-		birdFeeder:   NewBirdfeeder(5),
+		birdFeeder:   NewBirdfeeder(MAX_FOOD_FEEDER),
 	}, nil
 }
 
@@ -280,4 +281,8 @@ func (g *Game) Broadcast(response Response) {
 
 func (g *Game) BirdTray() []*Bird {
 	return g.birdTray.Birds()
+}
+
+func (g *Game) Birdfeeder() map[FoodType]int {
+	return g.birdFeeder.List()
 }

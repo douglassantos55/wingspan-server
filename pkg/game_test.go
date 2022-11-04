@@ -416,4 +416,29 @@ func TestGame(t *testing.T) {
 			t.Errorf("expected qty %v, got %v", 2, qty.(float64))
 		}
 	})
+
+	t.Run("refills birdfeeder", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+
+		available := game.Birdfeeder()
+		for foodType, qty := range available {
+			for i := 0; i < qty; i++ {
+				if err := game.GainFood(p1, foodType); err != nil {
+					t.Fatalf("expected no error, got %v", err)
+				}
+			}
+		}
+
+		sum := 0
+		for _, qty := range game.Birdfeeder() {
+			sum += qty
+		}
+
+		if sum != pkg.MAX_FOOD_FEEDER-1 {
+			t.Errorf("expected %v food, got %v", pkg.MAX_FOOD_FEEDER-1, sum)
+		}
+	})
 }
