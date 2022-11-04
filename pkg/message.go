@@ -23,6 +23,7 @@ const (
 	RoundEnded       = "round_ended"
 	GameOver         = "game_over"
 	FoodGained       = "food_gained"
+	BirdsDrawn       = "birds_drawn"
 )
 
 type Response struct {
@@ -45,11 +46,5 @@ func ParsePayload(payload any, dest any) error {
 	if err != nil {
 		return err
 	}
-
-	switch dest.(type) {
-	case *StartingResources:
-		return json.Unmarshal(data, dest)
-	default:
-		return ErrPayloadTypeNotFound
-	}
+	return json.Unmarshal(data, dest)
 }

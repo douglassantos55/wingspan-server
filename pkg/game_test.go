@@ -376,11 +376,13 @@ func TestGame(t *testing.T) {
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
 		game.Start(time.Second)
 
-		original := game.BirdTray()
-		game.DrawFromTray(p1, []int{original[0].ID, original[1].ID})
-
 		discardFood(t, p1, game)
 		discardFood(t, p2, game)
+
+		original := game.BirdTray()
+		if err := game.DrawFromTray(p1, []int{original[0].ID, original[1].ID}); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
 
 		game.EndTurn()
 
@@ -439,6 +441,34 @@ func TestGame(t *testing.T) {
 
 		if sum != pkg.MAX_FOOD_FEEDER-1 {
 			t.Errorf("expected %v food, got %v", pkg.MAX_FOOD_FEEDER-1, sum)
+		}
+	})
+
+	t.Run("draw from tray", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+
+		birds := game.BirdTray()
+		if err := game.DrawFromTray(p1, []int{birds[0].ID, birds[1].ID}); err != nil {
+			t.Errorf("expected no error, got \"%+v\"", err)
+		}
+
+		response := assertResponse(t, p1, pkg.BirdsDrawn)
+
+		var payload []*pkg.Bird
+		if err := pkg.ParsePayload(response.Payload, &payload); err != nil {
+			t.Fatalf("could not parse payload: %v", err)
+		}
+
+		if len(payload) != 2 {
+			t.Errorf("expected len %v, got %v", 2, len(payload))
+		}
+
+		response = assertResponse(t, p2, pkg.BirdsDrawn)
+		if response.Payload.(float64) != 2 {
+			t.Errorf("expected len %v, got %v", 2, len(payload))
 		}
 	})
 }

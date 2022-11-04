@@ -150,6 +150,8 @@ func (g *Game) DrawFromTray(socket Socket, birdIds []int) error {
 	}
 
 	player := value.(*Player)
+	drawnBirds := make([]*Bird, 0, len(birdIds))
+
 	for _, id := range birdIds {
 		bird, err := g.birdTray.Get(id)
 		if err != nil {
@@ -158,7 +160,24 @@ func (g *Game) DrawFromTray(socket Socket, birdIds []int) error {
 
 		// add bird to player's hand
 		player.GainBird(bird)
+		drawnBirds = append(drawnBirds, bird)
 	}
+
+	g.players.Range(func(key, _ any) bool {
+		s := key.(Socket)
+		if s == socket {
+			s.Send(Response{
+				Type:    BirdsDrawn,
+				Payload: drawnBirds,
+			})
+		} else {
+			s.Send(Response{
+				Type:    BirdsDrawn,
+				Payload: len(birdIds),
+			})
+		}
+		return true
+	})
 
 	return nil
 }
