@@ -262,12 +262,8 @@ func TestGame(t *testing.T) {
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
 		game.Start(time.Second)
 
-		if _, err := game.DiscardFood(p1, 2, 0); err != nil {
-			t.Fatalf("expected no error got %v", err)
-		}
-		if _, err := game.DiscardFood(p2, 1, 0); err != nil {
-			t.Fatalf("expected no error got %v", err)
-		}
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
 
 		if err := game.StartRound(); err != nil {
 			t.Fatalf("expected no error, got %v", err)
@@ -400,22 +396,36 @@ func TestGame(t *testing.T) {
 
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
 
-		if err := game.GainFood(p1, pkg.Fish); err != nil {
+		food := game.Birdfeeder()
+		keys := make([]pkg.FoodType, 0, len(food))
+		for ft, qty := range food {
+			if qty > 1 {
+				keys = append(keys, ft)
+			}
+		}
+
+		if len(keys) == 0 {
+			t.Fatal("no food with more than one")
+		}
+
+		if err := game.GainFood(p1, keys[0]); err != nil {
 			t.Errorf("expected no error, got \"%v\"", err)
 		}
 
 		response := assertResponse(t, p1, pkg.FoodGained)
-		payload := response.Payload.(map[string]any)
 
-		if qty := payload["3"]; qty.(float64) != 2 {
-			t.Errorf("expected qty %v, got %v", 2, qty.(float64))
+		var payload map[pkg.FoodType]int
+		pkg.ParsePayload(response.Payload, &payload)
+
+		if qty := payload[keys[0]]; qty < 1 {
+			t.Errorf("expected qty >= %v, got %v", 1, qty)
 		}
 
 		response = assertResponse(t, p2, pkg.FoodGained)
-		payload = response.Payload.(map[string]any)
+		pkg.ParsePayload(response.Payload, &payload)
 
-		if qty := payload["3"]; qty.(float64) != 2 {
-			t.Errorf("expected qty %v, got %v", 2, qty.(float64))
+		if qty := payload[keys[0]]; qty < 1 {
+			t.Errorf("expected qty >= %v, got %v", 1, qty)
 		}
 	})
 
