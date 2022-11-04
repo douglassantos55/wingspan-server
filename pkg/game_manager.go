@@ -89,6 +89,20 @@ func (g *GameManager) DrawFromTray(socket Socket, ids []int) (*Message, error) {
 	return nil, nil
 }
 
+func (g *GameManager) GainFood(socket Socket, foodType FoodType) (*Message, error) {
+	value, ok := g.games.Load(socket)
+	if !ok {
+		return nil, ErrGameNotFound
+	}
+
+	game := value.(*Game)
+	if err := game.GainFood(socket, foodType); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
 func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 	value, ok := g.games.Load(socket)
 	if !ok {
