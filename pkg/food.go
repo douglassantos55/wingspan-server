@@ -47,7 +47,7 @@ func (f *Birdfeeder) GetFood(foodType FoodType) error {
 	if value.(int)-1 <= 0 {
 		f.food.Delete(foodType)
 	} else {
-		f.food.Store(foodType, 1-value.(int))
+		f.food.Store(foodType, value.(int)-1)
 	}
 
 	return nil
@@ -58,11 +58,25 @@ func (f *Birdfeeder) Refill() {
 	curr := atomic.LoadInt32(&f.len)
 
 	for i := 0; i < int(size-curr); i++ {
-		f.food.Store(FoodType(rand.Intn(FOOD_TYPE_COUNT)), 1)
+		foodType := FoodType(rand.Intn(FOOD_TYPE_COUNT))
+		curr, loaded := f.food.LoadOrStore(foodType, 1)
+		if loaded {
+			f.food.Store(foodType, 1+curr.(int))
+		}
 	}
+
 	atomic.StoreInt32(&f.len, size)
 }
 
 func (f *Birdfeeder) Len() int {
 	return int(atomic.LoadInt32(&f.len))
+}
+
+func (f *Birdfeeder) List() map[FoodType]int {
+	items := make(map[FoodType]int)
+	f.food.Range(func(key, value any) bool {
+		items[key.(FoodType)] = value.(int)
+		return true
+	})
+	return items
 }

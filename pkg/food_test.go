@@ -9,7 +9,7 @@ import (
 func TestBirdfeeder(t *testing.T) {
 	t.Run("get food", func(t *testing.T) {
 		feeder := pkg.NewBirdfeeder(5)
-		err := feeder.GetFood(pkg.Seed)
+		err := feeder.GetFood(pkg.Rodent)
 
 		if err != nil {
 			t.Fatalf("expected no error, got \"%v\"", err)
@@ -17,7 +17,7 @@ func TestBirdfeeder(t *testing.T) {
 		if feeder.Len() != 4 {
 			t.Errorf("expected len %v, got %v", 4, feeder.Len())
 		}
-		if err := feeder.GetFood(pkg.Seed); err == nil {
+		if err := feeder.GetFood(pkg.Rodent); err == nil {
 			t.Error("should not have seed again")
 		}
 	})
