@@ -33,6 +33,7 @@ type Game struct {
 	turnOrder    *RingBuffer
 	players      *sync.Map
 	birdTray     *BirdTray
+	birdFeeder   *Birdfeeder
 }
 
 func NewGame(sockets []Socket, turnDuration time.Duration) (*Game, error) {
@@ -66,6 +67,7 @@ func NewGame(sockets []Socket, turnDuration time.Duration) (*Game, error) {
 		players:      players,
 		birdTray:     birdTray,
 		turnOrder:    NewRingBuffer(len(sockets)),
+		birdFeeder:   NewBirdfeeder(5),
 	}, nil
 }
 
@@ -156,6 +158,31 @@ func (g *Game) DrawFromTray(socket Socket, birdIds []int) error {
 		// add bird to player's hand
 		player.GainBird(bird)
 	}
+
+	return nil
+}
+
+func (g *Game) GainFood(socket Socket, foodType FoodType) error {
+	value, ok := g.players.Load(socket)
+	if !ok {
+		return ErrGameNotFound
+	}
+
+	if g.birdFeeder.Len() <= 1 {
+		g.birdFeeder.Refill()
+	}
+
+	if err := g.birdFeeder.GetFood(foodType); err != nil {
+		return err
+	}
+
+	player := value.(*Player)
+	player.GainFood(foodType, 1)
+
+	g.Broadcast(Response{
+		Type:    FoodGained,
+		Payload: player.GetFood(),
+	})
 
 	return nil
 }

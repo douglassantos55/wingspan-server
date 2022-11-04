@@ -391,4 +391,29 @@ func TestGame(t *testing.T) {
 			t.Errorf("expected %v, got %v", pkg.MAX_BIRDS_TRAY, len(game.BirdTray()))
 		}
 	})
+
+	t.Run("gain food", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+
+		if err := game.GainFood(p1, pkg.Fish); err != nil {
+			t.Errorf("expected no error, got \"%v\"", err)
+		}
+
+		response := assertResponse(t, p1, pkg.FoodGained)
+		payload := response.Payload.(map[string]any)
+
+		if qty := payload["3"]; qty.(float64) != 2 {
+			t.Errorf("expected qty %v, got %v", 2, qty.(float64))
+		}
+
+		response = assertResponse(t, p2, pkg.FoodGained)
+		payload = response.Payload.(map[string]any)
+
+		if qty := payload["3"]; qty.(float64) != 2 {
+			t.Errorf("expected qty %v, got %v", 2, qty.(float64))
+		}
+	})
 }

@@ -22,6 +22,7 @@ const (
 	WaitTurn         = "wait_turn"
 	RoundEnded       = "round_ended"
 	GameOver         = "game_over"
+	FoodGained       = "food_gained"
 )
 
 type Response struct {
