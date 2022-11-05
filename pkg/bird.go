@@ -1,13 +1,28 @@
 package pkg
 
 import (
+	"errors"
 	"sync"
 	"sync/atomic"
 )
 
+var (
+	ErrEggLimitReached = errors.New("bird's egg limit reached")
+)
+
 type Bird struct {
-	ID   int
-	Name string
+	ID       int
+	Name     string
+	EggLimit int
+	EggCount int
+}
+
+func (b *Bird) LayEgg() error {
+	if b.EggCount >= b.EggLimit {
+		return ErrEggLimitReached
+	}
+	b.EggCount++
+	return nil
 }
 
 type BirdTray struct {

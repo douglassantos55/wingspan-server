@@ -7,6 +7,31 @@ import (
 	"git.internal.com/wingspan/pkg"
 )
 
+func TestBird(t *testing.T) {
+	t.Run("lay egg", func(t *testing.T) {
+		bird := &pkg.Bird{EggLimit: 10}
+
+		if err := bird.LayEgg(); err != nil {
+			t.Fatalf("error laying egg: %v", err)
+		}
+		if bird.EggCount != 1 {
+			t.Errorf("expected %v egg, got %v", 1, bird.EggCount)
+		}
+	})
+
+	t.Run("lay more eggs than limit", func(t *testing.T) {
+		bird := &pkg.Bird{EggLimit: 0}
+
+		err := bird.LayEgg()
+		if err == nil {
+			t.Error("should not lay more eggs than limit")
+		}
+		if err != pkg.ErrEggLimitReached {
+			t.Errorf("expected error \"%v\", got \"%v\"", pkg.ErrEggLimitReached, err)
+		}
+	})
+}
+
 func TestBirdTray(t *testing.T) {
 	t.Run("refill", func(t *testing.T) {
 		deck := pkg.NewDeck(10)
