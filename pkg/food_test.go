@@ -33,4 +33,15 @@ func TestBirdfeeder(t *testing.T) {
 			t.Errorf("expected len %v, got %v", 1, feeder.Len())
 		}
 	})
+
+	t.Run("concurrency", func(t *testing.T) {
+		feeder := pkg.NewBirdfeeder(1)
+		food := feeder.List()
+		for foodType := range food {
+			go feeder.GetFood(foodType)
+		}
+
+		go feeder.Len()
+		go feeder.Refill()
+	})
 }
