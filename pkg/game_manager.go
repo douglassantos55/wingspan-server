@@ -39,7 +39,7 @@ func (g *GameManager) Create(players []Socket) (*Message, error) {
 	return nil, nil
 }
 
-func (g *GameManager) ChooseBirds(socket Socket, birds []int) (*Message, error) {
+func (g *GameManager) ChooseBirds(socket Socket, birds []BirdID) (*Message, error) {
 	value, ok := g.games.Load(socket)
 	if !ok {
 		return nil, ErrGameNotFound
@@ -90,7 +90,7 @@ func (g *GameManager) DrawFromDeck(socket Socket, qty int) (*Message, error) {
 	return nil, nil
 }
 
-func (g *GameManager) DrawFromTray(socket Socket, ids []int) (*Message, error) {
+func (g *GameManager) DrawFromTray(socket Socket, ids []BirdID) (*Message, error) {
 	value, ok := g.games.Load(socket)
 	if !ok {
 		return nil, ErrGameNotFound
@@ -111,6 +111,8 @@ func (g *GameManager) GainFood(socket Socket, foodType FoodType) (*Message, erro
 	}
 
 	game := value.(*Game)
+
+	// TODO: consider qty according to player's board
 	if err := game.GainFood(socket, foodType); err != nil {
 		return nil, err
 	}
@@ -142,6 +144,19 @@ func (g *GameManager) LayEggs(socket Socket) (*Message, error) {
 	return nil, nil
 }
 
+func (g *GameManager) LayEggOnBird(socket Socket, birdId BirdID) (*Message, error) {
+	game, err := g.GetSocketGame(socket)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := game.LayEggOnBird(socket, birdId); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
 func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 	value, ok := g.games.Load(socket)
 	if !ok {
@@ -167,4 +182,12 @@ func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 	}
 
 	return nil, err
+}
+
+func (g *GameManager) GetSocketGame(socket Socket) (*Game, error) {
+	value, ok := g.games.Load(socket)
+	if !ok {
+		return nil, ErrGameNotFound
+	}
+	return value.(*Game), nil
 }

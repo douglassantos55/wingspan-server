@@ -2,6 +2,9 @@ package pkg
 
 import "sync"
 
+// TODO: maybe add a state to player, like:
+// choosing_cards, choosing_food, drawing_cards, playing_cards
+// and block requests depending on the current state
 type Player struct {
 	food  *sync.Map
 	birds *sync.Map
@@ -39,6 +42,14 @@ func (p *Player) GainFood(foodType FoodType, qty int) {
 	}
 }
 
+func (p *Player) LayEgg(birdId BirdID) (*Bird, error) {
+	bird := p.board.GetBird(birdId)
+	if bird == nil {
+		return nil, ErrBirdCardNotFound
+	}
+	return bird, bird.LayEgg()
+}
+
 func (p *Player) GetEggsToLay() int {
 	column := p.board.Exposed(Grassland)
 	return column/2 + 1
@@ -64,8 +75,8 @@ func (p *Player) DiscardFood(foodType FoodType, qty int) error {
 	return nil
 }
 
-func (p *Player) KeepBirds(birdIds []int) error {
-	cardsToRemove := make([]int, 0)
+func (p *Player) KeepBirds(birdIds []BirdID) error {
+	cardsToRemove := make([]BirdID, 0)
 
 	for _, bird := range p.GetBirdCards() {
 		for _, id := range birdIds {

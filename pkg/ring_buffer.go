@@ -72,6 +72,10 @@ func (r *RingBuffer) Full() bool {
 	return r.len > 0 && r.head == r.tail
 }
 
+func (r *RingBuffer) Iterate() Iterator[any] {
+	return NewSliceIterator[any](r.values)
+}
+
 func (r *RingBuffer) expand() {
 	prev := r.values
 	r.values = make([]any, r.len*2)

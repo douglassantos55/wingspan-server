@@ -51,17 +51,17 @@ func TestPlayer(t *testing.T) {
 		player.Draw(pkg.NewDeck(10), 5)
 
 		// card not found
-		if err := player.KeepBirds([]int{0000}); err == nil {
+		if err := player.KeepBirds([]pkg.BirdID{0000}); err == nil {
 			t.Error("Expected error, got nothing")
 		}
 
 		// works properly
-		if err := player.KeepBirds([]int{9}); err != nil {
+		if err := player.KeepBirds([]pkg.BirdID{9}); err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
 
 		// cards are removed
-		if err := player.KeepBirds([]int{8}); err == nil {
+		if err := player.KeepBirds([]pkg.BirdID{8}); err == nil {
 			t.Error("Expected error, got nothing")
 		}
 	})
@@ -70,7 +70,7 @@ func TestPlayer(t *testing.T) {
 		player := pkg.NewPlayer(pkg.NewTestSocket())
 		player.Draw(pkg.NewDeck(10), 5)
 
-		if err := player.KeepBirds([]int{9, 8, 7, 6, 5}); err != nil {
+		if err := player.KeepBirds([]pkg.BirdID{9, 8, 7, 6, 5}); err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
 	})
@@ -138,11 +138,14 @@ func TestPlayer(t *testing.T) {
 		go player.Draw(deck, 1)
 		go player.Draw(deck, 1)
 
-		go player.KeepBirds([]int{0})
-		go player.KeepBirds([]int{1})
+		go player.KeepBirds([]pkg.BirdID{0})
+		go player.KeepBirds([]pkg.BirdID{1})
 
 		go player.GetFood()
 		go player.GetBirdCards()
+	})
+
+	t.Run("play bird", func(t *testing.T) {
 	})
 
 	t.Run("count eggs to lay", func(t *testing.T) {

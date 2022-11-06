@@ -74,7 +74,7 @@ func TestGame(t *testing.T) {
 		p2 := pkg.NewTestSocket()
 
 		game, _ := pkg.NewGame([]pkg.Socket{p1}, time.Second)
-		err := game.ChooseBirds(p2, []int{0})
+		err := game.ChooseBirds(p2, []pkg.BirdID{0})
 
 		if err == nil {
 			t.Fatal("Expected error, got nothing")
@@ -88,7 +88,7 @@ func TestGame(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		game, _ := pkg.NewGame([]pkg.Socket{p1}, time.Second)
 
-		err := game.ChooseBirds(p1, []int{9999})
+		err := game.ChooseBirds(p1, []pkg.BirdID{9999})
 		if err == nil {
 			t.Fatal("Expected error, got nothing")
 		}
@@ -102,11 +102,11 @@ func TestGame(t *testing.T) {
 		game, _ := pkg.NewGame([]pkg.Socket{p1}, time.Second)
 
 		// keep just one
-		if err := game.ChooseBirds(p1, []int{169}); err != nil {
+		if err := game.ChooseBirds(p1, []pkg.BirdID{169}); err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
 		// make sure the other cards are removed
-		if err := game.ChooseBirds(p1, []int{168}); err == nil {
+		if err := game.ChooseBirds(p1, []pkg.BirdID{168}); err == nil {
 			t.Error("expected error, got nothing")
 		}
 	})
@@ -334,8 +334,8 @@ func TestGame(t *testing.T) {
 
 		game.Start(time.Millisecond)
 
-		go game.ChooseBirds(p1, []int{0})
-		go game.ChooseBirds(p2, []int{0})
+		go game.ChooseBirds(p1, []pkg.BirdID{0})
+		go game.ChooseBirds(p2, []pkg.BirdID{0})
 
 		go game.DiscardFood(p1, 0, 0)
 		go game.DiscardFood(p2, 0, 0)
@@ -376,7 +376,7 @@ func TestGame(t *testing.T) {
 		discardFood(t, p2, game)
 
 		original := game.BirdTray()
-		if err := game.DrawFromTray(p1, []int{original[0].ID, original[1].ID}); err != nil {
+		if err := game.DrawFromTray(p1, []pkg.BirdID{original[0].ID, original[1].ID}); err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
 
@@ -461,7 +461,7 @@ func TestGame(t *testing.T) {
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
 
 		birds := game.BirdTray()
-		if err := game.DrawFromTray(p1, []int{birds[0].ID, birds[1].ID}); err != nil {
+		if err := game.DrawFromTray(p1, []pkg.BirdID{birds[0].ID, birds[1].ID}); err != nil {
 			t.Errorf("expected no error, got \"%+v\"", err)
 		}
 

@@ -47,4 +47,17 @@ func TestBoard(t *testing.T) {
 			t.Errorf("Expected index %v, got %v", 3, column)
 		}
 	})
+
+	t.Run("get bird", func(t *testing.T) {
+		board := pkg.NewBoard()
+
+		bird := &pkg.Bird{ID: pkg.BirdID(7)}
+		if err := board.PlayBird(bird); err != nil {
+			t.Errorf("should not have error, got %v", err)
+		}
+
+		if board.GetBird(bird.ID) == nil {
+			t.Error("should find bird")
+		}
+	})
 }

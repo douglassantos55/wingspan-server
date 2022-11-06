@@ -96,7 +96,7 @@ func (g *Game) Start(timeout time.Duration) {
 	})
 }
 
-func (g *Game) ChooseBirds(socket Socket, birdsToKeep []int) error {
+func (g *Game) ChooseBirds(socket Socket, birdsToKeep []BirdID) error {
 	value, ok := g.players.Load(socket)
 	if !ok {
 		return ErrGameNotFound
@@ -178,7 +178,7 @@ func (g *Game) DrawFromDeck(socket Socket, qty int) error {
 	return nil
 }
 
-func (g *Game) DrawFromTray(socket Socket, birdIds []int) error {
+func (g *Game) DrawFromTray(socket Socket, birdIds []BirdID) error {
 	value, ok := g.players.Load(socket)
 	if !ok {
 		return ErrGameNotFound
@@ -248,6 +248,25 @@ func (g *Game) GetEggsToLay(socket Socket) (int, error) {
 		return 0, err
 	}
 	return player.GetEggsToLay(), nil
+}
+
+func (g *Game) LayEggOnBird(socket Socket, birdId BirdID) error {
+	player, err := g.validateSocket(socket)
+	if err != nil {
+		return err
+	}
+
+	bird, err := player.LayEgg(birdId)
+	if err != nil {
+		return err
+	}
+
+	g.Broadcast(Response{
+		Type:    BirdUpdated,
+		Payload: bird,
+	})
+
+	return nil
 }
 
 func (g *Game) StartRound() error {

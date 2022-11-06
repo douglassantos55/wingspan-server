@@ -11,6 +11,7 @@ var (
 )
 
 type Habitat int
+type BirdID int
 
 const (
 	Forest Habitat = iota
@@ -19,7 +20,7 @@ const (
 )
 
 type Bird struct {
-	ID       int
+	ID       BirdID
 	Name     string
 	EggLimit int
 	EggCount int
@@ -78,7 +79,7 @@ func (t *BirdTray) Refill(source Deck) error {
 	return nil
 }
 
-func (t *BirdTray) Get(id int) (*Bird, error) {
+func (t *BirdTray) Get(id BirdID) (*Bird, error) {
 	value, loaded := t.birds.LoadAndDelete(id)
 	if !loaded {
 		return nil, ErrBirdCardNotFound

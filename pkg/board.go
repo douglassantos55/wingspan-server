@@ -26,6 +26,21 @@ func (r *Row) IsFull() bool {
 	return r.columns.Full()
 }
 
+func (r *Row) FindBird(id BirdID) *Bird {
+	iterator := r.columns.Iterate()
+	value := iterator.Next()
+
+	for value != nil {
+		bird, ok := value.(*Bird)
+		if ok && bird.ID == id {
+			return bird
+		}
+		value = iterator.Next()
+	}
+
+	return nil
+}
+
 func (r *Row) PushBird(bird *Bird) error {
 	if r.IsFull() {
 		return ErrRowIsFull
@@ -64,10 +79,24 @@ func (b *Board) PlayBird(bird *Bird) error {
 	return row.PushBird(bird)
 }
 
+// Returns the index of the last exposed column
+// for a particular habitat
 func (b *Board) Exposed(habitat Habitat) int {
 	row, ok := b.rows.Load(habitat)
 	if !ok {
 		return -1
 	}
 	return row.(*Row).Exposed()
+}
+
+func (b *Board) GetBird(id BirdID) *Bird {
+	var bird *Bird
+
+	b.rows.Range(func(_, value any) bool {
+		row := value.(*Row)
+		bird = row.FindBird(id)
+		return bird == nil
+	})
+
+	return bird
 }
