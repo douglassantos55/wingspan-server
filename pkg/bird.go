@@ -10,11 +10,20 @@ var (
 	ErrEggLimitReached = errors.New("bird's egg limit reached")
 )
 
+type Habitat int
+
+const (
+	Forest Habitat = iota
+	Grassland
+	Wetland
+)
+
 type Bird struct {
 	ID       int
 	Name     string
 	EggLimit int
 	EggCount int
+	Habitat  Habitat
 }
 
 func (b *Bird) LayEgg() error {
