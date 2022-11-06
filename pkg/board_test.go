@@ -38,8 +38,13 @@ func TestBoard(t *testing.T) {
 		board.PlayBird(&pkg.Bird{Habitat: pkg.Forest})
 
 		column := board.Exposed(pkg.Forest)
-		if column.Qty != 2 {
-			t.Errorf("Expected qty %v, got %v", 2, column.Qty)
+		if column != 2 {
+			t.Errorf("Expected index %v, got %v", 2, column)
+		}
+
+		board.PlayBird(&pkg.Bird{Habitat: pkg.Forest})
+		if board.Exposed(pkg.Forest) != 3 {
+			t.Errorf("Expected index %v, got %v", 3, column)
 		}
 	})
 }

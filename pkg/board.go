@@ -12,26 +12,13 @@ var (
 	ErrHabitatNotFound = errors.New("habitat not found")
 )
 
-type Column struct {
-	Qty int
-}
-
-func NewColumn(qty int) *Column {
-	return &Column{}
-}
-
 type Row struct {
 	columns *RingBuffer
 }
 
 func NewRow(size int) *Row {
-	columns := NewRingBuffer(size)
-	for i := 0; i < size; i++ {
-		columns.Push(NewColumn(i))
-	}
-
 	return &Row{
-		columns: columns,
+		columns: NewRingBuffer(size),
 	}
 }
 
@@ -47,8 +34,8 @@ func (r *Row) PushBird(bird *Bird) error {
 	return nil
 }
 
-func (r *Row) Exposed() *Column {
-	return nil
+func (r *Row) Exposed() int {
+	return r.columns.Len()
 }
 
 type Board struct {
@@ -77,10 +64,10 @@ func (b *Board) PlayBird(bird *Bird) error {
 	return row.PushBird(bird)
 }
 
-func (b *Board) Exposed(habitat Habitat) *Column {
+func (b *Board) Exposed(habitat Habitat) int {
 	row, ok := b.rows.Load(habitat)
 	if !ok {
-		return nil
+		return -1
 	}
 	return row.(*Row).Exposed()
 }
