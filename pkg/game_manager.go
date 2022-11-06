@@ -118,6 +118,30 @@ func (g *GameManager) GainFood(socket Socket, foodType FoodType) (*Message, erro
 	return nil, nil
 }
 
+// Sends a response to user with the amount of
+// eggs he can lay based on the leftmost exposed
+// slot of the habitat
+func (g *GameManager) LayEggs(socket Socket) (*Message, error) {
+	value, ok := g.games.Load(socket)
+	if !ok {
+		return nil, ErrGameNotFound
+	}
+
+	game := value.(*Game)
+	qty, err := game.GetEggsToLay(socket)
+
+	if err != nil {
+		return nil, err
+	}
+
+	socket.Send(Response{
+		Type:    SelectBirds,
+		Payload: qty,
+	})
+
+	return nil, nil
+}
+
 func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 	value, ok := g.games.Load(socket)
 	if !ok {

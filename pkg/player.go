@@ -5,10 +5,12 @@ import "sync"
 type Player struct {
 	food  *sync.Map
 	birds *sync.Map
+	board *Board
 }
 
 func NewPlayer(socket Socket) *Player {
 	return &Player{
+		board: NewBoard(),
 		food:  new(sync.Map),
 		birds: new(sync.Map),
 	}
@@ -35,6 +37,11 @@ func (p *Player) GainFood(foodType FoodType, qty int) {
 	if actual, ok := p.food.LoadOrStore(foodType, qty); ok {
 		p.food.Store(foodType, actual.(int)+qty)
 	}
+}
+
+func (p *Player) GetEggsToLay() int {
+	column := p.board.Exposed(Grassland)
+	return column/2 + 1
 }
 
 func (p *Player) DiscardFood(foodType FoodType, qty int) error {

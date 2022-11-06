@@ -252,4 +252,24 @@ func TestGameManager(t *testing.T) {
 		assertResponse(t, p1, pkg.BirdsDrawn)
 		assertResponse(t, p2, pkg.BirdsDrawn)
 	})
+
+	t.Run("lay eggs", func(t *testing.T) {
+		manager := pkg.NewGameManager()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		manager.Create([]pkg.Socket{p1, p2})
+		discardFood(t, p1, manager)
+		discardFood(t, p2, manager)
+
+		if _, err := manager.LayEggs(p1); err != nil {
+			t.Fatalf("failed laying eggs: %v", err)
+		}
+
+		response := assertResponse(t, p1, pkg.SelectBirds)
+		if response.Payload.(float64) != 1 {
+			t.Errorf("expected %v, got %v", 1, response.Payload.(float64))
+		}
+	})
 }

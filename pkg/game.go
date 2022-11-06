@@ -242,6 +242,14 @@ func (g *Game) GainFood(socket Socket, foodType FoodType) error {
 	return nil
 }
 
+func (g *Game) GetEggsToLay(socket Socket) (int, error) {
+	player, err := g.validateSocket(socket)
+	if err != nil {
+		return 0, err
+	}
+	return player.GetEggsToLay(), nil
+}
+
 func (g *Game) StartRound() error {
 	g.mutex.Lock()
 
@@ -339,4 +347,22 @@ func (g *Game) BirdTray() []*Bird {
 
 func (g *Game) Birdfeeder() map[FoodType]int {
 	return g.birdFeeder.List()
+}
+
+func (g *Game) validateSocket(socket Socket) (*Player, error) {
+	curr, ok := g.turnOrder.Peek().(Socket)
+	if !ok {
+		return nil, ErrNoPlayerReady
+	}
+
+	if socket != curr {
+		return nil, ErrPlayerNotFound
+	}
+
+	value, ok := g.players.Load(socket)
+	if !ok {
+		return nil, ErrGameNotFound
+	}
+
+	return value.(*Player), nil
 }

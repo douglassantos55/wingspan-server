@@ -144,4 +144,13 @@ func TestPlayer(t *testing.T) {
 		go player.GetFood()
 		go player.GetBirdCards()
 	})
+
+	t.Run("count eggs to lay", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		if player.GetEggsToLay() != 1 {
+			t.Errorf("expected %v, got %v", 1, player.GetEggsToLay())
+		}
+	})
 }

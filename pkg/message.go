@@ -24,6 +24,7 @@ const (
 	GameOver         = "game_over"
 	FoodGained       = "food_gained"
 	BirdsDrawn       = "birds_drawn"
+	SelectBirds      = "select_birds"
 )
 
 type Response struct {
