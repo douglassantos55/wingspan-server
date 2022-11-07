@@ -294,6 +294,8 @@ func TestPlayer(t *testing.T) {
 		if !reflect.DeepEqual(expected, player.GetFood()) {
 			t.Errorf("Expected food %v, got %v", expected, player.GetFood())
 		}
+
+		assertResponse(t, socket, pkg.FoodUpdated)
 	})
 
 	t.Run("not enough food", func(t *testing.T) {
@@ -356,6 +358,8 @@ func TestPlayer(t *testing.T) {
 		if !reflect.DeepEqual(expected, player.GetFood()) {
 			t.Errorf("Expected food %v, got %v", expected, player.GetFood())
 		}
+
+		assertResponse(t, socket, pkg.FoodUpdated)
 	})
 
 	t.Run("food cost or multiple", func(t *testing.T) {
@@ -431,5 +435,7 @@ func TestPlayer(t *testing.T) {
 		if !reflect.DeepEqual(expected, player.GetFood()) {
 			t.Errorf("expected %v, got %v", expected, player.GetFood())
 		}
+
+		assertResponse(t, socket, pkg.FoodUpdated)
 	})
 }

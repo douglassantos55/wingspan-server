@@ -129,6 +129,11 @@ func (p *Player) payFoodCost(foodCost map[FoodType]int) {
 			p.food.Store(food, value.(int)-qty)
 		}
 	}
+
+	p.socket.Send(Response{
+		Type:    FoodUpdated,
+		Payload: p.GetFood(),
+	})
 }
 
 func (p *Player) DiscardFood(foodType FoodType, qty int) error {
