@@ -539,4 +539,24 @@ func TestGame(t *testing.T) {
 			t.Error("Expected error, got nothing")
 		}
 	})
+
+	t.Run("lay egg on bird", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
+
+		game.PlayBird(p1, 169)
+		if err := game.LayEggOnBird(p1, 169); err != pkg.ErrEggLimitReached {
+			t.Errorf("expected error %v, got %v", pkg.ErrEggLimitReached, err)
+		}
+
+		if err := game.LayEggOnBird(p1, 11111); err != pkg.ErrBirdCardNotFound {
+			t.Errorf("expected error %v, got %v", pkg.ErrBirdCardNotFound, err)
+		}
+	})
 }
