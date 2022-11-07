@@ -187,6 +187,10 @@ func (g *Game) DrawFromTray(socket Socket, birdIds []BirdID) error {
 	}
 
 	player := value.(*Player)
+	if len(birdIds) != player.GetCardsToDraw() {
+		return ErrUnexpectedValue
+	}
+
 	drawnBirds := make([]*Bird, 0, len(birdIds))
 
 	for _, id := range birdIds {
