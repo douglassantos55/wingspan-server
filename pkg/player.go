@@ -6,16 +6,18 @@ import "sync"
 // choosing_cards, choosing_food, drawing_cards, playing_cards
 // and block requests depending on the current state
 type Player struct {
-	food  *sync.Map
-	birds *sync.Map
-	board *Board
+	socket Socket
+	food   *sync.Map
+	birds  *sync.Map
+	board  *Board
 }
 
 func NewPlayer(socket Socket) *Player {
 	return &Player{
-		board: NewBoard(),
-		food:  new(sync.Map),
-		birds: new(sync.Map),
+		socket: socket,
+		board:  NewBoard(),
+		food:   new(sync.Map),
+		birds:  new(sync.Map),
 	}
 }
 
@@ -61,11 +63,53 @@ func (p *Player) GetEggsToLay() int {
 }
 
 func (p *Player) PlayBird(birdId BirdID) error {
-	bird, ok := p.birds.Load(birdId)
+	value, ok := p.birds.Load(birdId)
 	if !ok {
 		return ErrBirdCardNotFound
 	}
-	return p.board.PlayBird(bird.(*Bird))
+
+	bird, ok := value.(*Bird)
+	if !ok {
+		return ErrUnexpectedValue
+	}
+
+	available := make(map[FoodType]int)
+	for food, qty := range bird.FoodCost {
+		value, ok := p.food.Load(food)
+		if !ok || value.(int) < qty {
+			continue
+		}
+		available[food] = qty
+	}
+
+	if bird.FoodCondition == Or {
+		if len(available) > 1 {
+			// send choose response
+			p.socket.Send(Response{
+				Type:    ChooseFood,
+				Payload: available,
+			})
+			return nil
+		}
+	} else {
+		if len(available) != len(bird.FoodCost) {
+			return ErrNotEnoughFood
+		}
+	}
+
+	p.PayFoodCost(available)
+	return p.board.PlayBird(bird)
+}
+
+func (p *Player) PayFoodCost(foodCost map[FoodType]int) {
+	for food, qty := range foodCost {
+		value, _ := p.food.Load(food)
+		if value.(int)-qty <= 0 {
+			p.food.Delete(food)
+		} else {
+			p.food.Store(food, value.(int)-qty)
+		}
+	}
 }
 
 func (p *Player) DiscardFood(foodType FoodType, qty int) error {

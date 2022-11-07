@@ -168,7 +168,7 @@ func TestGame(t *testing.T) {
 		p2 := pkg.NewTestSocket()
 
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
-		game.Start(time.Millisecond)
+		game.Start(2 * time.Millisecond)
 
 		response, _ := p1.GetResponse()
 		var payload pkg.StartingResources

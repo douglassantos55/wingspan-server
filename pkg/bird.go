@@ -19,12 +19,21 @@ const (
 	Wetland
 )
 
+type FoodCondition int
+
+const (
+	And FoodCondition = iota
+	Or
+)
+
 type Bird struct {
-	ID       BirdID
-	Name     string
-	EggLimit int
-	EggCount int
-	Habitat  Habitat
+	ID            BirdID
+	Name          string
+	EggLimit      int
+	EggCount      int
+	Habitat       Habitat
+	FoodCondition FoodCondition
+	FoodCost      map[FoodType]int
 }
 
 func (b *Bird) LayEgg() error {

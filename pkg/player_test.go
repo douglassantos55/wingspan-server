@@ -1,6 +1,7 @@
 package pkg_test
 
 import (
+	"reflect"
 	"testing"
 
 	"git.internal.com/wingspan/pkg"
@@ -259,5 +260,125 @@ func TestPlayer(t *testing.T) {
 		if player.GetCardsToDraw() != 2 {
 			t.Errorf("expected %v, got %v", 2, player.GetCardsToDraw())
 		}
+	})
+
+	t.Run("pay food cost", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		bird := &pkg.Bird{
+			ID:            pkg.BirdID(1),
+			FoodCondition: pkg.And,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish:   1,
+				pkg.Rodent: 1,
+			},
+		}
+
+		player.GainBird(bird)
+		player.GainFood(pkg.Fish, 2)
+		player.GainFood(pkg.Rodent, 2)
+
+		if err := player.PlayBird(bird.ID); err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if err := player.PlayBird(2); err == nil {
+			t.Error("expected error, got nothing")
+		}
+
+		expected := map[pkg.FoodType]int{
+			pkg.Fish:   1,
+			pkg.Rodent: 1,
+		}
+
+		if !reflect.DeepEqual(expected, player.GetFood()) {
+			t.Errorf("Expected food %v, got %v", expected, player.GetFood())
+		}
+	})
+
+	t.Run("not enough food", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		bird := &pkg.Bird{
+			ID:            pkg.BirdID(1),
+			FoodCondition: pkg.And,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish:   2,
+				pkg.Rodent: 2,
+			},
+		}
+
+		player.GainBird(bird)
+		player.GainFood(pkg.Fish, 1)
+		player.GainFood(pkg.Rodent, 2)
+
+		if err := player.PlayBird(bird.ID); err != pkg.ErrNotEnoughFood {
+			t.Errorf("expected error %v, got %v", pkg.ErrNotEnoughFood, err)
+		}
+		if err := player.PlayBird(2); err == nil {
+			t.Error("expected error, got nothing")
+		}
+
+		expected := map[pkg.FoodType]int{
+			pkg.Fish:   1,
+			pkg.Rodent: 2,
+		}
+
+		if !reflect.DeepEqual(expected, player.GetFood()) {
+			t.Errorf("Expected food %v, got %v", expected, player.GetFood())
+		}
+	})
+
+	t.Run("food cost or unique", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		bird := &pkg.Bird{
+			ID:            pkg.BirdID(1),
+			FoodCondition: pkg.Or,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish:   2,
+				pkg.Rodent: 2,
+			},
+		}
+
+		player.GainBird(bird)
+		player.GainFood(pkg.Fish, 1)
+		player.GainFood(pkg.Rodent, 2)
+
+		if err := player.PlayBird(bird.ID); err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		expected := map[pkg.FoodType]int{pkg.Fish: 1}
+
+		if !reflect.DeepEqual(expected, player.GetFood()) {
+			t.Errorf("Expected food %v, got %v", expected, player.GetFood())
+		}
+	})
+
+	t.Run("food cost or multiple", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		bird := &pkg.Bird{
+			ID:            pkg.BirdID(1),
+			FoodCondition: pkg.Or,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish:   1,
+				pkg.Rodent: 1,
+			},
+		}
+
+		player.GainBird(bird)
+		player.GainFood(pkg.Fish, 1)
+		player.GainFood(pkg.Rodent, 2)
+
+		if err := player.PlayBird(bird.ID); err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		assertResponse(t, socket, pkg.ChooseFood)
 	})
 }
