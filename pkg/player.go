@@ -84,10 +84,12 @@ func (p *Player) PlayBird(birdId BirdID) error {
 
 	if bird.FoodCondition == Or {
 		if len(available) > 1 {
-			// send choose response
 			p.socket.Send(Response{
-				Type:    ChooseFood,
-				Payload: available,
+				Type: ChooseFood,
+				Payload: AvailableFood{
+					BirdID: bird.ID,
+					Food:   available,
+				},
 			})
 			return nil
 		}
@@ -97,11 +99,28 @@ func (p *Player) PlayBird(birdId BirdID) error {
 		}
 	}
 
-	p.PayFoodCost(available)
+	p.payFoodCost(available)
 	return p.board.PlayBird(bird)
 }
 
-func (p *Player) PayFoodCost(foodCost map[FoodType]int) {
+func (p *Player) PayFoodCost(birdId BirdID, foodType FoodType) error {
+	_, ok := p.food.Load(foodType)
+	if !ok {
+		return ErrFoodNotFound
+	}
+
+	bird, ok := p.birds.Load(birdId)
+	if !ok {
+		return ErrBirdCardNotFound
+	}
+
+	qty := bird.(*Bird).FoodCost[foodType]
+	p.payFoodCost(map[FoodType]int{foodType: qty})
+
+	return p.board.PlayBird(bird.(*Bird))
+}
+
+func (p *Player) payFoodCost(foodCost map[FoodType]int) {
 	for food, qty := range foodCost {
 		value, _ := p.food.Load(food)
 		if value.(int)-qty <= 0 {

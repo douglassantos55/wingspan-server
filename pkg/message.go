@@ -44,6 +44,11 @@ type StartingResources struct {
 	Food  map[FoodType]int
 }
 
+type AvailableFood struct {
+	BirdID BirdID
+	Food   map[FoodType]int
+}
+
 func ParsePayload(payload any, dest any) error {
 	data, err := json.Marshal(payload)
 	if err != nil {
