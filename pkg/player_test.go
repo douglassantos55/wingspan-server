@@ -168,4 +168,59 @@ func TestPlayer(t *testing.T) {
 			t.Errorf("expected %v, got %v", 1, player.GetEggsToLay())
 		}
 	})
+
+	t.Run("lay egg", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		bird := &pkg.Bird{
+			ID:       pkg.BirdID(1),
+			EggLimit: 2,
+		}
+
+		player.GainBird(bird)
+		player.PlayBird(bird.ID)
+
+		birdWithEggs, err := player.LayEgg(bird.ID)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if birdWithEggs != bird {
+			t.Errorf("expected %v to be the same as %v", bird, birdWithEggs)
+		}
+	})
+
+	t.Run("invalid lay egg", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		_, err := player.LayEgg(949)
+
+		if err == nil {
+			t.Fatal("expected error, got nothing")
+		}
+		if err != pkg.ErrBirdCardNotFound {
+			t.Errorf("expected error %v, got %v", pkg.ErrBirdCardNotFound, err)
+		}
+	})
+
+	t.Run("lay egg full", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		bird := &pkg.Bird{
+			ID: pkg.BirdID(1),
+		}
+
+		player.GainBird(bird)
+		player.PlayBird(bird.ID)
+
+		_, err := player.LayEgg(bird.ID)
+		if err == nil {
+			t.Fatal("expected error, got nothing")
+		}
+		if err != pkg.ErrEggLimitReached {
+			t.Errorf("expected error %v, got %v", pkg.ErrEggLimitReached, err)
+		}
+	})
 }
