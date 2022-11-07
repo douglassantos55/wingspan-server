@@ -245,7 +245,7 @@ func TestGameManager(t *testing.T) {
 
 		manager.Create([]pkg.Socket{p1, p2})
 
-		if _, err := manager.DrawFromDeck(p1, 2); err != nil {
+		if _, err := manager.DrawFromDeck(p1); err != nil {
 			t.Fatalf("could not draw from deck: %v", err)
 		}
 
@@ -268,8 +268,8 @@ func TestGameManager(t *testing.T) {
 		}
 
 		response := assertResponse(t, p1, pkg.SelectBirds)
-		if response.Payload.(float64) != 1 {
-			t.Errorf("expected %v, got %v", 1, response.Payload.(float64))
+		if response.Payload.(float64) != 2 {
+			t.Errorf("expected %v, got %v", 2, response.Payload.(float64))
 		}
 	})
 }

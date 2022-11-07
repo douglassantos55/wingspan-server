@@ -143,14 +143,16 @@ func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) (bool, err
 	return g.turnOrder.Full(), nil
 }
 
-func (g *Game) DrawFromDeck(socket Socket, qty int) error {
+func (g *Game) DrawFromDeck(socket Socket) error {
 	value, ok := g.players.Load(socket)
 	if !ok {
 		return ErrGameNotFound
 	}
 
 	player := value.(*Player)
+	qty := player.GetCardsToDraw()
 	drawnBirds, err := g.deck.Draw(qty)
+
 	if err != nil {
 		return err
 	}

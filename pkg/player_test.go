@@ -164,8 +164,22 @@ func TestPlayer(t *testing.T) {
 		socket := pkg.NewTestSocket()
 		player := pkg.NewPlayer(socket)
 
-		if player.GetEggsToLay() != 1 {
-			t.Errorf("expected %v, got %v", 1, player.GetEggsToLay())
+		if player.GetEggsToLay() != 2 {
+			t.Errorf("expected %v, got %v", 2, player.GetEggsToLay())
+		}
+
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(1), Habitat: pkg.Grassland})
+		player.PlayBird(1)
+
+		if player.GetEggsToLay() != 2 {
+			t.Errorf("expected %v, got %v", 2, player.GetEggsToLay())
+		}
+
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2), Habitat: pkg.Grassland})
+		player.PlayBird(2)
+
+		if player.GetEggsToLay() != 3 {
+			t.Errorf("expected %v, got %v", 3, player.GetEggsToLay())
 		}
 	})
 
@@ -221,6 +235,29 @@ func TestPlayer(t *testing.T) {
 		}
 		if err != pkg.ErrEggLimitReached {
 			t.Errorf("expected error %v, got %v", pkg.ErrEggLimitReached, err)
+		}
+	})
+
+	t.Run("count cards to draw", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		if player.GetCardsToDraw() != 1 {
+			t.Errorf("expected %v, got %v", 1, player.GetCardsToDraw())
+		}
+
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(1), Habitat: pkg.Wetland})
+		player.PlayBird(1)
+
+		if player.GetCardsToDraw() != 1 {
+			t.Errorf("expected %v, got %v", 1, player.GetCardsToDraw())
+		}
+
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2), Habitat: pkg.Wetland})
+		player.PlayBird(2)
+
+		if player.GetCardsToDraw() != 2 {
+			t.Errorf("expected %v, got %v", 2, player.GetCardsToDraw())
 		}
 	})
 }

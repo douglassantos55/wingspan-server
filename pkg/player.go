@@ -50,9 +50,14 @@ func (p *Player) LayEgg(birdId BirdID) (*Bird, error) {
 	return bird, bird.LayEgg()
 }
 
+func (p *Player) GetCardsToDraw() int {
+	column := p.board.Exposed(Wetland)
+	return column/2 + 1
+}
+
 func (p *Player) GetEggsToLay() int {
 	column := p.board.Exposed(Grassland)
-	return column/2 + 1
+	return column/2 + 2
 }
 
 func (p *Player) PlayBird(birdId BirdID) error {
