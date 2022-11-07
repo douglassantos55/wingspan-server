@@ -157,6 +157,19 @@ func (g *GameManager) LayEggOnBird(socket Socket, birdId BirdID) (*Message, erro
 	return nil, nil
 }
 
+func (g *GameManager) PlayCard(socket Socket, birdId BirdID) (*Message, error) {
+	game, err := g.GetSocketGame(socket)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := game.PlayBird(socket, birdId); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
 func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 	value, ok := g.games.Load(socket)
 	if !ok {

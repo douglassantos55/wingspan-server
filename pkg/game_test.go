@@ -512,4 +512,31 @@ func TestGame(t *testing.T) {
 			t.Error("should not be able to draw more than in deck")
 		}
 	})
+
+	t.Run("play bird", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
+
+		if err := game.PlayBird(p1, 169); err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if err := game.PlayBird(p1, 4999); err == nil {
+			t.Error("Expected error, got nothing")
+		}
+
+		game.EndTurn()
+
+		if err := game.PlayBird(p2, 162); err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+		if err := game.PlayBird(p2, 4999); err == nil {
+			t.Error("Expected error, got nothing")
+		}
+	})
 }

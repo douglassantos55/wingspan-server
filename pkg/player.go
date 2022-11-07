@@ -55,6 +55,14 @@ func (p *Player) GetEggsToLay() int {
 	return column/2 + 1
 }
 
+func (p *Player) PlayBird(birdId BirdID) error {
+	bird, ok := p.birds.Load(birdId)
+	if !ok {
+		return ErrBirdCardNotFound
+	}
+	return p.board.PlayBird(bird.(*Bird))
+}
+
 func (p *Player) DiscardFood(foodType FoodType, qty int) error {
 	actual, ok := p.food.Load(foodType)
 	if !ok {

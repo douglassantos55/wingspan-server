@@ -269,6 +269,14 @@ func (g *Game) LayEggOnBird(socket Socket, birdId BirdID) error {
 	return nil
 }
 
+func (g *Game) PlayBird(socket Socket, birdId BirdID) error {
+	player, err := g.validateSocket(socket)
+	if err != nil {
+		return err
+	}
+	return player.PlayBird(birdId)
+}
+
 func (g *Game) StartRound() error {
 	g.mutex.Lock()
 

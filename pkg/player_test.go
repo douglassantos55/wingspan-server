@@ -146,6 +146,18 @@ func TestPlayer(t *testing.T) {
 	})
 
 	t.Run("play bird", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		bird := &pkg.Bird{ID: pkg.BirdID(1)}
+		player.GainBird(bird)
+
+		if err := player.PlayBird(bird.ID); err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+		if err := player.PlayBird(2); err == nil {
+			t.Error("expected error, got nothing")
+		}
 	})
 
 	t.Run("count eggs to lay", func(t *testing.T) {
