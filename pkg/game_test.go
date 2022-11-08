@@ -529,6 +529,8 @@ func TestGame(t *testing.T) {
 			t.Error("Expected error, got nothing")
 		}
 
+		assertResponse(t, p1, pkg.BoardUpdated)
+
 		game.EndTurn()
 
 		if err := game.PlayBird(p2, 162); err != nil {
@@ -537,6 +539,8 @@ func TestGame(t *testing.T) {
 		if err := game.PlayBird(p2, 4999); err == nil {
 			t.Error("Expected error, got nothing")
 		}
+
+		assertResponse(t, p2, pkg.BoardUpdated)
 	})
 
 	t.Run("lay egg on bird", func(t *testing.T) {

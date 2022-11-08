@@ -100,7 +100,16 @@ func (p *Player) PlayBird(birdId BirdID) error {
 	}
 
 	p.payFoodCost(available)
-	return p.board.PlayBird(bird)
+	if err := p.board.PlayBird(bird); err != nil {
+		return err
+	}
+
+	_, err := p.socket.Send(Response{
+		Type:    BoardUpdated,
+		Payload: p.board,
+	})
+
+	return err
 }
 
 func (p *Player) PayFoodCost(birdId BirdID, foodType FoodType) error {
@@ -117,7 +126,16 @@ func (p *Player) PayFoodCost(birdId BirdID, foodType FoodType) error {
 	qty := bird.(*Bird).FoodCost[foodType]
 	p.payFoodCost(map[FoodType]int{foodType: qty})
 
-	return p.board.PlayBird(bird.(*Bird))
+	if err := p.board.PlayBird(bird.(*Bird)); err != nil {
+		return err
+	}
+
+	_, err := p.socket.Send(Response{
+		Type:    BoardUpdated,
+		Payload: p.board,
+	})
+
+	return err
 }
 
 func (p *Player) payFoodCost(foodCost map[FoodType]int) {

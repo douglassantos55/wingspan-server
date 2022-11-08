@@ -159,6 +159,8 @@ func TestPlayer(t *testing.T) {
 		if err := player.PlayBird(2); err == nil {
 			t.Error("expected error, got nothing")
 		}
+
+		assertResponse(t, socket, pkg.BoardUpdated)
 	})
 
 	t.Run("count eggs to lay", func(t *testing.T) {
@@ -295,7 +297,7 @@ func TestPlayer(t *testing.T) {
 			t.Errorf("Expected food %v, got %v", expected, player.GetFood())
 		}
 
-		assertResponse(t, socket, pkg.FoodUpdated)
+		assertResponse(t, socket, pkg.BoardUpdated)
 	})
 
 	t.Run("not enough food", func(t *testing.T) {
@@ -359,7 +361,7 @@ func TestPlayer(t *testing.T) {
 			t.Errorf("Expected food %v, got %v", expected, player.GetFood())
 		}
 
-		assertResponse(t, socket, pkg.FoodUpdated)
+		assertResponse(t, socket, pkg.BoardUpdated)
 	})
 
 	t.Run("food cost or multiple", func(t *testing.T) {
@@ -436,6 +438,6 @@ func TestPlayer(t *testing.T) {
 			t.Errorf("expected %v, got %v", expected, player.GetFood())
 		}
 
-		assertResponse(t, socket, pkg.FoodUpdated)
+		assertResponse(t, socket, pkg.BoardUpdated)
 	})
 }

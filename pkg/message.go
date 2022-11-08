@@ -28,6 +28,7 @@ const (
 	BirdUpdated      = "bird_updated"
 	ChooseFood       = "choose_food"
 	FoodUpdated      = "food_updated"
+	BoardUpdated     = "board_updated"
 )
 
 type Response struct {
