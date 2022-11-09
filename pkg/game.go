@@ -13,6 +13,7 @@ var (
 	ErrNoPlayerReady    = errors.New("No player ready")
 	ErrFoodNotFound     = errors.New("Food not found")
 	ErrNotEnoughFood    = errors.New("Not enough food")
+	ErrNotEnoughEggs    = errors.New("Not enough eggs")
 	ErrBirdCardNotFound = errors.New("Bird card not found")
 )
 

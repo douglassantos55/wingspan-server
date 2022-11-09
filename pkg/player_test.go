@@ -177,13 +177,6 @@ func TestPlayer(t *testing.T) {
 		if player.GetEggsToLay() != 2 {
 			t.Errorf("expected %v, got %v", 2, player.GetEggsToLay())
 		}
-
-		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2), Habitat: pkg.Grassland})
-		player.PlayBird(2)
-
-		if player.GetEggsToLay() != 3 {
-			t.Errorf("expected %v, got %v", 3, player.GetEggsToLay())
-		}
 	})
 
 	t.Run("lay egg", func(t *testing.T) {
@@ -254,13 +247,6 @@ func TestPlayer(t *testing.T) {
 
 		if player.GetCardsToDraw() != 1 {
 			t.Errorf("expected %v, got %v", 1, player.GetCardsToDraw())
-		}
-
-		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2), Habitat: pkg.Wetland})
-		player.PlayBird(2)
-
-		if player.GetCardsToDraw() != 2 {
-			t.Errorf("expected %v, got %v", 2, player.GetCardsToDraw())
 		}
 	})
 
@@ -437,6 +423,78 @@ func TestPlayer(t *testing.T) {
 		if !reflect.DeepEqual(expected, player.GetFood()) {
 			t.Errorf("expected %v, got %v", expected, player.GetFood())
 		}
+
+		assertResponse(t, socket, pkg.BoardUpdated)
+	})
+
+	t.Run("egg cost choice", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		bird1 := &pkg.Bird{
+			ID:            pkg.BirdID(1),
+			EggCount:      2,
+			FoodCondition: pkg.And,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish: 1,
+			},
+		}
+
+		player.GainBird(bird1)
+		player.GainFood(pkg.Fish, 2)
+		player.PlayBird(bird1.ID)
+
+		bird2 := &pkg.Bird{
+			ID:            pkg.BirdID(2),
+			FoodCondition: pkg.Or,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish: 1,
+			},
+		}
+
+		player.GainBird(bird2)
+		player.PlayBird(bird2.ID)
+
+		response := assertResponse(t, socket, pkg.ChooseEggs)
+
+		var payload map[pkg.BirdID]int
+		pkg.ParsePayload(response.Payload, &payload)
+
+		if len(payload) != 1 {
+			t.Errorf("expected %v item, got %v", 1, len(payload))
+		}
+		if payload[1] != 2 {
+			t.Errorf("expected %v eggs, got %v", 2, payload[1])
+		}
+	})
+
+	t.Run("egg cost direct", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		bird1 := &pkg.Bird{
+			ID:            pkg.BirdID(1),
+			EggCount:      1,
+			FoodCondition: pkg.And,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish: 1,
+			},
+		}
+
+		player.GainBird(bird1)
+		player.GainFood(pkg.Fish, 2)
+		player.PlayBird(bird1.ID)
+
+		bird2 := &pkg.Bird{
+			ID:            pkg.BirdID(2),
+			FoodCondition: pkg.Or,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish: 1,
+			},
+		}
+
+		player.GainBird(bird2)
+		player.PlayBird(bird2.ID)
 
 		assertResponse(t, socket, pkg.BoardUpdated)
 	})
