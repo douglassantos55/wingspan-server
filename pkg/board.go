@@ -26,6 +26,23 @@ func (r *Row) IsFull() bool {
 	return r.columns.Full()
 }
 
+func (r *Row) TotalEggs() int {
+	total := 0
+	for _, bird := range r.GetBirds() {
+		total += bird.EggCount
+	}
+	return total
+}
+
+func (r *Row) GetBirds() []*Bird {
+	birds := make([]*Bird, 0)
+	iterator := r.columns.Iterate()
+	for curr := iterator.Next(); curr != nil; curr = iterator.Next() {
+		birds = append(birds, curr.(*Bird))
+	}
+	return birds
+}
+
 func (r *Row) FindBird(id BirdID) *Bird {
 	iterator := r.columns.Iterate()
 	value := iterator.Next()
@@ -99,4 +116,26 @@ func (b *Board) GetBird(id BirdID) *Bird {
 	})
 
 	return bird
+}
+
+func (b *Board) TotalEggs() int {
+	total := 0
+	b.rows.Range(func(_, value any) bool {
+		total += value.(*Row).TotalEggs()
+		return true
+	})
+	return total
+}
+
+func (b *Board) GetBirdsWithEggs() map[BirdID]int {
+	birds := make(map[BirdID]int)
+	b.rows.Range(func(_, value any) bool {
+		for _, bird := range value.(*Row).GetBirds() {
+			if bird.EggCount > 0 {
+				birds[bird.ID] = bird.EggCount
+			}
+		}
+		return true
+	})
+	return birds
 }

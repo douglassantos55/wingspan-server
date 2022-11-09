@@ -1,6 +1,7 @@
 package pkg_test
 
 import (
+	"reflect"
 	"testing"
 
 	"git.internal.com/wingspan/pkg"
@@ -58,6 +59,28 @@ func TestBoard(t *testing.T) {
 
 		if board.GetBird(bird.ID) == nil {
 			t.Error("should find bird")
+		}
+	})
+
+	t.Run("total eggs", func(t *testing.T) {
+		board := pkg.NewBoard()
+		board.PlayBird(&pkg.Bird{EggCount: 2})
+		board.PlayBird(&pkg.Bird{EggCount: 3})
+
+		if board.TotalEggs() != 5 {
+			t.Errorf("expected %v eggs, got %v", 5, board.TotalEggs())
+		}
+	})
+
+	t.Run("birds with eggs", func(t *testing.T) {
+		board := pkg.NewBoard()
+
+		board.PlayBird(&pkg.Bird{ID: pkg.BirdID(1), EggCount: 2})
+		board.PlayBird(&pkg.Bird{ID: pkg.BirdID(2), EggCount: 3})
+
+		expected := map[pkg.BirdID]int{1: 2, 2: 3}
+		if !reflect.DeepEqual(expected, board.GetBirdsWithEggs()) {
+			t.Errorf("Expected %v, got %v", expected, board.GetBirdsWithEggs())
 		}
 	})
 }
