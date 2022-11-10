@@ -566,4 +566,18 @@ func TestPlayer(t *testing.T) {
 		player.PayBirdCost(payload.BirdID, nil, map[pkg.BirdID]int{1: 1})
 		assertResponse(t, socket, pkg.BoardUpdated)
 	})
+
+	t.Run("no food cost", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		bird := &pkg.Bird{ID: pkg.BirdID(1)}
+		player.GainBird(bird)
+
+		if err := player.PlayBird(bird.ID); err != nil {
+			t.Errorf("expected no error, got %v", err)
+		}
+
+		assertResponse(t, socket, pkg.BoardUpdated)
+	})
 }
