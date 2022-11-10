@@ -14,7 +14,7 @@ func TestGame(t *testing.T) {
 
 		response := assertResponse(t, player.(*pkg.TestSocket), pkg.ChooseCards)
 
-		var payload pkg.StartingResources
+		var payload pkg.ChooseResources
 		pkg.ParsePayload(response.Payload, &payload)
 
 		keys := []pkg.FoodType{}
@@ -57,7 +57,7 @@ func TestGame(t *testing.T) {
 		game.Start(time.Second)
 		response := assertResponse(t, socket, pkg.ChooseCards)
 
-		var payload pkg.StartingResources
+		var payload pkg.ChooseResources
 		if err := pkg.ParsePayload(response.Payload, &payload); err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -145,7 +145,7 @@ func TestGame(t *testing.T) {
 
 		response := assertResponse(t, p1, pkg.ChooseCards)
 
-		var payload pkg.StartingResources
+		var payload pkg.ChooseResources
 		pkg.ParsePayload(response.Payload, &payload)
 
 		keys := make([]pkg.FoodType, 0, len(payload.Food))
@@ -171,7 +171,7 @@ func TestGame(t *testing.T) {
 		game.Start(2 * time.Millisecond)
 
 		response, _ := p1.GetResponse()
-		var payload pkg.StartingResources
+		var payload pkg.ChooseResources
 		pkg.ParsePayload(response.Payload, &payload)
 
 		keys := make([]pkg.FoodType, 0, len(payload.Food))
@@ -204,7 +204,7 @@ func TestGame(t *testing.T) {
 		for _, player := range players {
 			response, _ := player.(*pkg.TestSocket).GetResponse()
 
-			var payload pkg.StartingResources
+			var payload pkg.ChooseResources
 			pkg.ParsePayload(response.Payload, &payload)
 
 			keys := make([]pkg.FoodType, 0, len(payload.Food))
@@ -302,7 +302,7 @@ func TestGame(t *testing.T) {
 		for _, player := range players {
 			response := assertResponse(t, player.(*pkg.TestSocket), pkg.ChooseCards)
 
-			var payload pkg.StartingResources
+			var payload pkg.ChooseResources
 			pkg.ParsePayload(response.Payload, &payload)
 
 			keys := []pkg.FoodType{}

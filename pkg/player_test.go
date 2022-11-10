@@ -371,7 +371,7 @@ func TestPlayer(t *testing.T) {
 			t.Errorf("expected no error, got %v", err)
 		}
 
-		assertResponse(t, socket, pkg.ChooseFood)
+		assertResponse(t, socket, pkg.PayBirdCost)
 	})
 
 	t.Run("choose one food cost", func(t *testing.T) {
@@ -395,9 +395,9 @@ func TestPlayer(t *testing.T) {
 			t.Errorf("expected no error, got %v", err)
 		}
 
-		response := assertResponse(t, socket, pkg.ChooseFood)
+		response := assertResponse(t, socket, pkg.PayBirdCost)
 
-		var payload pkg.AvailableFood
+		var payload pkg.AvailableResources
 		if err := pkg.ParsePayload(response.Payload, &payload); err != nil {
 			t.Errorf("could not parse payload: %v", err)
 		}
@@ -406,22 +406,22 @@ func TestPlayer(t *testing.T) {
 			t.Errorf("expected ID %v, got %v", bird.ID, payload.BirdID)
 		}
 
-		expected := map[pkg.FoodType]int{
-			pkg.Fish:   1,
-			pkg.Rodent: 1,
+		expected := []pkg.FoodType{
+			pkg.Fish,
+			pkg.Rodent,
 		}
 
 		if !reflect.DeepEqual(expected, payload.Food) {
 			t.Errorf("expected %v, got %v", expected, payload.Food)
 		}
 
-		if err := player.PayFoodCost(bird.ID, pkg.Fish); err != nil {
+		if err := player.PayBirdCost(bird.ID, []pkg.FoodType{pkg.Fish}, nil); err != nil {
 			t.Errorf("error paying food cost: %v", err)
 		}
 
-		expected = map[pkg.FoodType]int{pkg.Rodent: 2}
-		if !reflect.DeepEqual(expected, player.GetFood()) {
-			t.Errorf("expected %v, got %v", expected, player.GetFood())
+		remaining := map[pkg.FoodType]int{pkg.Rodent: 2}
+		if !reflect.DeepEqual(remaining, player.GetFood()) {
+			t.Errorf("expected %v, got %v", remaining, player.GetFood())
 		}
 
 		assertResponse(t, socket, pkg.BoardUpdated)
@@ -433,7 +433,7 @@ func TestPlayer(t *testing.T) {
 
 		bird1 := &pkg.Bird{
 			ID:            pkg.BirdID(1),
-			EggCount:      2,
+			EggCount:      3,
 			FoodCondition: pkg.And,
 			FoodCost: map[pkg.FoodType]int{
 				pkg.Fish: 1,
@@ -446,6 +446,7 @@ func TestPlayer(t *testing.T) {
 
 		bird2 := &pkg.Bird{
 			ID:            pkg.BirdID(2),
+			EggCount:      1,
 			FoodCondition: pkg.Or,
 			FoodCost: map[pkg.FoodType]int{
 				pkg.Fish: 1,
@@ -455,16 +456,32 @@ func TestPlayer(t *testing.T) {
 		player.GainBird(bird2)
 		player.PlayBird(bird2.ID)
 
-		response := assertResponse(t, socket, pkg.ChooseEggs)
+		bird3 := &pkg.Bird{
+			ID:            pkg.BirdID(3),
+			FoodCondition: pkg.Or,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish: 1,
+			},
+		}
 
-		var payload map[pkg.BirdID]int
+		player.GainBird(bird3)
+		if err := player.PlayBird(bird3.ID); err != nil {
+			t.Fatalf("error: %v", err)
+		}
+
+		response := assertResponse(t, socket, pkg.PayBirdCost)
+
+		var payload pkg.AvailableResources
 		pkg.ParsePayload(response.Payload, &payload)
 
-		if len(payload) != 1 {
-			t.Errorf("expected %v item, got %v", 1, len(payload))
+		if len(payload.Birds) != 2 {
+			t.Errorf("expected %v item, got %v", 1, len(payload.Birds))
 		}
-		if payload[1] != 2 {
-			t.Errorf("expected %v eggs, got %v", 2, payload[1])
+		if payload.Birds[1] != 2 {
+			t.Errorf("expected %v eggs, got %v", 2, payload.Birds[1])
+		}
+		if payload.Birds[2] != 1 {
+			t.Errorf("expected %v eggs, got %v", 1, payload.Birds[2])
 		}
 	})
 
@@ -496,6 +513,57 @@ func TestPlayer(t *testing.T) {
 		player.GainBird(bird2)
 		player.PlayBird(bird2.ID)
 
+		assertResponse(t, socket, pkg.BoardUpdated)
+	})
+
+	t.Run("pay egg cost", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		bird1 := &pkg.Bird{
+			ID:            pkg.BirdID(1),
+			EggCount:      3,
+			FoodCondition: pkg.And,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish: 1,
+			},
+		}
+
+		player.GainBird(bird1)
+		player.GainFood(pkg.Fish, 2)
+		player.PlayBird(bird1.ID)
+
+		bird2 := &pkg.Bird{
+			ID:            pkg.BirdID(2),
+			EggCount:      1,
+			FoodCondition: pkg.Or,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish: 1,
+			},
+		}
+
+		player.GainBird(bird2)
+		player.PlayBird(bird2.ID)
+
+		bird3 := &pkg.Bird{
+			ID:            pkg.BirdID(3),
+			FoodCondition: pkg.Or,
+			FoodCost: map[pkg.FoodType]int{
+				pkg.Fish: 1,
+			},
+		}
+
+		player.GainBird(bird3)
+		if err := player.PlayBird(bird3.ID); err != nil {
+			t.Fatalf("error: %v", err)
+		}
+
+		response := assertResponse(t, socket, pkg.PayBirdCost)
+
+		var payload pkg.AvailableResources
+		pkg.ParsePayload(response.Payload, &payload)
+
+		player.PayBirdCost(payload.BirdID, nil, map[pkg.BirdID]int{1: 1})
 		assertResponse(t, socket, pkg.BoardUpdated)
 	})
 }

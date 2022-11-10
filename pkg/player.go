@@ -78,13 +78,13 @@ func (p *Player) PlayBird(birdId BirdID) error {
 		return ErrUnexpectedValue
 	}
 
-	available := make(map[FoodType]int)
+	available := make([]FoodType, 0)
 	for food, qty := range bird.FoodCost {
 		value, ok := p.food.Load(food)
 		if !ok || value.(int) < qty {
 			continue
 		}
-		available[food] = qty
+		available = append(available, food)
 	}
 
 	eggCost := p.GetEggCost(bird.Habitat)
@@ -92,25 +92,17 @@ func (p *Player) PlayBird(birdId BirdID) error {
 		return ErrNotEnoughEggs
 	}
 
+	payload := AvailableResources{BirdID: bird.ID}
+
 	birdsWithEggs := p.board.GetBirdsWithEggs()
-	if eggCost > 0 && p.board.TotalEggs() > eggCost {
-		p.socket.Send(Response{
-			Type:    ChooseEggs,
-			Payload: birdsWithEggs,
-		})
-		return nil
+	if eggCost > 0 && p.board.TotalEggs() > eggCost && len(birdsWithEggs) > 1 {
+		payload.EggCost = eggCost
+		payload.Birds = birdsWithEggs
 	}
 
 	if bird.FoodCondition == Or {
 		if len(available) > 1 {
-			p.socket.Send(Response{
-				Type: ChooseFood,
-				Payload: AvailableFood{
-					BirdID: bird.ID,
-					Food:   available,
-				},
-			})
-			return nil
+			payload.Food = available
 		}
 	} else {
 		if len(available) != len(bird.FoodCost) {
@@ -118,40 +110,38 @@ func (p *Player) PlayBird(birdId BirdID) error {
 		}
 	}
 
-	p.payFoodCost(available)
-	p.payEggCost(eggCost, birdsWithEggs)
-
-	if err := p.board.PlayBird(bird); err != nil {
+	if payload.Food != nil || payload.EggCost != 0 {
+		_, err := p.socket.Send(Response{
+			Type:    PayBirdCost,
+			Payload: payload,
+		})
 		return err
 	}
 
-	p.socket.Send(Response{
-		Type:    BoardUpdated,
-		Payload: p.board,
-	})
-
-	return nil
+	return p.PayBirdCost(birdId, available, birdsWithEggs)
 }
 
-func (p *Player) PayEggCost(cost int, birds map[BirdID]int) {
-	p.payEggCost(cost, birds)
-}
-
-func (p *Player) PayFoodCost(birdId BirdID, foodType FoodType) error {
-	_, ok := p.food.Load(foodType)
-	if !ok {
-		return ErrFoodNotFound
-	}
-
-	bird, ok := p.birds.Load(birdId)
+func (p *Player) PayBirdCost(birdID BirdID, food []FoodType, eggs map[BirdID]int) error {
+	value, ok := p.birds.Load(birdID)
 	if !ok {
 		return ErrBirdCardNotFound
 	}
 
-	qty := bird.(*Bird).FoodCost[foodType]
-	p.payFoodCost(map[FoodType]int{foodType: qty})
+	bird, ok := value.(*Bird)
+	if !ok {
+		return ErrUnexpectedValue
+	}
 
-	if err := p.board.PlayBird(bird.(*Bird)); err != nil {
+	if eggs != nil {
+		p.PayEggCost(p.GetEggCost(bird.Habitat), eggs)
+	}
+	if food != nil {
+		if err := p.PayFoodCost(bird.FoodCost, food); err != nil {
+			return err
+		}
+	}
+
+	if err := p.board.PlayBird(bird); err != nil {
 		return err
 	}
 
@@ -163,16 +153,21 @@ func (p *Player) PayFoodCost(birdId BirdID, foodType FoodType) error {
 	return err
 }
 
-func (p *Player) payEggCost(cost int, birds map[BirdID]int) {
-	for id, qty := range birds {
+func (p *Player) PayEggCost(cost int, birds map[BirdID]int) {
+	for id := range birds {
 		bird := p.board.GetBird(id)
-		bird.EggCount -= qty
+		bird.EggCount -= cost
 	}
 }
 
-func (p *Player) payFoodCost(foodCost map[FoodType]int) {
-	for food, qty := range foodCost {
-		value, _ := p.food.Load(food)
+func (p *Player) PayFoodCost(cost map[FoodType]int, chosen []FoodType) error {
+	for _, food := range chosen {
+		value, ok := p.food.Load(food)
+		if !ok {
+			return ErrFoodNotFound
+		}
+
+		qty := cost[food]
 		if value.(int)-qty <= 0 {
 			p.food.Delete(food)
 		} else {
@@ -184,6 +179,8 @@ func (p *Player) payFoodCost(foodCost map[FoodType]int) {
 		Type:    FoodUpdated,
 		Payload: p.GetFood(),
 	})
+
+	return nil
 }
 
 func (p *Player) DiscardFood(foodType FoodType, qty int) error {

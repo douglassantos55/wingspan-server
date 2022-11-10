@@ -14,7 +14,7 @@ func assertResponse(t testing.TB, socket *pkg.TestSocket, expected string) pkg.R
 		t.Fatalf("Failed reading response: %v", err)
 	}
 	if response.Type != expected {
-		t.Errorf("Expected response %v, got %v", expected, response.Type)
+		t.Fatalf("Expected response %v, got %v", expected, response.Type)
 	}
 	return *response
 }
@@ -36,7 +36,7 @@ func TestGameManager(t *testing.T) {
 
 		response := assertResponse(t, player.(*pkg.TestSocket), pkg.ChooseCards)
 
-		var payload pkg.StartingResources
+		var payload pkg.ChooseResources
 		pkg.ParsePayload(response.Payload, &payload)
 
 		keys := []pkg.FoodType{}
@@ -74,7 +74,7 @@ func TestGameManager(t *testing.T) {
 		manager.Create([]pkg.Socket{p1, p2})
 		response := assertResponse(t, p1, pkg.ChooseCards)
 
-		var payload pkg.StartingResources
+		var payload pkg.ChooseResources
 		if err := pkg.ParsePayload(response.Payload, &payload); err != nil {
 			t.Fatalf("Failed parsing payload: %v", err)
 		}
@@ -106,7 +106,7 @@ func TestGameManager(t *testing.T) {
 		manager.Create([]pkg.Socket{p1, p2})
 		response := assertResponse(t, p1, pkg.ChooseCards)
 
-		var payload pkg.StartingResources
+		var payload pkg.ChooseResources
 		if err := pkg.ParsePayload(response.Payload, &payload); err != nil {
 			t.Fatalf("Error parsing payload: %v", err)
 		}
