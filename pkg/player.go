@@ -138,7 +138,9 @@ func (p *Player) PayBirdCost(birdID BirdID, food []FoodType, eggs map[BirdID]int
 	}
 
 	if eggs != nil {
-		p.PayEggCost(p.GetEggCost(bird.Habitat), eggs)
+		if err := p.PayEggCost(p.GetEggCost(bird.Habitat), eggs); err != nil {
+			return err
+		}
 	}
 	if food != nil {
 		if err := p.PayFoodCost(bird.FoodCost, food); err != nil {
@@ -158,11 +160,25 @@ func (p *Player) PayBirdCost(birdID BirdID, food []FoodType, eggs map[BirdID]int
 	return err
 }
 
-func (p *Player) PayEggCost(cost int, birds map[BirdID]int) {
-	for id, qty := range birds {
+func (p *Player) PayEggCost(cost int, chosenEggs map[BirdID]int) error {
+	total := 0
+	birds := make(map[*Bird]int)
+
+	for id, qty := range chosenEggs {
+		total += qty
 		bird := p.board.GetBird(id)
+		birds[bird] = qty
+	}
+
+	if total != cost {
+		return ErrNotEnoughEggs
+	}
+
+	for bird, qty := range birds {
 		bird.EggCount -= qty
 	}
+
+	return nil
 }
 
 func (p *Player) PayFoodCost(cost map[FoodType]int, chosen []FoodType) error {
