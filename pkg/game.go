@@ -284,6 +284,14 @@ func (g *Game) PlayBird(socket Socket, birdId BirdID) error {
 	return player.PlayBird(birdId)
 }
 
+func (g *Game) PayBirdCost(socket Socket, birdId BirdID, food []FoodType, eggs map[BirdID]int) error {
+	player, err := g.validateSocket(socket)
+	if err != nil {
+		return err
+	}
+	return player.PayBirdCost(birdId, food, eggs)
+}
+
 func (g *Game) StartRound() error {
 	g.mutex.Lock()
 
