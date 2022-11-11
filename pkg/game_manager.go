@@ -103,7 +103,7 @@ func (g *GameManager) DrawFromTray(socket Socket, ids []BirdID) (*Message, error
 	return nil, nil
 }
 
-func (g *GameManager) GainFood(socket Socket, foodType FoodType) (*Message, error) {
+func (g *GameManager) GainFood(socket Socket) (*Message, error) {
 	value, ok := g.games.Load(socket)
 	if !ok {
 		return nil, ErrGameNotFound
@@ -111,8 +111,21 @@ func (g *GameManager) GainFood(socket Socket, foodType FoodType) (*Message, erro
 
 	game := value.(*Game)
 
-	// TODO: consider qty according to player's board
 	if err := game.GainFood(socket); err != nil {
+		return nil, err
+	}
+
+	return nil, nil
+}
+
+func (g *GameManager) ChooseFood(socket Socket, chosen map[FoodType]int) (*Message, error) {
+	value, ok := g.games.Load(socket)
+	if !ok {
+		return nil, ErrGameNotFound
+	}
+
+	game := value.(*Game)
+	if err := game.ChooseFood(socket, chosen); err != nil {
 		return nil, err
 	}
 
