@@ -421,7 +421,7 @@ func TestGame(t *testing.T) {
 		if err := game.PlayBird(p1, pkg.BirdID(168)); err != nil {
 			t.Fatalf("could not play bird: %v", err)
 		}
-		if err := game.LayEggOnBird(p1, pkg.BirdID(168)); err != nil {
+		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{168: 1}); err != nil {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
 		if err := game.PlayBird(p1, pkg.BirdID(169)); err != nil {
@@ -453,7 +453,7 @@ func TestGame(t *testing.T) {
 		if err := game.PlayBird(p1, pkg.BirdID(168)); err != nil {
 			t.Fatalf("could not play bird: %v", err)
 		}
-		if err := game.LayEggOnBird(p1, pkg.BirdID(168)); err != nil {
+		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{168: 1}); err != nil {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
 		if err := game.PlayBird(p1, pkg.BirdID(169)); err != nil {
@@ -624,13 +624,45 @@ func TestGame(t *testing.T) {
 		discardFood(t, p1, game)
 		discardFood(t, p2, game)
 
-		game.PlayBird(p1, 169)
-		if err := game.LayEggOnBird(p1, 169); err != pkg.ErrEggLimitReached {
-			t.Errorf("expected error %v, got %v", pkg.ErrEggLimitReached, err)
+		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{9999: 1}); err != pkg.ErrBirdCardNotFound {
+			t.Errorf("expected error %v, got %v", pkg.ErrBirdCardNotFound, err)
 		}
 
-		if err := game.LayEggOnBird(p1, 11111); err != pkg.ErrBirdCardNotFound {
-			t.Errorf("expected error %v, got %v", pkg.ErrBirdCardNotFound, err)
+		if err := game.PlayBird(p1, 168); err != nil {
+			t.Fatalf("could not play bird: %v", err)
+		}
+
+		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{168: 1}); err != nil {
+			t.Fatalf("could not lay eggs on bird: %v", err)
+		}
+
+		if err := game.PlayBird(p1, 169); err != nil {
+			t.Fatalf("could not play bird: %v", err)
+		}
+
+		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{169: 1}); err != pkg.ErrEggLimitReached {
+			t.Fatalf("expected error %v, got %v", pkg.ErrEggLimitReached, err)
+		}
+
+		qty, err := game.LayEggs(p1)
+		if err != nil {
+			t.Fatalf("could not lay eggs: %v", err)
+		}
+		if qty != 2 {
+			t.Errorf("expected qty %v, got %v", 2, qty)
+		}
+
+		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{168: 1}); err != nil {
+			t.Fatalf("could not lay eggs on bird: %v", err)
+		}
+
+		response := assertResponse(t, p1, pkg.BirdUpdated)
+
+		var payload []*pkg.Bird
+		pkg.ParsePayload(response.Payload, &payload)
+
+		if len(payload) != 1 {
+			t.Errorf("expected len %v, got %v", 1, len(payload))
 		}
 	})
 }

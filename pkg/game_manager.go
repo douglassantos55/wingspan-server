@@ -142,7 +142,7 @@ func (g *GameManager) LayEggs(socket Socket) (*Message, error) {
 	}
 
 	game := value.(*Game)
-	qty, err := game.GetEggsToLay(socket)
+	qty, err := game.LayEggs(socket)
 
 	if err != nil {
 		return nil, err
@@ -156,13 +156,13 @@ func (g *GameManager) LayEggs(socket Socket) (*Message, error) {
 	return nil, nil
 }
 
-func (g *GameManager) LayEggOnBird(socket Socket, birdId BirdID) (*Message, error) {
+func (g *GameManager) LayEggsOnBirds(socket Socket, chosen map[BirdID]int) (*Message, error) {
 	game, err := g.GetSocketGame(socket)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := game.LayEggOnBird(socket, birdId); err != nil {
+	if err := game.LayEggsOnBirds(socket, chosen); err != nil {
 		return nil, err
 	}
 

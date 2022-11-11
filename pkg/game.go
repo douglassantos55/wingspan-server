@@ -261,7 +261,7 @@ func (g *Game) GainFood(socket Socket) error {
 		g.birdFeeder.Refill()
 	}
 
-	g.Broadcast(Response{
+	socket.Send(Response{
 		Type: ChooseFood,
 		Payload: GainFood{
 			Amount:    player.GetFoodToGain(),
@@ -272,7 +272,7 @@ func (g *Game) GainFood(socket Socket) error {
 	return nil
 }
 
-func (g *Game) GetEggsToLay(socket Socket) (int, error) {
+func (g *Game) LayEggs(socket Socket) (int, error) {
 	player, err := g.validateSocket(socket)
 	if err != nil {
 		return 0, err
@@ -280,20 +280,26 @@ func (g *Game) GetEggsToLay(socket Socket) (int, error) {
 	return player.GetEggsToLay(), nil
 }
 
-func (g *Game) LayEggOnBird(socket Socket, birdId BirdID) error {
+func (g *Game) LayEggsOnBirds(socket Socket, chosen map[BirdID]int) error {
 	player, err := g.validateSocket(socket)
 	if err != nil {
 		return err
 	}
 
-	bird, err := player.LayEgg(birdId)
-	if err != nil {
-		return err
+	birds := make([]*Bird, 0, len(chosen))
+	for id, qty := range chosen {
+		for i := 0; i < qty; i++ {
+			bird, err := player.LayEgg(id)
+			if err != nil {
+				return err
+			}
+			birds = append(birds, bird)
+		}
 	}
 
 	g.Broadcast(Response{
 		Type:    BirdUpdated,
-		Payload: bird,
+		Payload: birds,
 	})
 
 	return nil
