@@ -286,15 +286,19 @@ func (g *Game) LayEggsOnBirds(socket Socket, chosen map[BirdID]int) error {
 		return err
 	}
 
+	total := 0
 	birds := make([]*Bird, 0, len(chosen))
 	for id, qty := range chosen {
-		for i := 0; i < qty; i++ {
-			bird, err := player.LayEgg(id)
-			if err != nil {
-				return err
-			}
-			birds = append(birds, bird)
+		total += qty
+		bird, err := player.LayEgg(id, qty)
+		if err != nil {
+			return err
 		}
+		birds = append(birds, bird)
+	}
+
+	if total != player.GetEggsToLay() {
+		return ErrNotEnoughEggs
 	}
 
 	g.Broadcast(Response{

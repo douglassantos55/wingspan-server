@@ -418,10 +418,10 @@ func TestGame(t *testing.T) {
 			t.Errorf("expected available %v, got %v", game.Birdfeeder(), payload.Available)
 		}
 
-		if err := game.PlayBird(p1, pkg.BirdID(168)); err != nil {
+		if err := game.PlayBird(p1, pkg.BirdID(167)); err != nil {
 			t.Fatalf("could not play bird: %v", err)
 		}
-		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{168: 1}); err != nil {
+		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{167: 2}); err != nil {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
 		if err := game.PlayBird(p1, pkg.BirdID(169)); err != nil {
@@ -450,10 +450,10 @@ func TestGame(t *testing.T) {
 		discardFood(t, p1, game)
 		discardFood(t, p2, game)
 
-		if err := game.PlayBird(p1, pkg.BirdID(168)); err != nil {
+		if err := game.PlayBird(p1, pkg.BirdID(167)); err != nil {
 			t.Fatalf("could not play bird: %v", err)
 		}
-		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{168: 1}); err != nil {
+		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{167: 2}); err != nil {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
 		if err := game.PlayBird(p1, pkg.BirdID(169)); err != nil {
@@ -628,11 +628,11 @@ func TestGame(t *testing.T) {
 			t.Errorf("expected error %v, got %v", pkg.ErrBirdCardNotFound, err)
 		}
 
-		if err := game.PlayBird(p1, 168); err != nil {
+		if err := game.PlayBird(p1, 165); err != nil {
 			t.Fatalf("could not play bird: %v", err)
 		}
 
-		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{168: 1}); err != nil {
+		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{165: 2}); err != nil {
 			t.Fatalf("could not lay eggs on bird: %v", err)
 		}
 
@@ -652,7 +652,7 @@ func TestGame(t *testing.T) {
 			t.Errorf("expected qty %v, got %v", 2, qty)
 		}
 
-		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{168: 1}); err != nil {
+		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{165: 2}); err != nil {
 			t.Fatalf("could not lay eggs on bird: %v", err)
 		}
 
@@ -663,6 +663,9 @@ func TestGame(t *testing.T) {
 
 		if len(payload) != 1 {
 			t.Errorf("expected len %v, got %v", 1, len(payload))
+		}
+		if payload[0].EggCount != 3 {
+			t.Errorf("expected %v eggs, got %v", 3, payload[0].EggCount)
 		}
 	})
 }

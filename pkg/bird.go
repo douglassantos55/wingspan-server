@@ -36,11 +36,11 @@ type Bird struct {
 	FoodCost      map[FoodType]int
 }
 
-func (b *Bird) LayEgg() error {
-	if b.EggCount >= b.EggLimit {
+func (b *Bird) LayEgg(qty int) error {
+	if b.EggCount+qty > b.EggLimit {
 		return ErrEggLimitReached
 	}
-	b.EggCount++
+	b.EggCount += qty
 	return nil
 }
 

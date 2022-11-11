@@ -44,12 +44,12 @@ func (p *Player) GainFood(foodType FoodType, qty int) {
 	}
 }
 
-func (p *Player) LayEgg(birdId BirdID) (*Bird, error) {
+func (p *Player) LayEgg(birdId BirdID, qty int) (*Bird, error) {
 	bird := p.board.GetBird(birdId)
 	if bird == nil {
 		return nil, ErrBirdCardNotFound
 	}
-	return bird, bird.LayEgg()
+	return bird, bird.LayEgg(qty)
 }
 
 func (p *Player) GetCardsToDraw() int {

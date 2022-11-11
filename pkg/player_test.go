@@ -191,7 +191,7 @@ func TestPlayer(t *testing.T) {
 		player.GainBird(bird)
 		player.PlayBird(bird.ID)
 
-		birdWithEggs, err := player.LayEgg(bird.ID)
+		birdWithEggs, err := player.LayEgg(bird.ID, 1)
 		if err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -204,7 +204,7 @@ func TestPlayer(t *testing.T) {
 		socket := pkg.NewTestSocket()
 		player := pkg.NewPlayer(socket)
 
-		_, err := player.LayEgg(949)
+		_, err := player.LayEgg(949, 1)
 
 		if err == nil {
 			t.Fatal("expected error, got nothing")
@@ -225,7 +225,7 @@ func TestPlayer(t *testing.T) {
 		player.GainBird(bird)
 		player.PlayBird(bird.ID)
 
-		_, err := player.LayEgg(bird.ID)
+		_, err := player.LayEgg(bird.ID, 1)
 		if err == nil {
 			t.Fatal("expected error, got nothing")
 		}
