@@ -33,21 +33,21 @@ func NewBirdfeeder(size int) *Birdfeeder {
 	return feeder
 }
 
-func (f *Birdfeeder) GetFood(foodType FoodType) error {
+func (f *Birdfeeder) GetFood(foodType FoodType, qty int) error {
 	value, ok := f.food.Load(foodType)
 	if !ok {
 		return ErrFoodNotFound
 	}
 
-	if value.(int) < 1 {
+	if value.(int) < qty {
 		return ErrNotEnoughFood
 	}
 
-	atomic.AddInt32(&f.len, -1)
-	if value.(int)-1 <= 0 {
+	atomic.AddInt32(&f.len, int32(-qty))
+	if value.(int)-qty <= 0 {
 		f.food.Delete(foodType)
 	} else {
-		f.food.Store(foodType, value.(int)-1)
+		f.food.Store(foodType, value.(int)-qty)
 	}
 
 	return nil

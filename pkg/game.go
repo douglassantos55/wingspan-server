@@ -224,26 +224,49 @@ func (g *Game) DrawFromTray(socket Socket, birdIds []BirdID) error {
 	return nil
 }
 
-func (g *Game) GainFood(socket Socket, foodType FoodType) error {
+func (g *Game) ChooseFood(socket Socket, chosenFood map[FoodType]int) error {
 	value, ok := g.players.Load(socket)
 	if !ok {
 		return ErrGameNotFound
+	}
+
+	player := value.(*Player)
+	for food, qty := range chosenFood {
+		if err := g.birdFeeder.GetFood(food, qty); err != nil {
+			return err
+		}
+		player.GainFood(food, qty)
+	}
+
+	g.Broadcast(Response{
+		Type:    FoodGained,
+		Payload: player.GetFood(),
+	})
+
+	return nil
+}
+
+func (g *Game) GainFood(socket Socket) error {
+	value, ok := g.players.Load(socket)
+	if !ok {
+		return ErrGameNotFound
+	}
+
+	player, ok := value.(*Player)
+	if !ok {
+		return ErrUnexpectedValue
 	}
 
 	if g.birdFeeder.Len() <= 1 {
 		g.birdFeeder.Refill()
 	}
 
-	if err := g.birdFeeder.GetFood(foodType); err != nil {
-		return err
-	}
-
-	player := value.(*Player)
-	player.GainFood(foodType, 1)
-
 	g.Broadcast(Response{
-		Type:    FoodGained,
-		Payload: player.GetFood(),
+		Type: ChooseFood,
+		Payload: GainFood{
+			Amount:    player.GetFoodToGain(),
+			Available: g.birdFeeder.List(),
+		},
 	})
 
 	return nil

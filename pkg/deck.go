@@ -25,7 +25,10 @@ type BirdDeck struct {
 func NewDeck(size int) *BirdDeck {
 	buf := NewRingBuffer(size)
 	for i := 0; i < size; i++ {
-		buf.Push(&Bird{ID: BirdID(i)})
+		buf.Push(&Bird{
+			ID:       BirdID(i),
+			EggLimit: size - i - 1,
+		})
 	}
 
 	return &BirdDeck{

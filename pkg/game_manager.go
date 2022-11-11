@@ -112,7 +112,7 @@ func (g *GameManager) GainFood(socket Socket, foodType FoodType) (*Message, erro
 	game := value.(*Game)
 
 	// TODO: consider qty according to player's board
-	if err := game.GainFood(socket, foodType); err != nil {
+	if err := game.GainFood(socket); err != nil {
 		return nil, err
 	}
 

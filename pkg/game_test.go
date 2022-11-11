@@ -398,62 +398,59 @@ func TestGame(t *testing.T) {
 		p2 := pkg.NewTestSocket()
 
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
 
-		food := game.Birdfeeder()
-		keys := make([]pkg.FoodType, 0, len(food))
-		for ft, qty := range food {
-			if qty > 1 {
-				keys = append(keys, ft)
-			}
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
+
+		if err := game.GainFood(p1); err != nil {
+			t.Fatalf("could not gain food: %v", err)
 		}
+		response := assertResponse(t, p1, pkg.ChooseFood)
 
-		if len(keys) == 0 {
-			t.Fatal("no food with more than one")
-		}
-
-		if err := game.GainFood(p1, keys[0]); err != nil {
-			t.Errorf("expected no error, got \"%v\"", err)
-		}
-
-		response := assertResponse(t, p1, pkg.FoodGained)
-
-		var payload map[pkg.FoodType]int
+		var payload pkg.GainFood
 		pkg.ParsePayload(response.Payload, &payload)
 
-		if qty := payload[keys[0]]; qty < 1 {
-			t.Errorf("expected qty >= %v, got %v", 1, qty)
+		if payload.Amount != 1 {
+			t.Errorf("expected amount %v, got %v", 1, payload.Amount)
+		}
+		if !reflect.DeepEqual(payload.Available, game.Birdfeeder()) {
+			t.Errorf("expected available %v, got %v", game.Birdfeeder(), payload.Available)
 		}
 
-		response = assertResponse(t, p2, pkg.FoodGained)
+		if err := game.PlayBird(p1, pkg.BirdID(168)); err != nil {
+			t.Fatalf("could not play bird: %v", err)
+		}
+		if err := game.LayEggOnBird(p1, pkg.BirdID(168)); err != nil {
+			t.Fatalf("could not lay eggs: %v", err)
+		}
+		if err := game.PlayBird(p1, pkg.BirdID(169)); err != nil {
+			t.Fatalf("could not play bird: %v", err)
+		}
+
+		if err := game.GainFood(p1); err != nil {
+			t.Fatalf("could not gain food: %v", err)
+		}
+
+		response = assertResponse(t, p1, pkg.ChooseFood)
 		pkg.ParsePayload(response.Payload, &payload)
 
-		if qty := payload[keys[0]]; qty < 1 {
-			t.Errorf("expected qty >= %v, got %v", 1, qty)
+		if payload.Amount != 2 {
+			t.Errorf("expected amount %v, got %v", 2, payload.Amount)
 		}
 	})
 
 	t.Run("refills birdfeeder", func(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
-
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
 
-		available := game.Birdfeeder()
-		for foodType, qty := range available {
-			for i := 0; i < qty; i++ {
-				if err := game.GainFood(p1, foodType); err != nil {
-					t.Fatalf("expected no error, got %v", err)
-				}
-			}
+		if err := game.ChooseFood(p1, game.Birdfeeder()); err != nil {
+			t.Fatalf("expected no error, got %v", err)
 		}
 
-		sum := 0
-		for _, qty := range game.Birdfeeder() {
-			sum += qty
-		}
-
-		if sum != pkg.MAX_FOOD_FEEDER-1 {
-			t.Errorf("expected %v food, got %v", pkg.MAX_FOOD_FEEDER-1, sum)
+		if !reflect.DeepEqual(map[pkg.FoodType]int{}, game.Birdfeeder()) {
+			t.Error("should empty bird feeder")
 		}
 	})
 

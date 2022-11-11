@@ -29,6 +29,7 @@ const (
 	PayBirdCost      = "pay_bird_cost"
 	FoodUpdated      = "food_updated"
 	BoardUpdated     = "board_updated"
+	ChooseFood       = "choose_food"
 )
 
 type Response struct {
@@ -51,6 +52,11 @@ type AvailableResources struct {
 	BirdID  BirdID
 	Birds   map[BirdID]int
 	Food    []FoodType
+}
+
+type GainFood struct {
+	Amount    int
+	Available map[FoodType]int
 }
 
 func ParsePayload(payload any, dest any) error {

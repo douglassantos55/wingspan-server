@@ -62,6 +62,11 @@ func (p *Player) GetEggsToLay() int {
 	return column/2 + 2
 }
 
+func (p *Player) GetFoodToGain() int {
+	column := p.board.Exposed(Forest)
+	return column/2 + 1
+}
+
 func (p *Player) GetEggCost(habitat Habitat) int {
 	column := p.board.Exposed(habitat)
 	return (column / 2) + (column % 2)
