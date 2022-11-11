@@ -440,6 +440,62 @@ func TestGame(t *testing.T) {
 		}
 	})
 
+	t.Run("choose food", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
+
+		if err := game.PlayBird(p1, pkg.BirdID(168)); err != nil {
+			t.Fatalf("could not play bird: %v", err)
+		}
+		if err := game.LayEggOnBird(p1, pkg.BirdID(168)); err != nil {
+			t.Fatalf("could not lay eggs: %v", err)
+		}
+		if err := game.PlayBird(p1, pkg.BirdID(169)); err != nil {
+			t.Fatalf("could not play bird: %v", err)
+		}
+
+		if err := game.GainFood(p1); err != nil {
+			t.Fatalf("could not gain food: %v", err)
+		}
+
+		response := assertResponse(t, p1, pkg.ChooseFood)
+
+		var payload pkg.GainFood
+		pkg.ParsePayload(response.Payload, &payload)
+
+		if payload.Amount != 2 {
+			t.Errorf("expected amount %v, got %v", 2, payload.Amount)
+		}
+
+		keys := make([]pkg.FoodType, 0, len(payload.Available))
+		for ft := range payload.Available {
+			keys = append(keys, ft)
+		}
+
+		expected := map[pkg.FoodType]int{keys[0]: 1, keys[1]: 1}
+		if err := game.ChooseFood(p1, expected); err != nil {
+			t.Errorf("could not choosed food: %v", err)
+		}
+
+		response = assertResponse(t, p1, pkg.FoodGained)
+
+		var playerFood map[pkg.FoodType]int
+		pkg.ParsePayload(response.Payload, &playerFood)
+
+		if playerFood[keys[0]] < 1 {
+			t.Errorf("expected at least %v of food type %v, got %v", 1, keys[0], playerFood[keys[0]])
+		}
+		if playerFood[keys[1]] < 1 {
+			t.Errorf("expected at least %v of food type %v, got %v", 1, keys[1], playerFood[keys[1]])
+		}
+	})
+
 	t.Run("refills birdfeeder", func(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
