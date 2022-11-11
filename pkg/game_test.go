@@ -508,6 +508,24 @@ func TestGame(t *testing.T) {
 		if !reflect.DeepEqual(map[pkg.FoodType]int{}, game.Birdfeeder()) {
 			t.Error("should empty bird feeder")
 		}
+
+		if err := game.GainFood(p1); err != nil {
+			t.Errorf("could not gain food: %v", err)
+		}
+
+		response := assertResponse(t, p1, pkg.ChooseFood)
+
+		var payload pkg.GainFood
+		pkg.ParsePayload(response.Payload, &payload)
+
+		total := 0
+		for _, qty := range payload.Available {
+			total += qty
+		}
+
+		if total != pkg.MAX_FOOD_FEEDER {
+			t.Errorf("expected %v food in feeder, got %v", total, pkg.MAX_FOOD_FEEDER)
+		}
 	})
 
 	t.Run("draw from tray", func(t *testing.T) {
