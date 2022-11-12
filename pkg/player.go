@@ -270,3 +270,12 @@ func (p *Player) GetBirdCards() []*Bird {
 	})
 	return cards
 }
+
+func (p *Player) TotalScore() int {
+	birds := p.board.GetBirds()
+	total := len(birds)
+	for _, bird := range birds {
+		total += bird.Points + bird.EggCount + bird.CachedFood + bird.TuckedCards
+	}
+	return total
+}

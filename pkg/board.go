@@ -127,15 +127,21 @@ func (b *Board) TotalEggs() int {
 	return total
 }
 
-func (b *Board) GetBirdsWithEggs() map[BirdID]int {
-	birds := make(map[BirdID]int)
+func (b *Board) GetBirds() []*Bird {
+	birds := make([]*Bird, 0)
 	b.rows.Range(func(_, value any) bool {
-		for _, bird := range value.(*Row).GetBirds() {
-			if bird.EggCount > 0 {
-				birds[bird.ID] = bird.EggCount
-			}
-		}
+		birds = append(birds, value.(*Row).GetBirds()...)
 		return true
 	})
+	return birds
+}
+
+func (b *Board) GetBirdsWithEggs() map[BirdID]int {
+	birds := make(map[BirdID]int)
+	for _, bird := range b.GetBirds() {
+		if bird.EggCount > 0 {
+			birds[bird.ID] = bird.EggCount
+		}
+	}
 	return birds
 }

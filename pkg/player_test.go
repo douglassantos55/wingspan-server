@@ -604,4 +604,25 @@ func TestPlayer(t *testing.T) {
 
 		assertResponse(t, socket, pkg.BoardUpdated)
 	})
+
+	t.Run("total score", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		if player.TotalScore() != 0 {
+			t.Errorf("Expected %v points, got %v", 0, player.TotalScore())
+		}
+
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(1), Points: 5, EggCount: 2})
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2), Points: 2})
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(3), Points: 1})
+
+		player.PlayBird(1)
+		player.PlayBird(2)
+		player.PlayBird(3)
+
+		if player.TotalScore() != 11 {
+			t.Errorf("Expected %v points, got %v", 11, player.TotalScore())
+		}
+	})
 }

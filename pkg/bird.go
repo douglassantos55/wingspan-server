@@ -27,11 +27,11 @@ const (
 )
 
 // TODO: missing methods/properties
-// 1. points
 // 2. powers
 type Bird struct {
 	ID            BirdID
 	Name          string
+	Points        int
 	EggLimit      int
 	EggCount      int
 	CachedFood    int
