@@ -26,14 +26,27 @@ const (
 	Or
 )
 
+// TODO: missing methods/properties
+// 1. points
+// 2. powers
 type Bird struct {
 	ID            BirdID
 	Name          string
 	EggLimit      int
 	EggCount      int
+	CachedFood    int
+	TuckedCards   int
 	Habitat       Habitat
 	FoodCondition FoodCondition
 	FoodCost      map[FoodType]int
+}
+
+func (b *Bird) CacheFood() {
+	b.CachedFood++
+}
+
+func (b *Bird) TuckCard() {
+	b.TuckedCards++
 }
 
 func (b *Bird) LayEgg(qty int) error {

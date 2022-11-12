@@ -30,6 +30,22 @@ func TestBird(t *testing.T) {
 			t.Errorf("expected error \"%v\", got \"%v\"", pkg.ErrEggLimitReached, err)
 		}
 	})
+
+	t.Run("cache food", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		bird.CacheFood()
+		if bird.CachedFood != 1 {
+			t.Errorf("expected %v cached food, got %v", 1, bird.CachedFood)
+		}
+	})
+
+	t.Run("tuck card", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		bird.TuckCard()
+		if bird.TuckedCards != 1 {
+			t.Errorf("expected %v tucked cards, got %v", 1, bird.TuckedCards)
+		}
+	})
 }
 
 func TestBirdTray(t *testing.T) {
