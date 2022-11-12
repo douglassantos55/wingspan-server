@@ -533,6 +533,10 @@ func TestGame(t *testing.T) {
 		p2 := pkg.NewTestSocket()
 
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
 
 		birds := game.BirdTray()
 		if err := game.DrawFromTray(p1, []pkg.BirdID{birds[0].ID}); err != nil {
@@ -554,6 +558,10 @@ func TestGame(t *testing.T) {
 		if response.Payload.(float64) != 1 {
 			t.Errorf("expected len %v, got %v", 1, len(payload))
 		}
+
+		if err := game.DrawFromTray(p1, []pkg.BirdID{birds[1].ID, birds[2].ID}); err != pkg.ErrUnexpectedValue {
+			t.Errorf("Expected error %v, got %v", pkg.ErrUnexpectedValue, err)
+		}
 	})
 
 	t.Run("draw from deck", func(t *testing.T) {
@@ -561,6 +569,10 @@ func TestGame(t *testing.T) {
 		p2 := pkg.NewTestSocket()
 
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
 
 		if err := game.DrawFromDeck(p1); err != nil {
 			t.Fatalf("could not draw from deck: %v", err)
@@ -666,6 +678,25 @@ func TestGame(t *testing.T) {
 		}
 		if payload[0].EggCount != 3 {
 			t.Errorf("expected %v eggs, got %v", 3, payload[0].EggCount)
+		}
+	})
+
+	t.Run("draw cards", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
+
+		qty, err := game.DrawCards(p1)
+		if err != nil {
+			t.Fatalf("could not draw cards: %v", err)
+		}
+		if qty != 1 {
+			t.Errorf("expected %v qty, got %v", 1, qty)
 		}
 	})
 }

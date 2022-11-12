@@ -245,6 +245,9 @@ func TestGameManager(t *testing.T) {
 
 		manager.Create([]pkg.Socket{p1, p2})
 
+		discardFood(t, p1, manager)
+		discardFood(t, p2, manager)
+
 		if _, err := manager.DrawFromDeck(p1); err != nil {
 			t.Fatalf("could not draw from deck: %v", err)
 		}
