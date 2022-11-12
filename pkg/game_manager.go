@@ -206,7 +206,19 @@ func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 
 	if err != nil {
 		if err == ErrGameOver {
-			game.Broadcast(Response{Type: GameOver})
+			winner, losers := game.GetResult()
+
+			winner.Send(Response{
+				Type:    GameOver,
+				Payload: "You win",
+			})
+
+			for _, loser := range losers {
+				loser.Send(Response{
+					Type:    GameOver,
+					Payload: "You lost",
+				})
+			}
 
 			game.players.Range(func(socket, _ any) bool {
 				g.games.Delete(socket.(Socket))

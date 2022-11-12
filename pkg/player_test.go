@@ -625,4 +625,21 @@ func TestPlayer(t *testing.T) {
 			t.Errorf("Expected %v points, got %v", 11, player.TotalScore())
 		}
 	})
+
+	t.Run("count food", func(t *testing.T) {
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		if player.CountFood() != 0 {
+			t.Errorf("expected %v food, got %v", 0, player.CountFood())
+		}
+
+		player.GainFood(pkg.Fish, 2)
+		player.GainFood(pkg.Seed, 5)
+		player.GainFood(pkg.Rodent, 1)
+
+		if player.CountFood() != 8 {
+			t.Errorf("expected %v food, got %v", 8, player.CountFood())
+		}
+	})
 }

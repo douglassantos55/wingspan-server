@@ -184,6 +184,10 @@ func TestGameManager(t *testing.T) {
 		discardFood(t, p1, manager)
 		discardFood(t, p2, manager)
 
+		if _, err := manager.PlayCard(p1, 169); err != nil {
+			t.Fatalf("could not play card: %v", err)
+		}
+
 		for i := 0; i < pkg.MAX_ROUNDS; i++ {
 			for j := 0; j < (pkg.MAX_TURNS-i)*2; j++ {
 				if i%2 == 0 {
@@ -198,8 +202,17 @@ func TestGameManager(t *testing.T) {
 			}
 		}
 
-		assertResponse(t, p1, pkg.GameOver)
-		assertResponse(t, p2, pkg.GameOver)
+		response := assertResponse(t, p1, pkg.GameOver)
+		payload := response.Payload.(string)
+		if payload != "You win" {
+			t.Errorf("expected message %v, got %v", "You win", payload)
+		}
+
+		response = assertResponse(t, p2, pkg.GameOver)
+		payload = response.Payload.(string)
+		if payload != "You lost" {
+			t.Errorf("expected message %v, got %v", "You lost", payload)
+		}
 
 		// checks if game is removed from manager
 		if _, err := manager.EndTurn(p1); err != pkg.ErrGameNotFound {

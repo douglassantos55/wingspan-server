@@ -24,6 +24,8 @@ const (
 	MAX_FOOD_FEEDER = 5
 )
 
+// TODO: activate powers when an action is
+// triggered
 type Game struct {
 	mutex        sync.Mutex
 	currRound    int
@@ -413,6 +415,31 @@ func (g *Game) EndRound() error {
 	g.birdTray.Reset(g.deck)
 
 	return ErrRoundEnded
+}
+
+func (g *Game) GetResult() (Socket, []Socket) {
+	var winner *Player
+	winnerScore := -1
+	losers := make([]Socket, 0)
+
+	g.players.Range(func(key, value any) bool {
+		player := value.(*Player)
+		score := player.TotalScore()
+
+		if score > winnerScore {
+			winnerScore = score
+			winner = player
+		} else if score == winnerScore {
+			if player.CountFood() > winner.CountFood() {
+				winner = player
+			}
+		} else {
+			losers = append(losers, key.(Socket))
+		}
+		return true
+	})
+
+	return winner.socket, losers
 }
 
 func (g *Game) Broadcast(response Response) {

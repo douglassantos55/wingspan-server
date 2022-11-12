@@ -262,6 +262,14 @@ func (p *Player) GetFood() map[FoodType]int {
 	return food
 }
 
+func (p *Player) CountFood() int {
+	total := 0
+	for _, qty := range p.GetFood() {
+		total += qty
+	}
+	return total
+}
+
 func (p *Player) GetBirdCards() []*Bird {
 	cards := make([]*Bird, 0)
 	p.birds.Range(func(_, value any) bool {
