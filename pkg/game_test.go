@@ -499,7 +499,12 @@ func TestGame(t *testing.T) {
 	t.Run("refills birdfeeder", func(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
+
 		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
 
 		if err := game.ChooseFood(p1, game.Birdfeeder()); err != nil {
 			t.Fatalf("expected no error, got %v", err)

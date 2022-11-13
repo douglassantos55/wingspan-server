@@ -191,12 +191,11 @@ func (g *Game) DrawFromDeck(socket Socket) error {
 }
 
 func (g *Game) DrawFromTray(socket Socket, birdIds []BirdID) error {
-	value, ok := g.players.Load(socket)
-	if !ok {
-		return ErrGameNotFound
+	player, err := g.validateSocket(socket)
+	if err != nil {
+		return err
 	}
 
-	player := value.(*Player)
 	if len(birdIds) != player.GetCardsToDraw() {
 		return ErrUnexpectedValue
 	}
@@ -234,12 +233,11 @@ func (g *Game) DrawFromTray(socket Socket, birdIds []BirdID) error {
 }
 
 func (g *Game) ChooseFood(socket Socket, chosenFood map[FoodType]int) error {
-	value, ok := g.players.Load(socket)
-	if !ok {
-		return ErrGameNotFound
+	player, err := g.validateSocket(socket)
+	if err != nil {
+		return err
 	}
 
-	player := value.(*Player)
 	for food, qty := range chosenFood {
 		if err := g.birdFeeder.GetFood(food, qty); err != nil {
 			return err
@@ -256,14 +254,9 @@ func (g *Game) ChooseFood(socket Socket, chosenFood map[FoodType]int) error {
 }
 
 func (g *Game) GainFood(socket Socket) error {
-	value, ok := g.players.Load(socket)
-	if !ok {
-		return ErrGameNotFound
-	}
-
-	player, ok := value.(*Player)
-	if !ok {
-		return ErrUnexpectedValue
+	player, err := g.validateSocket(socket)
+	if err != nil {
+		return err
 	}
 
 	if g.birdFeeder.Len() <= 1 {

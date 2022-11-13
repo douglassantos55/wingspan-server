@@ -26,8 +26,7 @@ const (
 	Or
 )
 
-// TODO: missing methods/properties
-// 2. powers
+// TODO: powers
 type Bird struct {
 	ID            BirdID
 	Name          string
