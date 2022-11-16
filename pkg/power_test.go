@@ -116,3 +116,34 @@ func TestCacheFoodPower(t *testing.T) {
 		}
 	})
 }
+
+func TestDrawCardsPower(t *testing.T) {
+	t.Run("draw from deck", func(t *testing.T) {
+		deck := pkg.NewDeck(10)
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+
+		power := pkg.NewDrawCardsPower(player, 2, deck, nil)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not draw cards: %v", err)
+		}
+		if deck.Len() != 8 {
+			t.Errorf("expected len %v, got %v", 8, deck.Len())
+		}
+		if err := player.PlayBird(9); err != nil {
+			t.Errorf("could not play bird: %v", err)
+		}
+	})
+
+	t.Run("draw from tray", func(t *testing.T) {
+		tray := pkg.NewBirdTray(20)
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+
+		power := pkg.NewDrawCardsPower(player, 2, nil, tray)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not draw cards: %v", err)
+		}
+		// TODO: implement
+	})
+}

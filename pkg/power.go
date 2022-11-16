@@ -75,3 +75,35 @@ func (p *CacheFoodPower) Execute() error {
 	p.Bird.CacheFood(p.Qty)
 	return nil
 }
+
+type DrawCardsPower struct {
+	Player   *Player
+	Qty      int
+	Deck     Deck
+	BirdTray *BirdTray
+}
+
+func NewDrawCardsPower(player *Player, qty int, deck Deck, tray *BirdTray) *DrawCardsPower {
+	return &DrawCardsPower{
+		Player:   player,
+		Qty:      qty,
+		BirdTray: tray,
+		Deck:     deck,
+	}
+}
+
+func (p *DrawCardsPower) Execute() error {
+	if p.Deck != nil {
+		birds, err := p.Deck.Draw(p.Qty)
+		if err != nil {
+			return err
+		}
+		for _, bird := range birds {
+			p.Player.GainBird(bird)
+		}
+	}
+	if p.BirdTray != nil {
+		// TODO: choose cards
+	}
+	return nil
+}
