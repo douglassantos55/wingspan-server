@@ -6,7 +6,7 @@ import (
 	"git.internal.com/wingspan/pkg"
 )
 
-func TestPower(t *testing.T) {
+func TestGainFoodPower(t *testing.T) {
 	t.Run("gain one food from feeder", func(t *testing.T) {
 		feeder := pkg.NewBirdfeeder(10)
 		player := pkg.NewPlayer(pkg.NewTestSocket())
@@ -74,6 +74,45 @@ func TestPower(t *testing.T) {
 		}
 		if food[pkg.Rodent] != 1 {
 			t.Errorf("expected %v food, got %v", 1, food[pkg.Rodent])
+		}
+	})
+}
+
+func TestCacheFoodPower(t *testing.T) {
+	t.Run("cache from supply (no source)", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		power := pkg.NewCacheFoodPower(bird, pkg.Seed, 1, nil)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not cache food: %v", err)
+		}
+
+		if bird.CachedFood != 1 {
+			t.Errorf("expected %v cached food, got %v", 1, bird.CachedFood)
+		}
+	})
+
+	t.Run("cache food from birdfeeder", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		feeder := pkg.NewBirdfeeder(10)
+		power := pkg.NewCacheFoodPower(bird, pkg.Rodent, 2, feeder)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not cache food: %v", err)
+		}
+
+		if bird.CachedFood != 2 {
+			t.Errorf("expected %v cached food, got %v", 2, bird.CachedFood)
+		}
+	})
+
+	t.Run("cache more than available from feeder", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		feeder := pkg.NewBirdfeeder(0)
+		power := pkg.NewCacheFoodPower(bird, pkg.Rodent, 2, feeder)
+
+		if err := power.Execute(); err == nil {
+			t.Error("should error")
 		}
 	})
 }

@@ -33,7 +33,7 @@ func TestBird(t *testing.T) {
 
 	t.Run("cache food", func(t *testing.T) {
 		bird := &pkg.Bird{}
-		bird.CacheFood()
+		bird.CacheFood(1)
 		if bird.CachedFood != 1 {
 			t.Errorf("expected %v cached food, got %v", 1, bird.CachedFood)
 		}
@@ -41,7 +41,7 @@ func TestBird(t *testing.T) {
 
 	t.Run("tuck card", func(t *testing.T) {
 		bird := &pkg.Bird{}
-		bird.TuckCard()
+		bird.TuckCards(1)
 		if bird.TuckedCards != 1 {
 			t.Errorf("expected %v tucked cards, got %v", 1, bird.TuckedCards)
 		}

@@ -49,3 +49,29 @@ func (p *GainFoodPower) Execute() error {
 	}
 	return nil
 }
+
+type CacheFoodPower struct {
+	Bird   *Bird
+	Food   FoodType
+	Qty    int
+	Source FoodSupplier
+}
+
+func NewCacheFoodPower(bird *Bird, food FoodType, qty int, source FoodSupplier) *CacheFoodPower {
+	return &CacheFoodPower{
+		Bird:   bird,
+		Qty:    qty,
+		Food:   food,
+		Source: source,
+	}
+}
+
+func (p *CacheFoodPower) Execute() error {
+	if p.Source != nil {
+		if err := p.Source.GetFood(p.Food, p.Qty); err != nil {
+			return err
+		}
+	}
+	p.Bird.CacheFood(p.Qty)
+	return nil
+}

@@ -40,12 +40,12 @@ type Bird struct {
 	FoodCost      map[FoodType]int
 }
 
-func (b *Bird) CacheFood() {
-	b.CachedFood++
+func (b *Bird) CacheFood(qty int) {
+	b.CachedFood += qty
 }
 
-func (b *Bird) TuckCard() {
-	b.TuckedCards++
+func (b *Bird) TuckCards(qty int) {
+	b.TuckedCards += qty
 }
 
 func (b *Bird) LayEgg(qty int) error {
