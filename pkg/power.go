@@ -33,15 +33,17 @@ func (p *GainFoodPower) Execute() error {
 			break
 		}
 
-		if p.Qty == -1 {
-			qty, err := p.Source.GetAll(p.FoodType)
-			if err != nil {
+		if p.Source != nil {
+			if p.Qty == -1 {
+				qty, err := p.Source.GetAll(p.FoodType)
+				if err != nil {
+					return err
+				}
+				p.Qty = qty
+			}
+			if err := p.Source.GetFood(p.FoodType, p.Qty); err != nil {
 				return err
 			}
-			p.Qty = qty
-		}
-		if err := p.Source.GetFood(p.FoodType, p.Qty); err != nil {
-			return err
 		}
 		player.GainFood(p.FoodType, p.Qty)
 	}

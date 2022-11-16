@@ -59,4 +59,21 @@ func TestPower(t *testing.T) {
 
 		// TODO: implement it
 	})
+
+	t.Run("gain food from supply", func(t *testing.T) {
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+		power := pkg.NewGainFood([]*pkg.Player{player}, 1, pkg.Rodent, nil)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not gain food: %v", err)
+		}
+
+		food := player.GetFood()
+		if len(food) != 1 {
+			t.Errorf("expected %v food, got %v", 1, len(food))
+		}
+		if food[pkg.Rodent] != 1 {
+			t.Errorf("expected %v food, got %v", 1, food[pkg.Rodent])
+		}
+	})
 }
