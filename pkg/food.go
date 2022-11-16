@@ -33,6 +33,14 @@ func NewBirdfeeder(size int) *Birdfeeder {
 	return feeder
 }
 
+func (f *Birdfeeder) GetAll(foodType FoodType) (int, error) {
+	value, ok := f.food.Load(foodType)
+	if !ok {
+		return 0, ErrFoodNotFound
+	}
+	return value.(int), nil
+}
+
 func (f *Birdfeeder) GetFood(foodType FoodType, qty int) error {
 	value, ok := f.food.Load(foodType)
 	if !ok {
