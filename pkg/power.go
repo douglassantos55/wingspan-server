@@ -76,35 +76,61 @@ func (p *CacheFoodPower) Execute() error {
 	return nil
 }
 
-type DrawCardsPower struct {
+type DrawFromDeckPower struct {
+	Player *Player
+	Qty    int
+	Deck   Deck
+}
+
+func DrawFromDeck(player *Player, qty int, deck Deck) *DrawFromDeckPower {
+	return &DrawFromDeckPower{
+		Player: player,
+		Qty:    qty,
+		Deck:   deck,
+	}
+}
+
+func (p *DrawFromDeckPower) Execute() error {
+	birds, err := p.Deck.Draw(p.Qty)
+	if err != nil {
+		return err
+	}
+	for _, bird := range birds {
+		p.Player.GainBird(bird)
+	}
+	return nil
+}
+
+type DrawFromTrayPower struct {
 	Player   *Player
 	Qty      int
-	Deck     Deck
 	BirdTray *BirdTray
 }
 
-func NewDrawCardsPower(player *Player, qty int, deck Deck, tray *BirdTray) *DrawCardsPower {
-	return &DrawCardsPower{
+func DrawFromTray(player *Player, qty int, tray *BirdTray) *DrawFromTrayPower {
+	return &DrawFromTrayPower{
 		Player:   player,
 		Qty:      qty,
 		BirdTray: tray,
-		Deck:     deck,
 	}
 }
 
-func (p *DrawCardsPower) Execute() error {
-	if p.Deck != nil {
-		birds, err := p.Deck.Draw(p.Qty)
-		if err != nil {
-			return err
-		}
-		for _, bird := range birds {
+func (p *DrawFromTrayPower) Execute() error {
+	if p.BirdTray.Len() < p.Qty {
+		return ErrNotEnoughCards
+	}
+
+	if p.BirdTray.Len() == p.Qty {
+		for _, bird := range p.BirdTray.Birds() {
+			if _, err := p.BirdTray.Get(bird.ID); err != nil {
+				return err
+			}
 			p.Player.GainBird(bird)
 		}
-	}
-	if p.BirdTray != nil {
+	} else {
 		// TODO: choose cards
 	}
+
 	return nil
 }
 
@@ -146,6 +172,11 @@ func TuckFromHand(bird *Bird, qty int, player *Player) *TuckFromHandPower {
 
 func (p *TuckFromHandPower) Execute() error {
 	hand := p.Player.GetBirdCards()
+
+	if len(hand) < p.Qty {
+		return ErrNotEnoughCards
+	}
+
 	if len(hand) == p.Qty {
 		if err := p.Player.KeepBirds(nil); err != nil {
 			return err
@@ -154,5 +185,6 @@ func (p *TuckFromHandPower) Execute() error {
 	} else {
 		// TODO: choose birds
 	}
+
 	return nil
 }

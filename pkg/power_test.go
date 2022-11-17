@@ -122,7 +122,7 @@ func TestDrawCardsPower(t *testing.T) {
 		deck := pkg.NewDeck(10)
 		player := pkg.NewPlayer(pkg.NewTestSocket())
 
-		power := pkg.NewDrawCardsPower(player, 2, deck, nil)
+		power := pkg.DrawFromDeck(player, 2, deck)
 
 		if err := power.Execute(); err != nil {
 			t.Fatalf("could not draw cards: %v", err)
@@ -136,10 +136,31 @@ func TestDrawCardsPower(t *testing.T) {
 	})
 
 	t.Run("draw from tray", func(t *testing.T) {
+		tray := pkg.NewBirdTray(2)
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+		power := pkg.DrawFromTray(player, 2, tray)
+
+		tray.Refill(pkg.NewDeck(100))
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not draw cards: %v", err)
+		}
+
+		cards := player.GetBirdCards()
+		if len(cards) != 2 {
+			t.Errorf("expected %v cards, got %v", 2, len(cards))
+		}
+		if tray.Len() != 0 {
+			t.Errorf("expected empty tray, got %v", tray.Len())
+		}
+	})
+
+	t.Run("draw from tray (choosing)", func(t *testing.T) {
 		tray := pkg.NewBirdTray(20)
 		player := pkg.NewPlayer(pkg.NewTestSocket())
 
-		power := pkg.NewDrawCardsPower(player, 2, nil, tray)
+		tray.Refill(pkg.NewDeck(100))
+		power := pkg.DrawFromTray(player, 2, tray)
 
 		if err := power.Execute(); err != nil {
 			t.Fatalf("could not draw cards: %v", err)
