@@ -247,3 +247,44 @@ func TestFishingPower(t *testing.T) {
 		}
 	})
 }
+
+func TestHuntingPower(t *testing.T) {
+	t.Run("successfull", func(t *testing.T) {
+		bird := &pkg.Bird{HuntingPower: 100}
+		deck := pkg.NewDeck(100)
+
+		power := pkg.NewHuntingPower(bird, deck)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not hunt: %v", err)
+		}
+		if bird.TuckedCards != 1 {
+			t.Errorf("expected %v tucked card, got %v", 1, bird.TuckedCards)
+		}
+	})
+
+	t.Run("unsuccessful", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		deck := pkg.NewDeck(100)
+
+		power := pkg.NewHuntingPower(bird, deck)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not hunt: %v", err)
+		}
+		if bird.TuckedCards != 0 {
+			t.Errorf("expected %v tucked card, got %v", 0, bird.TuckedCards)
+		}
+	})
+
+	t.Run("empty deck", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		deck := pkg.NewDeck(0)
+
+		power := pkg.NewHuntingPower(bird, deck)
+
+		if err := power.Execute(); err == nil {
+			t.Fatal("should error")
+		}
+	})
+}

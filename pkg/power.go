@@ -212,3 +212,28 @@ func (p *FishingPower) Execute() error {
 	}
 	return nil
 }
+
+type HuntingPower struct {
+	Bird *Bird
+	Deck Deck
+}
+
+func NewHuntingPower(bird *Bird, deck Deck) *HuntingPower {
+	return &HuntingPower{
+		Bird: bird,
+		Deck: deck,
+	}
+}
+
+func (p *HuntingPower) Execute() error {
+	birds, err := p.Deck.Draw(1)
+	if err != nil {
+		return err
+	}
+	for _, bird := range birds {
+		if bird.Wingspan < p.Bird.HuntingPower {
+			p.Bird.TuckCards(1)
+		}
+	}
+	return nil
+}
