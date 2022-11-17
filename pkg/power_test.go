@@ -221,3 +221,29 @@ func TestTuckPower(t *testing.T) {
 		//TODO: check for choose response and do stuff
 	})
 }
+
+func TestFishingPower(t *testing.T) {
+	t.Run("unsuccessfull", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		power := pkg.NewFishingPower(bird, 1, pkg.Fish)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not hunt: %v", err)
+		}
+		if bird.CachedFood != 0 {
+			t.Errorf("expected %v cached food, got %v", 0, bird.CachedFood)
+		}
+	})
+
+	t.Run("successfull", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		power := pkg.NewFishingPower(bird, 1, pkg.Rodent)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not hunt: %v", err)
+		}
+		if bird.CachedFood != 1 {
+			t.Errorf("expected %v cached food, got %v", 1, bird.CachedFood)
+		}
+	})
+}

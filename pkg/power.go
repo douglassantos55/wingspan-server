@@ -1,5 +1,7 @@
 package pkg
 
+import "math/rand"
+
 type Power interface {
 	Execute() error
 }
@@ -186,5 +188,27 @@ func (p *TuckFromHandPower) Execute() error {
 		// TODO: choose birds
 	}
 
+	return nil
+}
+
+type FishingPower struct {
+	Qty  int
+	Food FoodType
+	Bird *Bird
+}
+
+func NewFishingPower(bird *Bird, qty int, food FoodType) *FishingPower {
+	return &FishingPower{
+		Food: food,
+		Bird: bird,
+		Qty:  qty,
+	}
+}
+
+func (p *FishingPower) Execute() error {
+	random := rand.Intn(FOOD_TYPE_COUNT)
+	if FoodType(random) == p.Food {
+		p.Bird.CacheFood(p.Qty)
+	}
 	return nil
 }
