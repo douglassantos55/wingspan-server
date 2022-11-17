@@ -232,16 +232,17 @@ func (p *Player) DiscardFood(foodType FoodType, qty int) error {
 func (p *Player) KeepBirds(birdIds []BirdID) error {
 	cardsToRemove := make([]BirdID, 0)
 
+outer:
 	for _, bird := range p.GetBirdCards() {
 		for _, id := range birdIds {
 			if bird.ID == id {
-				continue
+				continue outer
 			}
 			if _, ok := p.birds.Load(id); !ok {
 				return ErrBirdCardNotFound
 			}
-			cardsToRemove = append(cardsToRemove, bird.ID)
 		}
+		cardsToRemove = append(cardsToRemove, bird.ID)
 	}
 
 	for _, id := range cardsToRemove {

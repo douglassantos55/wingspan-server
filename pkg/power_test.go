@@ -147,3 +147,56 @@ func TestDrawCardsPower(t *testing.T) {
 		// TODO: implement
 	})
 }
+
+func TestTuckPower(t *testing.T) {
+	t.Run("tuck from deck", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		deck := pkg.NewDeck(20)
+		power := pkg.TuckFromDeck(bird, 2, deck)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not tuck from hand: %v", err)
+		}
+		if deck.Len() != 18 {
+			t.Errorf("expected len %v, got %v", 18, deck.Len())
+		}
+		if bird.TuckedCards != 2 {
+			t.Errorf("expected %v tucked cards, got %v", 2, bird.TuckedCards)
+		}
+	})
+
+	t.Run("tuck from hand", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(1)})
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2)})
+
+		power := pkg.TuckFromHand(bird, 2, player)
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not tuck from hand: %v", err)
+		}
+
+		if len(player.GetBirdCards()) != 0 {
+			t.Errorf("expected len %v, got %v", 0, len(player.GetBirdCards()))
+		}
+		if bird.TuckedCards != 2 {
+			t.Errorf("expected %v tucked cards, got %v", 2, bird.TuckedCards)
+		}
+	})
+
+	t.Run("tuck from hand (choosing)", func(t *testing.T) {
+		bird := &pkg.Bird{}
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(1)})
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2)})
+
+		power := pkg.TuckFromHand(bird, 1, player)
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not tuck from hand: %v", err)
+		}
+
+		//TODO: check for choose response and do stuff
+	})
+}

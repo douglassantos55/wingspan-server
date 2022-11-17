@@ -107,3 +107,52 @@ func (p *DrawCardsPower) Execute() error {
 	}
 	return nil
 }
+
+type TuckFromDeckPower struct {
+	Bird *Bird
+	Qty  int
+	Deck Deck
+}
+
+func TuckFromDeck(bird *Bird, qty int, deck Deck) *TuckFromDeckPower {
+	return &TuckFromDeckPower{
+		Bird: bird,
+		Qty:  qty,
+		Deck: deck,
+	}
+}
+
+func (p *TuckFromDeckPower) Execute() error {
+	if _, err := p.Deck.Draw(p.Qty); err != nil {
+		return err
+	}
+	p.Bird.TuckCards(p.Qty)
+	return nil
+}
+
+type TuckFromHandPower struct {
+	Bird   *Bird
+	Qty    int
+	Player *Player
+}
+
+func TuckFromHand(bird *Bird, qty int, player *Player) *TuckFromHandPower {
+	return &TuckFromHandPower{
+		Bird:   bird,
+		Qty:    qty,
+		Player: player,
+	}
+}
+
+func (p *TuckFromHandPower) Execute() error {
+	hand := p.Player.GetBirdCards()
+	if len(hand) == p.Qty {
+		if err := p.Player.KeepBirds(nil); err != nil {
+			return err
+		}
+		p.Bird.TuckCards(p.Qty)
+	} else {
+		// TODO: choose birds
+	}
+	return nil
+}
