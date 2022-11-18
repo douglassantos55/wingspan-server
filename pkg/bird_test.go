@@ -11,7 +11,7 @@ func TestBird(t *testing.T) {
 	t.Run("lay egg", func(t *testing.T) {
 		bird := &pkg.Bird{EggLimit: 10}
 
-		if err := bird.LayEgg(1); err != nil {
+		if err := bird.LayEggs(1); err != nil {
 			t.Fatalf("error laying egg: %v", err)
 		}
 		if bird.EggCount != 1 {
@@ -22,7 +22,7 @@ func TestBird(t *testing.T) {
 	t.Run("lay more eggs than limit", func(t *testing.T) {
 		bird := &pkg.Bird{EggLimit: 0}
 
-		err := bird.LayEgg(1)
+		err := bird.LayEggs(1)
 		if err == nil {
 			t.Error("should not lay more eggs than limit")
 		}

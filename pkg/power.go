@@ -237,3 +237,35 @@ func (p *HuntingPower) Execute() error {
 	}
 	return nil
 }
+
+type LayEggsPower struct {
+	Birds []*Bird
+	Qty   int
+	Nest  NestType
+}
+
+func NewLayEggsPower(birds []*Bird, qty int, nest NestType) *LayEggsPower {
+	return &LayEggsPower{
+		Birds: birds,
+		Qty:   qty,
+		Nest:  nest,
+	}
+}
+
+func (p *LayEggsPower) Execute() error {
+	if p.Nest != -1 {
+		for _, bird := range p.Birds {
+			if bird.NestType == p.Nest {
+				if err := bird.LayEggs(p.Qty); err != nil {
+					return err
+				}
+			}
+		}
+	} else {
+		if len(p.Birds) == 1 {
+			return p.Birds[0].LayEggs(p.Qty)
+		}
+		// TODO: choose bird to lay egg
+	}
+	return nil
+}

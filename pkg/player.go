@@ -49,7 +49,7 @@ func (p *Player) LayEgg(birdId BirdID, qty int) (*Bird, error) {
 	if bird == nil {
 		return nil, ErrBirdCardNotFound
 	}
-	return bird, bird.LayEgg(qty)
+	return bird, bird.LayEggs(qty)
 }
 
 func (p *Player) GetCardsToDraw() int {

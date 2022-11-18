@@ -288,3 +288,53 @@ func TestHuntingPower(t *testing.T) {
 		}
 	})
 }
+
+func TestLayEggsPower(t *testing.T) {
+	t.Run("lay on this bird", func(t *testing.T) {
+		bird := &pkg.Bird{ID: pkg.BirdID(1), EggLimit: 5}
+		power := pkg.NewLayEggsPower([]*pkg.Bird{bird}, 2, -1)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not lay eggs: %v", err)
+		}
+
+		if bird.EggCount != 2 {
+			t.Errorf("expected %v eggs, got %v", 2, bird.EggCount)
+		}
+	})
+
+	t.Run("lay on any bird", func(t *testing.T) {
+		bird1 := &pkg.Bird{ID: pkg.BirdID(1), EggLimit: 5}
+		bird2 := &pkg.Bird{ID: pkg.BirdID(2), EggLimit: 5}
+
+		power := pkg.NewLayEggsPower([]*pkg.Bird{bird1, bird2}, 1, -1)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not lay eggs: %v", err)
+		}
+
+		// TODO: choose bird to lay eggs
+	})
+
+	t.Run("lay on each with nest type", func(t *testing.T) {
+		bird1 := &pkg.Bird{ID: pkg.BirdID(1), NestType: pkg.Plataform, EggLimit: 5}
+		bird2 := &pkg.Bird{ID: pkg.BirdID(2), NestType: pkg.Cavity, EggLimit: 5}
+		bird3 := &pkg.Bird{ID: pkg.BirdID(3), NestType: pkg.Cavity, EggLimit: 5}
+
+		power := pkg.NewLayEggsPower([]*pkg.Bird{bird1, bird2, bird3}, 1, pkg.Cavity)
+
+		if err := power.Execute(); err != nil {
+			t.Fatalf("could not lay eggs: %v", err)
+		}
+
+		if bird1.EggCount != 0 {
+			t.Errorf("expected %v egg, got %v", 0, bird2.EggCount)
+		}
+		if bird2.EggCount != 1 {
+			t.Errorf("expected %v egg, got %v", 1, bird2.EggCount)
+		}
+		if bird3.EggCount != 1 {
+			t.Errorf("expected %v egg, got %v", 1, bird3.EggCount)
+		}
+	})
+}

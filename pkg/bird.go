@@ -11,7 +11,15 @@ var (
 )
 
 type Habitat int
+type NestType int
 type BirdID int
+
+const (
+	Plataform NestType = iota
+	Bowl
+	Cavity
+	Ground
+)
 
 const (
 	Forest Habitat = iota
@@ -26,6 +34,13 @@ const (
 	Or
 )
 
+type Trigger int
+
+const (
+	WhenPlayed Trigger = iota
+	WhenActivated
+)
+
 // TODO: powers
 type Bird struct {
 	ID            BirdID
@@ -35,9 +50,13 @@ type Bird struct {
 	EggCount      int
 	CachedFood    int
 	TuckedCards   int
+	Wingspan      int
+	HuntingPower  int
+	NestType      NestType
 	Habitat       Habitat
 	FoodCondition FoodCondition
 	FoodCost      map[FoodType]int
+	Power         map[Trigger]Power
 }
 
 func (b *Bird) CacheFood(qty int) {
@@ -48,7 +67,7 @@ func (b *Bird) TuckCards(qty int) {
 	b.TuckedCards += qty
 }
 
-func (b *Bird) LayEgg(qty int) error {
+func (b *Bird) LayEggs(qty int) error {
 	if b.EggCount+qty > b.EggLimit {
 		return ErrEggLimitReached
 	}
