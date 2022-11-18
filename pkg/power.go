@@ -3,7 +3,7 @@ package pkg
 import "math/rand"
 
 type Power interface {
-	Execute() error
+	Execute(*Player) error
 }
 
 type FoodSupplier interface {
@@ -18,9 +18,8 @@ type GainFoodPower struct {
 	Source   FoodSupplier
 }
 
-func NewGainFood(players []*Player, qty int, foodType FoodType, source FoodSupplier) *GainFoodPower {
+func NewGainFood(qty int, foodType FoodType, source FoodSupplier) *GainFoodPower {
 	return &GainFoodPower{
-		Players:  players,
 		Qty:      qty,
 		FoodType: foodType,
 		Source:   source,
@@ -28,13 +27,10 @@ func NewGainFood(players []*Player, qty int, foodType FoodType, source FoodSuppl
 
 }
 
-func (p *GainFoodPower) Execute() error {
-	for _, player := range p.Players {
-		if p.FoodType == -1 {
-			// TODO: change state to choosing?
-			break
-		}
-
+func (p *GainFoodPower) Execute(player *Player) error {
+	if p.FoodType == -1 {
+		// TODO: change state to choosing?
+	} else {
 		if p.Source != nil {
 			if p.Qty == -1 {
 				qty, err := p.Source.GetAll(p.FoodType)
@@ -49,6 +45,7 @@ func (p *GainFoodPower) Execute() error {
 		}
 		player.GainFood(p.FoodType, p.Qty)
 	}
+
 	return nil
 }
 

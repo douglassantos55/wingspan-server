@@ -11,9 +11,9 @@ func TestGainFoodPower(t *testing.T) {
 		feeder := pkg.NewBirdfeeder(10)
 		player := pkg.NewPlayer(pkg.NewTestSocket())
 
-		power := pkg.NewGainFood([]*pkg.Player{player}, 1, pkg.Fish, feeder)
+		power := pkg.NewGainFood(1, pkg.Fish, feeder)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(player); err != nil {
 			t.Fatalf("could not gain food: %v", err)
 		}
 
@@ -31,10 +31,10 @@ func TestGainFoodPower(t *testing.T) {
 		feeder := pkg.NewBirdfeeder(10)
 		player := pkg.NewPlayer(pkg.NewTestSocket())
 
-		power := pkg.NewGainFood([]*pkg.Player{player}, -1, pkg.Fish, feeder)
+		power := pkg.NewGainFood(-1, pkg.Fish, feeder)
 		total, _ := feeder.GetAll(pkg.Fish)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(player); err != nil {
 			t.Fatalf("could not gain food: %v", err)
 		}
 
@@ -49,22 +49,14 @@ func TestGainFoodPower(t *testing.T) {
 	})
 
 	t.Run("all players gain 1 food from feeder", func(t *testing.T) {
-		feeder := pkg.NewBirdfeeder(10)
-		player := pkg.NewPlayer(pkg.NewTestSocket())
-
-		power := pkg.NewGainFood([]*pkg.Player{player}, 1, -1, feeder)
-		if err := power.Execute(); err != nil {
-			t.Fatalf("could not gain food: %v", err)
-		}
-
-		// TODO: implement it
+		// TODO
 	})
 
 	t.Run("gain food from supply", func(t *testing.T) {
 		player := pkg.NewPlayer(pkg.NewTestSocket())
-		power := pkg.NewGainFood([]*pkg.Player{player}, 1, pkg.Rodent, nil)
+		power := pkg.NewGainFood(1, pkg.Rodent, nil)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(player); err != nil {
 			t.Fatalf("could not gain food: %v", err)
 		}
 
