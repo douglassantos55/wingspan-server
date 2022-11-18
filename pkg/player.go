@@ -162,6 +162,12 @@ func (p *Player) PayBirdCost(birdID BirdID, food []FoodType, eggs map[BirdID]int
 		Payload: p.board,
 	})
 
+	if bird.Power[WhenPlayed] != nil {
+		if err := bird.Power[WhenPlayed].Execute(p); err != nil {
+			return err
+		}
+	}
+
 	return err
 }
 

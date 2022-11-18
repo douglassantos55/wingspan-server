@@ -642,4 +642,20 @@ func TestPlayer(t *testing.T) {
 			t.Errorf("expected %v food, got %v", 8, player.CountFood())
 		}
 	})
+
+	t.Run("activate when played power", func(t *testing.T) {
+		bird := &pkg.Bird{Power: map[pkg.Trigger]pkg.Power{
+			pkg.WhenPlayed: pkg.NewGainFood(1, pkg.Fish, nil),
+		}}
+
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+		player.GainBird(bird)
+
+		if err := player.PlayBird(bird.ID); err != nil {
+			t.Fatalf("could not play bird: %v", err)
+		}
+		if player.CountFood() != 1 {
+			t.Errorf("expected %v food, got %v", 1, player.CountFood())
+		}
+	})
 }
