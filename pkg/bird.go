@@ -75,6 +75,15 @@ func (b *Bird) LayEggs(qty int) error {
 	return nil
 }
 
+func (b *Bird) CastPower(trigger Trigger, caster *Player) error {
+	if b.Power[WhenPlayed] != nil {
+		if err := b.Power[WhenPlayed].Execute(b, caster); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 type BirdTray struct {
 	birds *sync.Map // Map of IDs to Bird references
 	len   int32     // Current number of birds on tray

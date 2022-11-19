@@ -3,7 +3,7 @@ package pkg
 import "math/rand"
 
 type Power interface {
-	Execute(*Player) error
+	Execute(*Bird, *Player) error
 }
 
 type FoodSupplier interface {
@@ -12,7 +12,6 @@ type FoodSupplier interface {
 }
 
 type GainFoodPower struct {
-	Players  []*Player
 	Qty      int
 	FoodType FoodType
 	Source   FoodSupplier
@@ -27,7 +26,7 @@ func NewGainFood(qty int, foodType FoodType, source FoodSupplier) *GainFoodPower
 
 }
 
-func (p *GainFoodPower) Execute(player *Player) error {
+func (p *GainFoodPower) Execute(bird *Bird, player *Player) error {
 	if p.FoodType == -1 {
 		// TODO: change state to choosing?
 	} else {
@@ -50,71 +49,65 @@ func (p *GainFoodPower) Execute(player *Player) error {
 }
 
 type CacheFoodPower struct {
-	Bird   *Bird
 	Food   FoodType
 	Qty    int
 	Source FoodSupplier
 }
 
-func NewCacheFoodPower(bird *Bird, food FoodType, qty int, source FoodSupplier) *CacheFoodPower {
+func NewCacheFoodPower(food FoodType, qty int, source FoodSupplier) *CacheFoodPower {
 	return &CacheFoodPower{
-		Bird:   bird,
 		Qty:    qty,
 		Food:   food,
 		Source: source,
 	}
 }
 
-func (p *CacheFoodPower) Execute() error {
+func (p *CacheFoodPower) Execute(bird *Bird, player *Player) error {
 	if p.Source != nil {
 		if err := p.Source.GetFood(p.Food, p.Qty); err != nil {
 			return err
 		}
 	}
-	p.Bird.CacheFood(p.Qty)
+	bird.CacheFood(p.Qty)
 	return nil
 }
 
 type DrawFromDeckPower struct {
-	Player *Player
-	Qty    int
-	Deck   Deck
+	Qty  int
+	Deck Deck
 }
 
-func DrawFromDeck(player *Player, qty int, deck Deck) *DrawFromDeckPower {
+func DrawFromDeck(qty int, deck Deck) *DrawFromDeckPower {
 	return &DrawFromDeckPower{
-		Player: player,
-		Qty:    qty,
-		Deck:   deck,
+		Qty:  qty,
+		Deck: deck,
 	}
 }
 
-func (p *DrawFromDeckPower) Execute() error {
+func (p *DrawFromDeckPower) Execute(bird *Bird, player *Player) error {
 	birds, err := p.Deck.Draw(p.Qty)
 	if err != nil {
 		return err
 	}
 	for _, bird := range birds {
-		p.Player.GainBird(bird)
+		player.GainBird(bird)
 	}
 	return nil
 }
 
 type DrawFromTrayPower struct {
-	Player   *Player
 	Qty      int
 	BirdTray *BirdTray
 }
 
-func DrawFromTray(player *Player, qty int, tray *BirdTray) *DrawFromTrayPower {
+func DrawFromTray(qty int, tray *BirdTray) *DrawFromTrayPower {
 	return &DrawFromTrayPower{
-		Player:   player,
 		Qty:      qty,
 		BirdTray: tray,
 	}
 }
 
-func (p *DrawFromTrayPower) Execute() error {
+func (p *DrawFromTrayPower) Execute(bird *Bird, player *Player) error {
 	if p.BirdTray.Len() < p.Qty {
 		return ErrNotEnoughCards
 	}
@@ -124,7 +117,7 @@ func (p *DrawFromTrayPower) Execute() error {
 			if _, err := p.BirdTray.Get(bird.ID); err != nil {
 				return err
 			}
-			p.Player.GainBird(bird)
+			player.GainBird(bird)
 		}
 	} else {
 		// TODO: choose cards
@@ -134,53 +127,47 @@ func (p *DrawFromTrayPower) Execute() error {
 }
 
 type TuckFromDeckPower struct {
-	Bird *Bird
 	Qty  int
 	Deck Deck
 }
 
-func TuckFromDeck(bird *Bird, qty int, deck Deck) *TuckFromDeckPower {
+func TuckFromDeck(qty int, deck Deck) *TuckFromDeckPower {
 	return &TuckFromDeckPower{
-		Bird: bird,
 		Qty:  qty,
 		Deck: deck,
 	}
 }
 
-func (p *TuckFromDeckPower) Execute() error {
+func (p *TuckFromDeckPower) Execute(bird *Bird, player *Player) error {
 	if _, err := p.Deck.Draw(p.Qty); err != nil {
 		return err
 	}
-	p.Bird.TuckCards(p.Qty)
+	bird.TuckCards(p.Qty)
 	return nil
 }
 
 type TuckFromHandPower struct {
-	Bird   *Bird
-	Qty    int
-	Player *Player
+	Qty int
 }
 
-func TuckFromHand(bird *Bird, qty int, player *Player) *TuckFromHandPower {
+func TuckFromHand(qty int) *TuckFromHandPower {
 	return &TuckFromHandPower{
-		Bird:   bird,
-		Qty:    qty,
-		Player: player,
+		Qty: qty,
 	}
 }
 
-func (p *TuckFromHandPower) Execute() error {
-	hand := p.Player.GetBirdCards()
+func (p *TuckFromHandPower) Execute(bird *Bird, player *Player) error {
+	hand := player.GetBirdCards()
 
 	if len(hand) < p.Qty {
 		return ErrNotEnoughCards
 	}
 
 	if len(hand) == p.Qty {
-		if err := p.Player.KeepBirds(nil); err != nil {
+		if err := player.KeepBirds(nil); err != nil {
 			return err
 		}
-		p.Bird.TuckCards(p.Qty)
+		bird.TuckCards(p.Qty)
 	} else {
 		// TODO: choose birds
 	}
@@ -191,67 +178,61 @@ func (p *TuckFromHandPower) Execute() error {
 type FishingPower struct {
 	Qty  int
 	Food FoodType
-	Bird *Bird
 }
 
-func NewFishingPower(bird *Bird, qty int, food FoodType) *FishingPower {
+func NewFishingPower(qty int, food FoodType) *FishingPower {
 	return &FishingPower{
 		Food: food,
-		Bird: bird,
 		Qty:  qty,
 	}
 }
 
-func (p *FishingPower) Execute() error {
+func (p *FishingPower) Execute(bird *Bird, player *Player) error {
 	random := rand.Intn(FOOD_TYPE_COUNT)
 	if FoodType(random) == p.Food {
-		p.Bird.CacheFood(p.Qty)
+		bird.CacheFood(p.Qty)
 	}
 	return nil
 }
 
 type HuntingPower struct {
-	Bird *Bird
 	Deck Deck
 }
 
-func NewHuntingPower(bird *Bird, deck Deck) *HuntingPower {
+func NewHuntingPower(deck Deck) *HuntingPower {
 	return &HuntingPower{
-		Bird: bird,
 		Deck: deck,
 	}
 }
 
-func (p *HuntingPower) Execute() error {
+func (p *HuntingPower) Execute(bird *Bird, player *Player) error {
 	birds, err := p.Deck.Draw(1)
 	if err != nil {
 		return err
 	}
-	for _, bird := range birds {
-		if bird.Wingspan < p.Bird.HuntingPower {
-			p.Bird.TuckCards(1)
+	for _, drawn := range birds {
+		if drawn.Wingspan < bird.HuntingPower {
+			bird.TuckCards(1)
 		}
 	}
 	return nil
 }
 
 type LayEggsPower struct {
-	Birds []*Bird
-	Qty   int
-	Nest  NestType
+	Qty  int
+	Nest NestType
 }
 
-func NewLayEggsPower(birds []*Bird, qty int, nest NestType) *LayEggsPower {
+func NewLayEggsPower(qty int, nest NestType) *LayEggsPower {
 	return &LayEggsPower{
-		Birds: birds,
-		Qty:   qty,
-		Nest:  nest,
+		Qty:  qty,
+		Nest: nest,
 	}
 }
 
-func (p *LayEggsPower) Execute() error {
+func (p *LayEggsPower) Execute(bird *Bird, player *Player) error {
 	if p.Nest != -1 {
-		for _, bird := range p.Birds {
+		for _, bird := range player.GetBirdCards() {
 			if bird.NestType == p.Nest {
 				if err := bird.LayEggs(p.Qty); err != nil {
 					return err
@@ -259,8 +240,8 @@ func (p *LayEggsPower) Execute() error {
 			}
 		}
 	} else {
-		if len(p.Birds) == 1 {
-			return p.Birds[0].LayEggs(p.Qty)
+		if len(player.GetBirdCards()) == 1 {
+			return player.GetBirdCards()[0].LayEggs(p.Qty)
 		}
 		// TODO: choose bird to lay egg
 	}

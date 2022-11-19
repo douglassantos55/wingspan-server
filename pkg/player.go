@@ -157,18 +157,16 @@ func (p *Player) PayBirdCost(birdID BirdID, food []FoodType, eggs map[BirdID]int
 		return err
 	}
 
-	_, err := p.socket.Send(Response{
+	p.socket.Send(Response{
 		Type:    BoardUpdated,
 		Payload: p.board,
 	})
 
-	if bird.Power[WhenPlayed] != nil {
-		if err := bird.Power[WhenPlayed].Execute(p); err != nil {
-			return err
-		}
+	if err := bird.CastPower(WhenPlayed, p); err != nil {
+		return err
 	}
 
-	return err
+	return nil
 }
 
 func (p *Player) PayEggCost(cost int, chosenEggs map[BirdID]int) error {

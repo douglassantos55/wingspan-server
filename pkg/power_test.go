@@ -13,7 +13,7 @@ func TestGainFoodPower(t *testing.T) {
 
 		power := pkg.NewGainFood(1, pkg.Fish, feeder)
 
-		if err := power.Execute(player); err != nil {
+		if err := power.Execute(nil, player); err != nil {
 			t.Fatalf("could not gain food: %v", err)
 		}
 
@@ -34,7 +34,7 @@ func TestGainFoodPower(t *testing.T) {
 		power := pkg.NewGainFood(-1, pkg.Fish, feeder)
 		total, _ := feeder.GetAll(pkg.Fish)
 
-		if err := power.Execute(player); err != nil {
+		if err := power.Execute(nil, player); err != nil {
 			t.Fatalf("could not gain food: %v", err)
 		}
 
@@ -56,7 +56,7 @@ func TestGainFoodPower(t *testing.T) {
 		player := pkg.NewPlayer(pkg.NewTestSocket())
 		power := pkg.NewGainFood(1, pkg.Rodent, nil)
 
-		if err := power.Execute(player); err != nil {
+		if err := power.Execute(nil, player); err != nil {
 			t.Fatalf("could not gain food: %v", err)
 		}
 
@@ -73,9 +73,9 @@ func TestGainFoodPower(t *testing.T) {
 func TestCacheFoodPower(t *testing.T) {
 	t.Run("cache from supply (no source)", func(t *testing.T) {
 		bird := &pkg.Bird{}
-		power := pkg.NewCacheFoodPower(bird, pkg.Seed, 1, nil)
+		power := pkg.NewCacheFoodPower(pkg.Seed, 1, nil)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(bird, nil); err != nil {
 			t.Fatalf("could not cache food: %v", err)
 		}
 
@@ -87,9 +87,9 @@ func TestCacheFoodPower(t *testing.T) {
 	t.Run("cache food from birdfeeder", func(t *testing.T) {
 		bird := &pkg.Bird{}
 		feeder := pkg.NewBirdfeeder(10)
-		power := pkg.NewCacheFoodPower(bird, pkg.Rodent, 2, feeder)
+		power := pkg.NewCacheFoodPower(pkg.Rodent, 2, feeder)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(bird, nil); err != nil {
 			t.Fatalf("could not cache food: %v", err)
 		}
 
@@ -101,9 +101,9 @@ func TestCacheFoodPower(t *testing.T) {
 	t.Run("cache more than available from feeder", func(t *testing.T) {
 		bird := &pkg.Bird{}
 		feeder := pkg.NewBirdfeeder(0)
-		power := pkg.NewCacheFoodPower(bird, pkg.Rodent, 2, feeder)
+		power := pkg.NewCacheFoodPower(pkg.Rodent, 2, feeder)
 
-		if err := power.Execute(); err == nil {
+		if err := power.Execute(bird, nil); err == nil {
 			t.Error("should error")
 		}
 	})
@@ -114,9 +114,9 @@ func TestDrawCardsPower(t *testing.T) {
 		deck := pkg.NewDeck(10)
 		player := pkg.NewPlayer(pkg.NewTestSocket())
 
-		power := pkg.DrawFromDeck(player, 2, deck)
+		power := pkg.DrawFromDeck(2, deck)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(nil, player); err != nil {
 			t.Fatalf("could not draw cards: %v", err)
 		}
 		if deck.Len() != 8 {
@@ -130,11 +130,11 @@ func TestDrawCardsPower(t *testing.T) {
 	t.Run("draw from tray", func(t *testing.T) {
 		tray := pkg.NewBirdTray(2)
 		player := pkg.NewPlayer(pkg.NewTestSocket())
-		power := pkg.DrawFromTray(player, 2, tray)
+		power := pkg.DrawFromTray(2, tray)
 
 		tray.Refill(pkg.NewDeck(100))
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(nil, player); err != nil {
 			t.Fatalf("could not draw cards: %v", err)
 		}
 
@@ -152,9 +152,9 @@ func TestDrawCardsPower(t *testing.T) {
 		player := pkg.NewPlayer(pkg.NewTestSocket())
 
 		tray.Refill(pkg.NewDeck(100))
-		power := pkg.DrawFromTray(player, 2, tray)
+		power := pkg.DrawFromTray(2, tray)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(nil, player); err != nil {
 			t.Fatalf("could not draw cards: %v", err)
 		}
 		// TODO: implement
@@ -165,9 +165,9 @@ func TestTuckPower(t *testing.T) {
 	t.Run("tuck from deck", func(t *testing.T) {
 		bird := &pkg.Bird{}
 		deck := pkg.NewDeck(20)
-		power := pkg.TuckFromDeck(bird, 2, deck)
+		power := pkg.TuckFromDeck(2, deck)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(bird, nil); err != nil {
 			t.Fatalf("could not tuck from hand: %v", err)
 		}
 		if deck.Len() != 18 {
@@ -185,8 +185,8 @@ func TestTuckPower(t *testing.T) {
 		player.GainBird(&pkg.Bird{ID: pkg.BirdID(1)})
 		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2)})
 
-		power := pkg.TuckFromHand(bird, 2, player)
-		if err := power.Execute(); err != nil {
+		power := pkg.TuckFromHand(2)
+		if err := power.Execute(bird, player); err != nil {
 			t.Fatalf("could not tuck from hand: %v", err)
 		}
 
@@ -205,8 +205,8 @@ func TestTuckPower(t *testing.T) {
 		player.GainBird(&pkg.Bird{ID: pkg.BirdID(1)})
 		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2)})
 
-		power := pkg.TuckFromHand(bird, 1, player)
-		if err := power.Execute(); err != nil {
+		power := pkg.TuckFromHand(1)
+		if err := power.Execute(bird, player); err != nil {
 			t.Fatalf("could not tuck from hand: %v", err)
 		}
 
@@ -217,9 +217,9 @@ func TestTuckPower(t *testing.T) {
 func TestFishingPower(t *testing.T) {
 	t.Run("unsuccessfull", func(t *testing.T) {
 		bird := &pkg.Bird{}
-		power := pkg.NewFishingPower(bird, 1, pkg.Fish)
+		power := pkg.NewFishingPower(1, pkg.Fish)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(bird, nil); err != nil {
 			t.Fatalf("could not hunt: %v", err)
 		}
 		if bird.CachedFood != 0 {
@@ -229,9 +229,9 @@ func TestFishingPower(t *testing.T) {
 
 	t.Run("successfull", func(t *testing.T) {
 		bird := &pkg.Bird{}
-		power := pkg.NewFishingPower(bird, 1, pkg.Rodent)
+		power := pkg.NewFishingPower(1, pkg.Rodent)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(bird, nil); err != nil {
 			t.Fatalf("could not hunt: %v", err)
 		}
 		if bird.CachedFood != 1 {
@@ -245,9 +245,9 @@ func TestHuntingPower(t *testing.T) {
 		bird := &pkg.Bird{HuntingPower: 100}
 		deck := pkg.NewDeck(100)
 
-		power := pkg.NewHuntingPower(bird, deck)
+		power := pkg.NewHuntingPower(deck)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(bird, nil); err != nil {
 			t.Fatalf("could not hunt: %v", err)
 		}
 		if bird.TuckedCards != 1 {
@@ -259,9 +259,9 @@ func TestHuntingPower(t *testing.T) {
 		bird := &pkg.Bird{}
 		deck := pkg.NewDeck(100)
 
-		power := pkg.NewHuntingPower(bird, deck)
+		power := pkg.NewHuntingPower(deck)
 
-		if err := power.Execute(); err != nil {
+		if err := power.Execute(bird, nil); err != nil {
 			t.Fatalf("could not hunt: %v", err)
 		}
 		if bird.TuckedCards != 0 {
@@ -273,9 +273,9 @@ func TestHuntingPower(t *testing.T) {
 		bird := &pkg.Bird{}
 		deck := pkg.NewDeck(0)
 
-		power := pkg.NewHuntingPower(bird, deck)
+		power := pkg.NewHuntingPower(deck)
 
-		if err := power.Execute(); err == nil {
+		if err := power.Execute(bird, nil); err == nil {
 			t.Fatal("should error")
 		}
 	})
@@ -284,9 +284,13 @@ func TestHuntingPower(t *testing.T) {
 func TestLayEggsPower(t *testing.T) {
 	t.Run("lay on this bird", func(t *testing.T) {
 		bird := &pkg.Bird{ID: pkg.BirdID(1), EggLimit: 5}
-		power := pkg.NewLayEggsPower([]*pkg.Bird{bird}, 2, -1)
 
-		if err := power.Execute(); err != nil {
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+		player.GainBird(bird)
+
+		power := pkg.NewLayEggsPower(2, -1)
+
+		if err := power.Execute(bird, player); err != nil {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
 
@@ -296,12 +300,14 @@ func TestLayEggsPower(t *testing.T) {
 	})
 
 	t.Run("lay on any bird", func(t *testing.T) {
-		bird1 := &pkg.Bird{ID: pkg.BirdID(1), EggLimit: 5}
-		bird2 := &pkg.Bird{ID: pkg.BirdID(2), EggLimit: 5}
+		player := pkg.NewPlayer(pkg.NewTestSocket())
 
-		power := pkg.NewLayEggsPower([]*pkg.Bird{bird1, bird2}, 1, -1)
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(1), EggLimit: 5})
+		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2), EggLimit: 5})
 
-		if err := power.Execute(); err != nil {
+		power := pkg.NewLayEggsPower(1, -1)
+
+		if err := power.Execute(nil, player); err != nil {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
 
@@ -309,13 +315,19 @@ func TestLayEggsPower(t *testing.T) {
 	})
 
 	t.Run("lay on each with nest type", func(t *testing.T) {
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+
 		bird1 := &pkg.Bird{ID: pkg.BirdID(1), NestType: pkg.Plataform, EggLimit: 5}
 		bird2 := &pkg.Bird{ID: pkg.BirdID(2), NestType: pkg.Cavity, EggLimit: 5}
 		bird3 := &pkg.Bird{ID: pkg.BirdID(3), NestType: pkg.Cavity, EggLimit: 5}
 
-		power := pkg.NewLayEggsPower([]*pkg.Bird{bird1, bird2, bird3}, 1, pkg.Cavity)
+		player.GainBird(bird1)
+		player.GainBird(bird2)
+		player.GainBird(bird3)
 
-		if err := power.Execute(); err != nil {
+		power := pkg.NewLayEggsPower(1, pkg.Cavity)
+
+		if err := power.Execute(nil, player); err != nil {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
 
