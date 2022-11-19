@@ -166,6 +166,10 @@ func (p *Player) PayBirdCost(birdID BirdID, food []FoodType, eggs map[BirdID]int
 		return err
 	}
 
+	if err := p.board.ActivatePowers(bird.Habitat, p); err != nil {
+		return err
+	}
+
 	return nil
 }
 

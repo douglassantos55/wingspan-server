@@ -24,8 +24,6 @@ const (
 	MAX_FOOD_FEEDER = 5
 )
 
-// TODO: activate powers when an action is
-// triggered
 type Game struct {
 	mutex        sync.Mutex
 	currRound    int

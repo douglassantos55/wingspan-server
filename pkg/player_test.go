@@ -658,4 +658,36 @@ func TestPlayer(t *testing.T) {
 			t.Errorf("expected %v food, got %v", 1, player.CountFood())
 		}
 	})
+
+	t.Run("activate habitat's powers", func(t *testing.T) {
+		bird1 := &pkg.Bird{
+			ID:       pkg.BirdID(1),
+			EggLimit: 10,
+			EggCount: 10,
+			Power: map[pkg.Trigger]pkg.Power{
+				pkg.WhenActivated: pkg.NewCacheFoodPower(pkg.Fish, 2, nil),
+			},
+		}
+		bird2 := &pkg.Bird{ID: pkg.BirdID(2)}
+
+		player := pkg.NewPlayer(pkg.NewTestSocket())
+		player.GainBird(bird1)
+		player.GainBird(bird2)
+
+		if err := player.PlayBird(bird1.ID); err != nil {
+			t.Fatalf("could not play bird: %v", err)
+		}
+
+		if bird1.CachedFood != 0 {
+			t.Errorf("expected %v cached food, got %v", 0, bird1.CachedFood)
+		}
+
+		if err := player.PlayBird(bird2.ID); err != nil {
+			t.Fatalf("could not play bird: %v", err)
+		}
+
+		if bird1.CachedFood != 2 {
+			t.Errorf("expected %v cached food, got %v", 2, bird1.CachedFood)
+		}
+	})
 }

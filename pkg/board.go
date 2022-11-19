@@ -91,7 +91,6 @@ func (b *Board) PlayBird(bird *Bird) error {
 	if !ok {
 		return ErrHabitatNotFound
 	}
-
 	row := value.(*Row)
 	return row.PushBird(bird)
 }
@@ -144,4 +143,20 @@ func (b *Board) GetBirdsWithEggs() map[BirdID]int {
 		}
 	}
 	return birds
+}
+
+func (b *Board) ActivatePowers(habitat Habitat, player *Player) error {
+	value, ok := b.rows.Load(habitat)
+	if !ok {
+		return ErrHabitatNotFound
+	}
+
+	birds := value.(*Row).GetBirds()
+	for i := len(birds) - 2; i >= 0; i-- {
+		if err := birds[i].CastPower(WhenActivated, player); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

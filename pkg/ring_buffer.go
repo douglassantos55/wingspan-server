@@ -73,7 +73,7 @@ func (r *RingBuffer) Full() bool {
 }
 
 func (r *RingBuffer) Iterate() Iterator[any] {
-	return NewSliceIterator[any](r.values)
+	return NewSliceIterator(r.values)
 }
 
 func (r *RingBuffer) expand() {

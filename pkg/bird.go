@@ -41,7 +41,6 @@ const (
 	WhenActivated
 )
 
-// TODO: powers
 type Bird struct {
 	ID            BirdID
 	Name          string
@@ -76,8 +75,8 @@ func (b *Bird) LayEggs(qty int) error {
 }
 
 func (b *Bird) CastPower(trigger Trigger, caster *Player) error {
-	if b.Power[WhenPlayed] != nil {
-		if err := b.Power[WhenPlayed].Execute(b, caster); err != nil {
+	if b.Power[trigger] != nil {
+		if err := b.Power[trigger].Execute(b, caster); err != nil {
 			return err
 		}
 	}
