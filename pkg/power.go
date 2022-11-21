@@ -177,7 +177,10 @@ func (p *TuckFromHandPower) Execute(bird *Bird, player *Player) error {
 		}
 		bird.TuckCards(p.Qty)
 	} else {
-		// TODO: choose birds
+		player.SetState(&DrawCardsState{
+			Qty:    p.Qty,
+			Source: player.birds,
+		})
 	}
 
 	return nil

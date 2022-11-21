@@ -263,7 +263,8 @@ func TestTuckPower(t *testing.T) {
 
 	t.Run("tuck from hand (choosing)", func(t *testing.T) {
 		bird := &pkg.Bird{}
-		player := pkg.NewPlayer(pkg.NewTestSocket())
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
 
 		player.GainBird(&pkg.Bird{ID: pkg.BirdID(1)})
 		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2)})
@@ -273,7 +274,25 @@ func TestTuckPower(t *testing.T) {
 			t.Fatalf("could not tuck from hand: %v", err)
 		}
 
-		//TODO: check for choose response and do stuff
+		response := assertResponse(t, socket, pkg.ChooseCards)
+		payload := response.Payload.(map[string]any)
+
+		if payload["qty"].(float64) != 1 {
+			t.Errorf("expected %v, got %v", 1, payload["qty"])
+		}
+		if len(payload["cards"].([]any)) != 2 {
+			t.Errorf("expected %v cards, got %v", 2, len(payload["cards"].([]any)))
+		}
+
+		if err := player.Process([]pkg.BirdID{2, 1}); err == nil {
+			t.Error("expected error, got nothing")
+		}
+		if err := player.Process([]pkg.BirdID{22}); err == nil {
+			t.Error("expected error, got nothing")
+		}
+		if err := player.Process([]pkg.BirdID{2}); err != nil {
+			t.Errorf("could not choose bird: %v", err)
+		}
 	})
 }
 

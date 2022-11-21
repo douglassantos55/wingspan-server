@@ -44,7 +44,7 @@ func (s *ChooseFoodState) Process(player *Player, params any) error {
 
 type DrawCardsState struct {
 	Qty    int
-	Source *BirdTray
+	Source BirdList
 }
 
 func (s *DrawCardsState) Enter(player *Player) error {
