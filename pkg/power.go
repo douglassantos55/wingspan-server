@@ -7,6 +7,7 @@ type Power interface {
 }
 
 type FoodSupplier interface {
+	List() map[FoodType]int
 	GetAll(FoodType) (int, error)
 	GetFood(FoodType, int) error
 }
@@ -27,8 +28,12 @@ func NewGainFood(qty int, foodType FoodType, source FoodSupplier) *GainFoodPower
 }
 
 func (p *GainFoodPower) Execute(bird *Bird, player *Player) error {
+	// there's no specific food type, you gotta choose
 	if p.FoodType == -1 {
-		// TODO: change state to choosing?
+		player.SetState(&ChooseFoodState{
+			Qty:    p.Qty,
+			Source: p.Source,
+		})
 	} else {
 		if p.Source != nil {
 			if p.Qty == -1 {

@@ -2,11 +2,9 @@ package pkg
 
 import "sync"
 
-// TODO: maybe add a state to player, like:
-// choosing_cards, choosing_food, drawing_cards, playing_cards
-// and block requests depending on the current state
 type Player struct {
 	socket Socket
+	state  *RingBuffer
 	food   *sync.Map
 	birds  *sync.Map
 	board  *Board
@@ -15,6 +13,7 @@ type Player struct {
 func NewPlayer(socket Socket) *Player {
 	return &Player{
 		socket: socket,
+		state:  NewRingBuffer(5),
 		board:  NewBoard(),
 		food:   new(sync.Map),
 		birds:  new(sync.Map),
@@ -295,4 +294,24 @@ func (p *Player) TotalScore() int {
 		total += bird.Points + bird.EggCount + bird.CachedFood + bird.TuckedCards
 	}
 	return total
+}
+
+func (p *Player) SetState(state State) error {
+	if err := state.Enter(p); err != nil {
+		return err
+	}
+	p.state.Push(state)
+	return nil
+}
+
+func (p *Player) Process(params any) error {
+	state, ok := p.state.Peek().(State)
+	if !ok {
+		return ErrUnexpectedValue
+	}
+	if err := state.Process(p, params); err != nil {
+		return err
+	}
+	p.state.Pop()
+	return nil
 }

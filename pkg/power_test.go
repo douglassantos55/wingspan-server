@@ -1,6 +1,7 @@
 package pkg_test
 
 import (
+	"reflect"
 	"testing"
 
 	"git.internal.com/wingspan/pkg"
@@ -8,7 +9,7 @@ import (
 
 func TestGainFoodPower(t *testing.T) {
 	t.Run("gain one food from feeder", func(t *testing.T) {
-		feeder := pkg.NewBirdfeeder(10)
+		feeder := pkg.NewBirdfeeder(20)
 		player := pkg.NewPlayer(pkg.NewTestSocket())
 
 		power := pkg.NewGainFood(1, pkg.Fish, feeder)
@@ -66,6 +67,44 @@ func TestGainFoodPower(t *testing.T) {
 		}
 		if food[pkg.Rodent] != 1 {
 			t.Errorf("expected %v food, got %v", 1, food[pkg.Rodent])
+		}
+	})
+
+	t.Run("gain any food from feeder", func(t *testing.T) {
+		feeder := pkg.NewBirdfeeder(10)
+		power := pkg.NewGainFood(1, -1, feeder)
+
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
+
+		if err := power.Execute(nil, player); err != nil {
+			t.Fatalf("could not execute power: %v", err)
+		}
+
+		response := assertResponse(t, socket, pkg.ChooseFood)
+
+		var payload pkg.GainFood
+		pkg.ParsePayload(response.Payload, &payload)
+
+		if payload.Amount != 1 {
+			t.Errorf("expected qty %v, got %v", 1, payload.Amount)
+		}
+		if !reflect.DeepEqual(payload.Available, feeder.List()) {
+			t.Errorf("expected options %v, got %v", feeder.List(), payload.Available)
+		}
+
+		keys := make([]pkg.FoodType, 0, len(payload.Available))
+		for ft := range payload.Available {
+			keys = append(keys, ft)
+		}
+
+		if err := player.Process(map[pkg.FoodType]int{
+			keys[0]: 1,
+		}); err != nil {
+			t.Fatalf("could not choose food: %v", err)
+		}
+		if player.CountFood() != 1 {
+			t.Errorf("expected %v food, got %v", 1, player.CountFood())
 		}
 	})
 }

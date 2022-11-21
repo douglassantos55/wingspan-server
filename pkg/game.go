@@ -185,6 +185,8 @@ func (g *Game) DrawFromDeck(socket Socket) error {
 		return true
 	})
 
+	// TODO: activate powers
+
 	return nil
 }
 
@@ -227,6 +229,8 @@ func (g *Game) DrawFromTray(socket Socket, birdIds []BirdID) error {
 		return true
 	})
 
+	// TODO: activate powers
+
 	return nil
 }
 
@@ -236,17 +240,16 @@ func (g *Game) ChooseFood(socket Socket, chosenFood map[FoodType]int) error {
 		return err
 	}
 
-	for food, qty := range chosenFood {
-		if err := g.birdFeeder.GetFood(food, qty); err != nil {
-			return err
-		}
-		player.GainFood(food, qty)
+	if err := player.Process(chosenFood); err != nil {
+		return err
 	}
 
 	g.Broadcast(Response{
 		Type:    FoodGained,
 		Payload: player.GetFood(),
 	})
+
+	// TODO: activate powers
 
 	return nil
 }
@@ -261,15 +264,10 @@ func (g *Game) GainFood(socket Socket) error {
 		g.birdFeeder.Refill()
 	}
 
-	socket.Send(Response{
-		Type: ChooseFood,
-		Payload: GainFood{
-			Amount:    player.GetFoodToGain(),
-			Available: g.birdFeeder.List(),
-		},
+	return player.SetState(&ChooseFoodState{
+		Source: g.birdFeeder,
+		Qty:    player.GetFoodToGain(),
 	})
-
-	return nil
 }
 
 func (g *Game) LayEggs(socket Socket) (int, error) {
@@ -305,6 +303,8 @@ func (g *Game) LayEggsOnBirds(socket Socket, chosen map[BirdID]int) error {
 		Type:    BirdUpdated,
 		Payload: birds,
 	})
+
+	// TODO: activate powers
 
 	return nil
 }
