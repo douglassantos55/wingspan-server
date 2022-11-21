@@ -41,6 +41,13 @@ const (
 	WhenActivated
 )
 
+type BirdList interface {
+	// Lists all birds
+	Birds() []*Bird
+	// Searches and removes a bird
+	Get(BirdID) (*Bird, error)
+}
+
 type Bird struct {
 	ID            BirdID
 	Name          string

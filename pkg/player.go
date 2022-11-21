@@ -2,11 +2,55 @@ package pkg
 
 import "sync"
 
+type BirdHand struct {
+	birds *sync.Map
+}
+
+func NewBirdHand() *BirdHand {
+	return &BirdHand{
+		birds: new(sync.Map),
+	}
+}
+
+func (h *BirdHand) Add(bird *Bird) {
+	h.birds.LoadOrStore(bird.ID, bird)
+}
+
+func (h *BirdHand) Delete(id BirdID) {
+	h.birds.Delete(id)
+}
+
+func (h *BirdHand) Find(id BirdID) (*Bird, bool) {
+	value, _ := h.birds.Load(id)
+	bird, ok := value.(*Bird)
+	if !ok {
+		return nil, ok
+	}
+	return bird, ok
+}
+
+func (h *BirdHand) Get(id BirdID) (*Bird, error) {
+	value, loaded := h.birds.LoadAndDelete(id)
+	if !loaded {
+		return nil, ErrBirdCardNotFound
+	}
+	return value.(*Bird), nil
+}
+
+func (h *BirdHand) Birds() []*Bird {
+	birds := make([]*Bird, 0)
+	h.birds.Range(func(_, value any) bool {
+		birds = append(birds, value.(*Bird))
+		return true
+	})
+	return birds
+}
+
 type Player struct {
 	socket Socket
 	state  State
 	food   *sync.Map
-	birds  *sync.Map
+	birds  *BirdHand
 	board  *Board
 }
 
@@ -15,7 +59,7 @@ func NewPlayer(socket Socket) *Player {
 		socket: socket,
 		board:  NewBoard(),
 		food:   new(sync.Map),
-		birds:  new(sync.Map),
+		birds:  NewBirdHand(),
 	}
 }
 
@@ -25,15 +69,13 @@ func (p *Player) Draw(deck Deck, qty int) error {
 		return err
 	}
 	for _, card := range cards {
-		p.birds.Store(card.ID, card)
+		p.birds.Add(card)
 	}
 	return nil
 }
 
 func (p *Player) GainBird(bird *Bird) {
-	if _, loaded := p.birds.LoadOrStore(bird.ID, bird); loaded {
-		panic("player already has this bird card")
-	}
+	p.birds.Add(bird)
 }
 
 func (p *Player) GainFood(foodType FoodType, qty int) {
@@ -71,14 +113,9 @@ func (p *Player) GetEggCost(habitat Habitat) int {
 }
 
 func (p *Player) PlayBird(birdId BirdID) error {
-	value, ok := p.birds.Load(birdId)
+	bird, ok := p.birds.Find(birdId)
 	if !ok {
 		return ErrBirdCardNotFound
-	}
-
-	bird, ok := value.(*Bird)
-	if !ok {
-		return ErrUnexpectedValue
 	}
 
 	available := make([]FoodType, 0)
@@ -130,14 +167,9 @@ func (p *Player) PlayBird(birdId BirdID) error {
 }
 
 func (p *Player) PayBirdCost(birdID BirdID, food []FoodType, eggs map[BirdID]int) error {
-	value, ok := p.birds.Load(birdID)
+	bird, ok := p.birds.Find(birdID)
 	if !ok {
 		return ErrBirdCardNotFound
-	}
-
-	bird, ok := value.(*Bird)
-	if !ok {
-		return ErrUnexpectedValue
 	}
 
 	if eggs != nil {
@@ -244,7 +276,7 @@ outer:
 			if bird.ID == id {
 				continue outer
 			}
-			if _, ok := p.birds.Load(id); !ok {
+			if _, ok := p.birds.Find(id); !ok {
 				return ErrBirdCardNotFound
 			}
 		}
@@ -278,12 +310,7 @@ func (p *Player) CountFood() int {
 }
 
 func (p *Player) GetBirdCards() []*Bird {
-	cards := make([]*Bird, 0)
-	p.birds.Range(func(_, value any) bool {
-		cards = append(cards, value.(*Bird))
-		return true
-	})
-	return cards
+	return p.birds.Birds()
 }
 
 func (p *Player) TotalScore() int {
