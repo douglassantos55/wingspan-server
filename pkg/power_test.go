@@ -369,6 +369,7 @@ func TestLayEggsPower(t *testing.T) {
 
 		player := pkg.NewPlayer(pkg.NewTestSocket())
 		player.GainBird(bird)
+		player.PlayBird(bird.ID)
 
 		power := pkg.NewLayEggsPower(2, -1)
 
@@ -382,10 +383,16 @@ func TestLayEggsPower(t *testing.T) {
 	})
 
 	t.Run("lay on any bird", func(t *testing.T) {
-		player := pkg.NewPlayer(pkg.NewTestSocket())
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
 
-		player.GainBird(&pkg.Bird{ID: pkg.BirdID(1), EggLimit: 5})
-		player.GainBird(&pkg.Bird{ID: pkg.BirdID(2), EggLimit: 5})
+		bird1 := &pkg.Bird{ID: pkg.BirdID(1), EggCount: 1, EggLimit: 5}
+		player.GainBird(bird1)
+		player.PlayBird(bird1.ID)
+
+		bird2 := &pkg.Bird{ID: pkg.BirdID(2), EggLimit: 5}
+		player.GainBird(bird2)
+		player.PlayBird(bird2.ID)
 
 		power := pkg.NewLayEggsPower(1, -1)
 
@@ -393,19 +400,46 @@ func TestLayEggsPower(t *testing.T) {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
 
-		// TODO: choose bird to lay eggs
+		response := assertResponse(t, socket, pkg.ChooseBirds)
+		payload := response.Payload.(map[string]any)
+
+		if payload["qty"].(float64) != 1 {
+			t.Errorf("expected qty %v, got %v", 1, payload["qty"])
+		}
+
+		birdIds := payload["birds"].([]any)
+		if len(birdIds) != 2 {
+			t.Errorf("expected %v birds, got %v", 2, len(birdIds))
+		}
+
+		for _, birdId := range birdIds {
+			if birdId.(float64) != 1 && birdId.(float64) != 2 {
+				t.Errorf("expected ID 1 or 2, got %v", birdId)
+			}
+		}
 	})
 
 	t.Run("lay on each with nest type", func(t *testing.T) {
 		player := pkg.NewPlayer(pkg.NewTestSocket())
 
-		bird1 := &pkg.Bird{ID: pkg.BirdID(1), NestType: pkg.Plataform, EggLimit: 5}
+		bird1 := &pkg.Bird{
+			ID:       pkg.BirdID(1),
+			NestType: pkg.Plataform,
+			EggCount: 2,
+			EggLimit: 5,
+		}
+
 		bird2 := &pkg.Bird{ID: pkg.BirdID(2), NestType: pkg.Cavity, EggLimit: 5}
 		bird3 := &pkg.Bird{ID: pkg.BirdID(3), NestType: pkg.Cavity, EggLimit: 5}
 
 		player.GainBird(bird1)
+		player.PlayBird(bird1.ID)
+
 		player.GainBird(bird2)
+		player.PlayBird(bird2.ID)
+
 		player.GainBird(bird3)
+		player.PlayBird(bird3.ID)
 
 		power := pkg.NewLayEggsPower(1, pkg.Cavity)
 
@@ -414,7 +448,7 @@ func TestLayEggsPower(t *testing.T) {
 		}
 
 		if bird1.EggCount != 0 {
-			t.Errorf("expected %v egg, got %v", 0, bird2.EggCount)
+			t.Errorf("expected %v egg, got %v", 0, bird1.EggCount)
 		}
 		if bird2.EggCount != 1 {
 			t.Errorf("expected %v egg, got %v", 1, bird2.EggCount)

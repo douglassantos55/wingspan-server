@@ -242,8 +242,10 @@ func NewLayEggsPower(qty int, nest NestType) *LayEggsPower {
 }
 
 func (p *LayEggsPower) Execute(bird *Bird, player *Player) error {
+	birds := player.board.GetBirds()
+
 	if p.Nest != -1 {
-		for _, bird := range player.GetBirdCards() {
+		for _, bird := range birds {
 			if bird.NestType == p.Nest {
 				if err := bird.LayEggs(p.Qty); err != nil {
 					return err
@@ -251,10 +253,20 @@ func (p *LayEggsPower) Execute(bird *Bird, player *Player) error {
 			}
 		}
 	} else {
-		if len(player.GetBirdCards()) == 1 {
-			return player.GetBirdCards()[0].LayEggs(p.Qty)
+		if len(birds) == 1 {
+			return birds[0].LayEggs(p.Qty)
 		}
-		// TODO: choose bird to lay egg
+
+		ids := make([]BirdID, 0, len(birds))
+		for _, bird := range birds {
+			ids = append(ids, bird.ID)
+		}
+
+		player.SetState(&LayEggsState{
+			Qty:   p.Qty,
+			Birds: ids,
+		})
 	}
+
 	return nil
 }

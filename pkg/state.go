@@ -80,3 +80,35 @@ func (s *DrawCardsState) Process(player *Player, params any) error {
 
 	return nil
 }
+
+type LayEggsState struct {
+	Qty   int
+	Birds []BirdID
+}
+
+func (s *LayEggsState) Enter(player *Player) error {
+	player.socket.Send(Response{
+		Type: ChooseBirds,
+		Payload: map[string]any{
+			"qty":   s.Qty,
+			"birds": s.Birds,
+		},
+	})
+	return nil
+}
+
+func (s *LayEggsState) Process(player *Player, params any) error {
+	chosenBirds, ok := params.(map[BirdID]int)
+	if !ok {
+		return ErrUnexpectedValue
+	}
+
+	for id, qty := range chosenBirds {
+		bird := player.board.GetBird(id)
+		if err := bird.LayEggs(qty); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
