@@ -376,6 +376,9 @@ func TestGame(t *testing.T) {
 		discardFood(t, p2, game)
 
 		original := game.BirdTray()
+		if err := game.DrawCards(p1); err != nil {
+			t.Fatalf("could not draw cards: %v", err)
+		}
 		if err := game.DrawFromTray(p1, []pkg.BirdID{original[0].ID}); err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
@@ -507,6 +510,9 @@ func TestGame(t *testing.T) {
 		discardFood(t, p2, game)
 
 		birds := game.BirdTray()
+		if err := game.DrawCards(p1); err != nil {
+			t.Fatalf("could not draw cards: %v", err)
+		}
 		if err := game.DrawFromTray(p1, []pkg.BirdID{birds[0].ID}); err != nil {
 			t.Errorf("expected no error, got \"%+v\"", err)
 		}
@@ -518,8 +524,8 @@ func TestGame(t *testing.T) {
 			t.Fatalf("could not parse payload: %v", err)
 		}
 
-		if len(payload) != 1 {
-			t.Errorf("expected len %v, got %v", 1, len(payload))
+		if len(payload) != 6 {
+			t.Errorf("expected len %v, got %v", 6, len(payload))
 		}
 
 		response = assertResponse(t, p2, pkg.BirdsDrawn)
@@ -659,12 +665,9 @@ func TestGame(t *testing.T) {
 		discardFood(t, p1, game)
 		discardFood(t, p2, game)
 
-		qty, err := game.DrawCards(p1)
+		err := game.DrawCards(p1)
 		if err != nil {
 			t.Fatalf("could not draw cards: %v", err)
-		}
-		if qty != 1 {
-			t.Errorf("expected %v qty, got %v", 1, qty)
 		}
 	})
 }

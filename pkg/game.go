@@ -144,12 +144,16 @@ func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) (bool, err
 	return g.turnOrder.Full(), nil
 }
 
-func (g *Game) DrawCards(socket Socket) (int, error) {
+func (g *Game) DrawCards(socket Socket) error {
 	player, err := g.validateSocket(socket)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	return player.GetCardsToDraw(), nil
+
+	return player.SetState(&DrawCardsState{
+		Qty:    player.GetCardsToDraw(),
+		Source: g.birdTray,
+	})
 }
 
 func (g *Game) DrawFromDeck(socket Socket) error {
@@ -196,21 +200,8 @@ func (g *Game) DrawFromTray(socket Socket, birdIds []BirdID) error {
 		return err
 	}
 
-	if len(birdIds) != player.GetCardsToDraw() {
-		return ErrUnexpectedValue
-	}
-
-	drawnBirds := make([]*Bird, 0, len(birdIds))
-
-	for _, id := range birdIds {
-		bird, err := g.birdTray.Get(id)
-		if err != nil {
-			return err
-		}
-
-		// add bird to player's hand
-		player.GainBird(bird)
-		drawnBirds = append(drawnBirds, bird)
+	if err := player.Process(birdIds); err != nil {
+		return err
 	}
 
 	g.players.Range(func(key, _ any) bool {
@@ -218,7 +209,7 @@ func (g *Game) DrawFromTray(socket Socket, birdIds []BirdID) error {
 		if s == socket {
 			s.Send(Response{
 				Type:    BirdsDrawn,
-				Payload: drawnBirds,
+				Payload: player.GetBirdCards(),
 			})
 		} else {
 			s.Send(Response{

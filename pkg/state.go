@@ -41,3 +41,36 @@ func (s *ChooseFoodState) Process(player *Player, params any) error {
 
 	return nil
 }
+
+type DrawCardsState struct {
+	Qty    int
+	Source *BirdTray
+}
+
+func (s *DrawCardsState) Enter(player *Player) error {
+	player.socket.Send(Response{
+		Type: ChooseCards,
+		Payload: map[string]any{
+			"qty":   s.Qty,
+			"cards": s.Source.Birds(),
+		},
+	})
+	return nil
+}
+
+func (s *DrawCardsState) Process(player *Player, params any) error {
+	birdIds := params.([]BirdID)
+	if len(birdIds) != s.Qty {
+		return ErrUnexpectedValue
+	}
+
+	for _, id := range birdIds {
+		bird, err := s.Source.Get(id)
+		if err != nil {
+			return err
+		}
+		player.GainBird(bird)
+	}
+
+	return nil
+}
