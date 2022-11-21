@@ -382,8 +382,12 @@ func TestGame(t *testing.T) {
 		if err := game.DrawFromTray(p1, []pkg.BirdID{original[0].ID}); err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
-		if err := game.DrawFromTray(p1, []pkg.BirdID{original[0].ID, original[1].ID}); err != pkg.ErrUnexpectedValue {
-			t.Fatalf("expected error %v, got %v", pkg.ErrUnexpectedValue, err)
+
+		if err := game.DrawCards(p1); err != nil {
+			t.Fatalf("could not draw cards: %v", err)
+		}
+		if err := game.DrawFromTray(p1, []pkg.BirdID{original[0].ID, original[1].ID}); err != pkg.ErrNotEnoughCards {
+			t.Fatalf("expected error %v, got %v", pkg.ErrNotEnoughCards, err)
 		}
 
 		game.EndTurn()
@@ -510,6 +514,7 @@ func TestGame(t *testing.T) {
 		discardFood(t, p2, game)
 
 		birds := game.BirdTray()
+
 		if err := game.DrawCards(p1); err != nil {
 			t.Fatalf("could not draw cards: %v", err)
 		}
@@ -533,8 +538,11 @@ func TestGame(t *testing.T) {
 			t.Errorf("expected len %v, got %v", 1, len(payload))
 		}
 
-		if err := game.DrawFromTray(p1, []pkg.BirdID{birds[1].ID, birds[2].ID}); err != pkg.ErrUnexpectedValue {
-			t.Errorf("Expected error %v, got %v", pkg.ErrUnexpectedValue, err)
+		if err := game.DrawCards(p1); err != nil {
+			t.Fatalf("could not draw cards: %v", err)
+		}
+		if err := game.DrawFromTray(p1, []pkg.BirdID{birds[1].ID, birds[2].ID}); err != pkg.ErrNotEnoughCards {
+			t.Errorf("Expected error %v, got %v", pkg.ErrNotEnoughCards, err)
 		}
 	})
 

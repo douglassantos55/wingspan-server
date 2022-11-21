@@ -4,7 +4,7 @@ import "sync"
 
 type Player struct {
 	socket Socket
-	state  *RingBuffer
+	state  State
 	food   *sync.Map
 	birds  *sync.Map
 	board  *Board
@@ -13,7 +13,6 @@ type Player struct {
 func NewPlayer(socket Socket) *Player {
 	return &Player{
 		socket: socket,
-		state:  NewRingBuffer(5),
 		board:  NewBoard(),
 		food:   new(sync.Map),
 		birds:  new(sync.Map),
@@ -300,18 +299,14 @@ func (p *Player) SetState(state State) error {
 	if err := state.Enter(p); err != nil {
 		return err
 	}
-	p.state.Push(state)
+	p.state = state
 	return nil
 }
 
 func (p *Player) Process(params any) error {
-	state, ok := p.state.Peek().(State)
-	if !ok {
-		return ErrUnexpectedValue
-	}
-	if err := state.Process(p, params); err != nil {
+	if err := p.state.Process(p, params); err != nil {
 		return err
 	}
-	p.state.Pop()
+	p.state = nil
 	return nil
 }
