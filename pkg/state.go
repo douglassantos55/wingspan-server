@@ -48,20 +48,26 @@ type DrawCardsState struct {
 }
 
 func (s *DrawCardsState) Enter(player *Player) error {
+	birdIds := make([]BirdID, 0)
+	for _, bird := range s.Source.Birds() {
+		birdIds = append(birdIds, bird.ID)
+	}
+
 	player.socket.Send(Response{
 		Type: ChooseCards,
 		Payload: map[string]any{
 			"qty":   s.Qty,
-			"cards": s.Source.Birds(),
+			"cards": birdIds,
 		},
 	})
+
 	return nil
 }
 
 func (s *DrawCardsState) Process(player *Player, params any) error {
 	birdIds := params.([]BirdID)
 	if len(birdIds) != s.Qty {
-		return ErrUnexpectedValue
+		return ErrNotEnoughCards
 	}
 
 	for _, id := range birdIds {

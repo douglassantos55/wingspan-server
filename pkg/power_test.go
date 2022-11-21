@@ -187,8 +187,9 @@ func TestDrawCardsPower(t *testing.T) {
 	})
 
 	t.Run("draw from tray (choosing)", func(t *testing.T) {
-		tray := pkg.NewBirdTray(20)
-		player := pkg.NewPlayer(pkg.NewTestSocket())
+		tray := pkg.NewBirdTray(5)
+		socket := pkg.NewTestSocket()
+		player := pkg.NewPlayer(socket)
 
 		tray.Refill(pkg.NewDeck(100))
 		power := pkg.DrawFromTray(2, tray)
@@ -196,7 +197,30 @@ func TestDrawCardsPower(t *testing.T) {
 		if err := power.Execute(nil, player); err != nil {
 			t.Fatalf("could not draw cards: %v", err)
 		}
-		// TODO: implement
+
+		expected := make([]pkg.BirdID, 0)
+		for _, bird := range tray.Birds() {
+			expected = append(expected, bird.ID)
+		}
+
+		response := assertResponse(t, socket, pkg.ChooseCards)
+		payload := response.Payload.(map[string]any)
+
+		if payload["qty"].(float64) != 2 {
+			t.Errorf("expected qty %v, got %v", 2, payload["qty"])
+		}
+
+		received := payload["cards"].([]any)
+		if len(received) != len(expected) {
+			t.Errorf("Expected %v cards, got %v", len(expected), len(received))
+		}
+
+		if err := player.Process([]pkg.BirdID{expected[0]}); err == nil {
+			t.Error("expected error, got nothing")
+		}
+		if err := player.Process([]pkg.BirdID{expected[0], expected[1]}); err != nil {
+			t.Errorf("could not draw cards: %v", err)
+		}
 	})
 }
 

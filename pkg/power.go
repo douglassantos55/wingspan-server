@@ -125,7 +125,10 @@ func (p *DrawFromTrayPower) Execute(bird *Bird, player *Player) error {
 			player.GainBird(bird)
 		}
 	} else {
-		// TODO: choose cards
+		player.SetState(&DrawCardsState{
+			Qty:    p.Qty,
+			Source: p.BirdTray,
+		})
 	}
 
 	return nil
