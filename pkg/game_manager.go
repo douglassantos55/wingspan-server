@@ -140,6 +140,14 @@ func (g *GameManager) PayBirdCost(socket Socket, birdId BirdID, food []FoodType,
 	return nil, game.PayBirdCost(socket, birdId, food, eggs)
 }
 
+func (g *GameManager) ActivatePower(socket Socket, birdId BirdID) (*Message, error) {
+	game, err := g.GetSocketGame(socket)
+	if err != nil {
+		return nil, err
+	}
+	return nil, game.ActivatePower(socket, birdId)
+}
+
 func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 	game, err := g.GetSocketGame(socket)
 	if err != nil {

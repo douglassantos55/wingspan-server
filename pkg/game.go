@@ -319,6 +319,18 @@ func (g *Game) PayBirdCost(socket Socket, birdId BirdID, food []FoodType, eggs m
 	return player.PayBirdCost(birdId, food, eggs)
 }
 
+func (g *Game) ActivatePower(socket Socket, birdId BirdID) error {
+	player, err := g.validateSocket(socket)
+	if err != nil {
+		return err
+	}
+	bird := player.board.GetBird(birdId)
+	if bird == nil {
+		return ErrBirdCardNotFound
+	}
+	return bird.CastPower(WhenActivated, player)
+}
+
 func (g *Game) StartRound() error {
 	g.mutex.Lock()
 

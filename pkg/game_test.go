@@ -685,4 +685,25 @@ func TestGame(t *testing.T) {
 			t.Fatalf("could not draw cards: %v", err)
 		}
 	})
+
+	t.Run("activate power", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
+
+		if err := game.PlayBird(p1, pkg.BirdID(169)); err != nil {
+			t.Fatalf("could not play bird: %v", err)
+		}
+		if err := game.ActivatePower(p1, pkg.BirdID(1)); err == nil {
+			t.Error("should not activate powers of missing bird")
+		}
+		if err := game.ActivatePower(p1, pkg.BirdID(169)); err != nil {
+			t.Errorf("could not activate power: %v", err)
+		}
+	})
 }

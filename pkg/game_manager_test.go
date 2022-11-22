@@ -290,4 +290,25 @@ func TestGameManager(t *testing.T) {
 			t.Errorf("expected %v, got %v", 2, payload["qty"])
 		}
 	})
+
+	t.Run("activate Power", func(t *testing.T) {
+		manager := pkg.NewGameManager()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		manager.Create([]pkg.Socket{p1, p2})
+		discardFood(t, p1, manager)
+		discardFood(t, p2, manager)
+
+		if _, err := manager.PlayCard(p1, pkg.BirdID(169)); err != nil {
+			t.Fatalf("could not play card: %v", err)
+		}
+		if _, err := manager.ActivatePower(p1, pkg.BirdID(999)); err == nil {
+			t.Error("should not activate power of missing bird")
+		}
+		if _, err := manager.ActivatePower(p1, pkg.BirdID(169)); err != nil {
+			t.Errorf("could not activate power: %v", err)
+		}
+	})
 }
