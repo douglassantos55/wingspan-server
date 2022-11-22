@@ -342,6 +342,40 @@ func TestGame(t *testing.T) {
 
 		go game.StartTurn()
 		go game.EndTurn()
+
+		go game.BirdTray()
+		go game.Birdfeeder()
+		go game.Broadcast(pkg.Response{})
+
+		go game.ChooseFood(p1, map[pkg.FoodType]int{})
+		go game.ChooseFood(p2, map[pkg.FoodType]int{})
+
+		go game.DrawCards(p1)
+		go game.DrawCards(p2)
+		go game.DrawFromDeck(p1)
+		go game.DrawFromDeck(p2)
+
+		go game.DrawFromTray(p1, []pkg.BirdID{})
+		go game.DrawFromTray(p2, []pkg.BirdID{})
+
+		go game.StartRound()
+		go game.EndRound()
+		go game.GetResult()
+
+		go game.GainFood(p1)
+		go game.GainFood(p2)
+
+		go game.LayEggs(p1)
+		go game.LayEggs(p2)
+
+		go game.LayEggsOnBirds(p1, map[pkg.BirdID]int{})
+		go game.LayEggsOnBirds(p2, map[pkg.BirdID]int{})
+
+		go game.PayBirdCost(p1, pkg.BirdID(1), []pkg.FoodType{}, map[pkg.BirdID]int{})
+		go game.PayBirdCost(p2, pkg.BirdID(1), []pkg.FoodType{}, map[pkg.BirdID]int{})
+
+		go game.PlayBird(p1, pkg.BirdID(1))
+		go game.PlayBird(p2, pkg.BirdID(1))
 	})
 
 	t.Run("resets bird tray when round ends", func(t *testing.T) {
