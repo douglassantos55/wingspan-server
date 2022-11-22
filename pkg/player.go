@@ -49,6 +49,7 @@ func (h *BirdHand) Birds() []*Bird {
 type Player struct {
 	socket Socket
 	state  State
+	mutex  sync.Mutex
 	food   *sync.Map
 	birds  *BirdHand
 	board  *Board
@@ -319,6 +320,9 @@ func (p *Player) TotalScore() int {
 }
 
 func (p *Player) SetState(state State) error {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
 	if err := state.Enter(p); err != nil {
 		return err
 	}
@@ -327,9 +331,14 @@ func (p *Player) SetState(state State) error {
 }
 
 func (p *Player) Process(params any) error {
+	p.mutex.Lock()
+	defer p.mutex.Unlock()
+
+	if p.state == nil {
+		return ErrGameOver
+	}
 	if err := p.state.Process(p, params); err != nil {
 		return err
 	}
-	p.state = nil
 	return nil
 }

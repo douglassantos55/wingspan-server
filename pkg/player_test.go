@@ -144,6 +144,19 @@ func TestPlayer(t *testing.T) {
 
 		go player.GetFood()
 		go player.GetBirdCards()
+
+		go player.TotalScore()
+		go player.CountFood()
+		go player.GetCardsToDraw()
+		go player.GainBird(&pkg.Bird{})
+		go player.GetBirdCards()
+
+		go player.SetState(&pkg.DrawCardsState{Source: pkg.NewBirdTray(10)})
+		go player.Process([]pkg.BirdID{})
+
+		go player.GetEggCost(pkg.Forest)
+		go player.GetEggsToLay()
+		go player.GetFoodToGain()
 	})
 
 	t.Run("play bird", func(t *testing.T) {
