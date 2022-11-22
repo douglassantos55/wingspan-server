@@ -261,12 +261,21 @@ func (g *Game) GainFood(socket Socket) error {
 	})
 }
 
-func (g *Game) LayEggs(socket Socket) (int, error) {
+func (g *Game) LayEggs(socket Socket) error {
 	player, err := g.validateSocket(socket)
 	if err != nil {
-		return 0, err
+		return err
 	}
-	return player.GetEggsToLay(), nil
+
+	birdIds := make([]BirdID, 0)
+	for _, bird := range player.board.GetBirds() {
+		birdIds = append(birdIds, bird.ID)
+	}
+
+	return player.SetState(&LayEggsState{
+		Qty:   player.GetEggsToLay(),
+		Birds: birdIds,
+	})
 }
 
 func (g *Game) LayEggsOnBirds(socket Socket, chosen map[BirdID]int) error {
@@ -275,19 +284,13 @@ func (g *Game) LayEggsOnBirds(socket Socket, chosen map[BirdID]int) error {
 		return err
 	}
 
-	total := 0
-	birds := make([]*Bird, 0, len(chosen))
-	for id, qty := range chosen {
-		total += qty
-		bird, err := player.LayEgg(id, qty)
-		if err != nil {
-			return err
-		}
-		birds = append(birds, bird)
+	if err := player.Process(chosen); err != nil {
+		return err
 	}
 
-	if total != player.GetEggsToLay() {
-		return ErrNotEnoughEggs
+	birds := make([]*Bird, 0, len(chosen))
+	for id := range chosen {
+		birds = append(birds, player.board.GetBird(id))
 	}
 
 	g.Broadcast(Response{

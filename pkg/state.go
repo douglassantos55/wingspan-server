@@ -105,6 +105,9 @@ func (s *LayEggsState) Process(player *Player, params any) error {
 
 	for id, qty := range chosenBirds {
 		bird := player.board.GetBird(id)
+		if bird == nil {
+			return ErrBirdCardNotFound
+		}
 		if err := bird.LayEggs(qty); err != nil {
 			return err
 		}

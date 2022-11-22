@@ -24,7 +24,6 @@ const (
 	GameOver         = "game_over"
 	FoodGained       = "food_gained"
 	BirdsDrawn       = "birds_drawn"
-	SelectBirds      = "select_birds"
 	BirdUpdated      = "bird_updated"
 	PayBirdCost      = "pay_bird_cost"
 	FoodUpdated      = "food_updated"

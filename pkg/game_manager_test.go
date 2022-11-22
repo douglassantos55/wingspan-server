@@ -283,9 +283,11 @@ func TestGameManager(t *testing.T) {
 			t.Fatalf("failed laying eggs: %v", err)
 		}
 
-		response := assertResponse(t, p1, pkg.SelectBirds)
-		if response.Payload.(float64) != 2 {
-			t.Errorf("expected %v, got %v", 2, response.Payload.(float64))
+		response := assertResponse(t, p1, pkg.ChooseBirds)
+		payload := response.Payload.(map[string]any)
+
+		if payload["qty"].(float64) != 2 {
+			t.Errorf("expected %v, got %v", 2, payload["qty"])
 		}
 	})
 }

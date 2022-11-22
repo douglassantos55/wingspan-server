@@ -44,13 +44,8 @@ func (g *GameManager) ChooseBirds(socket Socket, birds []BirdID) (*Message, erro
 	if !ok {
 		return nil, ErrGameNotFound
 	}
-
 	game := value.(*Game)
-	if err := game.ChooseBirds(socket, birds); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+	return nil, game.ChooseBirds(socket, birds)
 }
 
 func (g *GameManager) DiscardFood(socket Socket, foodType FoodType, qty int) (*Message, error) {
@@ -80,13 +75,8 @@ func (g *GameManager) DrawFromDeck(socket Socket) (*Message, error) {
 	if !ok {
 		return nil, ErrGameNotFound
 	}
-
 	game := value.(*Game)
-	if err := game.DrawFromDeck(socket); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+	return nil, game.DrawFromDeck(socket)
 }
 
 func (g *GameManager) DrawFromTray(socket Socket, ids []BirdID) (*Message, error) {
@@ -94,13 +84,8 @@ func (g *GameManager) DrawFromTray(socket Socket, ids []BirdID) (*Message, error
 	if !ok {
 		return nil, ErrGameNotFound
 	}
-
 	game := value.(*Game)
-	if err := game.DrawFromTray(socket, ids); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+	return nil, game.DrawFromTray(socket, ids)
 }
 
 func (g *GameManager) GainFood(socket Socket) (*Message, error) {
@@ -108,14 +93,8 @@ func (g *GameManager) GainFood(socket Socket) (*Message, error) {
 	if !ok {
 		return nil, ErrGameNotFound
 	}
-
 	game := value.(*Game)
-
-	if err := game.GainFood(socket); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+	return nil, game.GainFood(socket)
 }
 
 func (g *GameManager) ChooseFood(socket Socket, chosen map[FoodType]int) (*Message, error) {
@@ -123,37 +102,17 @@ func (g *GameManager) ChooseFood(socket Socket, chosen map[FoodType]int) (*Messa
 	if !ok {
 		return nil, ErrGameNotFound
 	}
-
 	game := value.(*Game)
-	if err := game.ChooseFood(socket, chosen); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+	return nil, game.ChooseFood(socket, chosen)
 }
 
-// Sends a response to user with the amount of
-// eggs he can lay based on the leftmost exposed
-// slot of the habitat
 func (g *GameManager) LayEggs(socket Socket) (*Message, error) {
 	value, ok := g.games.Load(socket)
 	if !ok {
 		return nil, ErrGameNotFound
 	}
-
 	game := value.(*Game)
-	qty, err := game.LayEggs(socket)
-
-	if err != nil {
-		return nil, err
-	}
-
-	socket.Send(Response{
-		Type:    SelectBirds,
-		Payload: qty,
-	})
-
-	return nil, nil
+	return nil, game.LayEggs(socket)
 }
 
 func (g *GameManager) LayEggsOnBirds(socket Socket, chosen map[BirdID]int) (*Message, error) {
@@ -161,12 +120,7 @@ func (g *GameManager) LayEggsOnBirds(socket Socket, chosen map[BirdID]int) (*Mes
 	if err != nil {
 		return nil, err
 	}
-
-	if err := game.LayEggsOnBirds(socket, chosen); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+	return nil, game.LayEggsOnBirds(socket, chosen)
 }
 
 func (g *GameManager) PlayCard(socket Socket, birdId BirdID) (*Message, error) {
@@ -174,12 +128,7 @@ func (g *GameManager) PlayCard(socket Socket, birdId BirdID) (*Message, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	if err := game.PlayBird(socket, birdId); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+	return nil, game.PlayBird(socket, birdId)
 }
 
 func (g *GameManager) PayBirdCost(socket Socket, birdId BirdID, food []FoodType, eggs map[BirdID]int) (*Message, error) {
@@ -187,12 +136,7 @@ func (g *GameManager) PayBirdCost(socket Socket, birdId BirdID, food []FoodType,
 	if err != nil {
 		return nil, err
 	}
-
-	if err := game.PayBirdCost(socket, birdId, food, eggs); err != nil {
-		return nil, err
-	}
-
-	return nil, nil
+	return nil, game.PayBirdCost(socket, birdId, food, eggs)
 }
 
 func (g *GameManager) EndTurn(socket Socket) (*Message, error) {

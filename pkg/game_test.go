@@ -428,6 +428,9 @@ func TestGame(t *testing.T) {
 		if err := game.PlayBird(p1, pkg.BirdID(167)); err != nil {
 			t.Fatalf("could not play bird: %v", err)
 		}
+		if err := game.LayEggs(p1); err != nil {
+			t.Fatalf("could not lay eggs: %v", err)
+		}
 		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{167: 2}); err != nil {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
@@ -459,6 +462,9 @@ func TestGame(t *testing.T) {
 
 		if err := game.PlayBird(p1, pkg.BirdID(167)); err != nil {
 			t.Fatalf("could not play bird: %v", err)
+		}
+		if err := game.LayEggs(p1); err != nil {
+			t.Fatalf("could not lay eggs: %v", err)
 		}
 		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{167: 2}); err != nil {
 			t.Fatalf("could not lay eggs: %v", err)
@@ -618,6 +624,9 @@ func TestGame(t *testing.T) {
 		discardFood(t, p1, game)
 		discardFood(t, p2, game)
 
+		if err := game.LayEggs(p1); err != nil {
+			t.Fatalf("could not lay eggs: %v", err)
+		}
 		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{9999: 1}); err != pkg.ErrBirdCardNotFound {
 			t.Errorf("expected error %v, got %v", pkg.ErrBirdCardNotFound, err)
 		}
@@ -634,18 +643,16 @@ func TestGame(t *testing.T) {
 			t.Fatalf("could not play bird: %v", err)
 		}
 
+		if err := game.LayEggs(p1); err != nil {
+			t.Fatalf("could not lay eggs: %v", err)
+		}
 		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{169: 1}); err != pkg.ErrEggLimitReached {
 			t.Fatalf("expected error %v, got %v", pkg.ErrEggLimitReached, err)
 		}
 
-		qty, err := game.LayEggs(p1)
-		if err != nil {
+		if err := game.LayEggs(p1); err != nil {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
-		if qty != 2 {
-			t.Errorf("expected qty %v, got %v", 2, qty)
-		}
-
 		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{165: 2}); err != nil {
 			t.Fatalf("could not lay eggs on bird: %v", err)
 		}
