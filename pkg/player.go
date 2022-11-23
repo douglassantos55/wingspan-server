@@ -1,6 +1,10 @@
 package pkg
 
-import "sync"
+import (
+	"sync"
+
+	"github.com/google/uuid"
+)
 
 type BirdHand struct {
 	birds *sync.Map
@@ -47,6 +51,7 @@ func (h *BirdHand) Birds() []*Bird {
 }
 
 type Player struct {
+	ID     uuid.UUID
 	socket Socket
 	state  State
 	mutex  sync.Mutex
@@ -57,6 +62,7 @@ type Player struct {
 
 func NewPlayer(socket Socket) *Player {
 	return &Player{
+		ID:     uuid.New(),
 		socket: socket,
 		board:  NewBoard(),
 		food:   new(sync.Map),
@@ -188,11 +194,6 @@ func (p *Player) PayBirdCost(birdID BirdID, food []FoodType, eggs map[BirdID]int
 		return err
 	}
 
-	p.socket.Send(Response{
-		Type:    BoardUpdated,
-		Payload: p.board,
-	})
-
 	if err := bird.CastPower(WhenPlayed, p); err != nil {
 		return err
 	}
@@ -217,6 +218,11 @@ func (p *Player) PayEggCost(cost int, chosenEggs map[BirdID]int) error {
 	for bird, qty := range birds {
 		bird.EggCount -= qty
 	}
+
+	p.socket.Send(Response{
+		Type:    BirdUpdated,
+		Payload: chosenEggs,
+	})
 
 	return nil
 }

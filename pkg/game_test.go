@@ -347,16 +347,10 @@ func TestGame(t *testing.T) {
 		go game.Birdfeeder()
 		go game.Broadcast(pkg.Response{})
 
-		go game.ChooseFood(p1, map[pkg.FoodType]int{})
-		go game.ChooseFood(p2, map[pkg.FoodType]int{})
-
 		go game.DrawCards(p1)
 		go game.DrawCards(p2)
 		go game.DrawFromDeck(p1)
 		go game.DrawFromDeck(p2)
-
-		go game.DrawFromTray(p1, []pkg.BirdID{})
-		go game.DrawFromTray(p2, []pkg.BirdID{})
 
 		go game.StartRound()
 		go game.EndRound()
@@ -367,9 +361,6 @@ func TestGame(t *testing.T) {
 
 		go game.LayEggs(p1)
 		go game.LayEggs(p2)
-
-		go game.LayEggsOnBirds(p1, map[pkg.BirdID]int{})
-		go game.LayEggsOnBirds(p2, map[pkg.BirdID]int{})
 
 		go game.PayBirdCost(p1, pkg.BirdID(1), []pkg.FoodType{}, map[pkg.BirdID]int{})
 		go game.PayBirdCost(p2, pkg.BirdID(1), []pkg.FoodType{}, map[pkg.BirdID]int{})
@@ -531,9 +522,10 @@ func TestGame(t *testing.T) {
 		}
 
 		response = assertResponse(t, p1, pkg.FoodGained)
+		foodPayload := response.Payload.(map[string]any)
 
 		var playerFood map[pkg.FoodType]int
-		pkg.ParsePayload(response.Payload, &playerFood)
+		pkg.ParsePayload(foodPayload["food"], &playerFood)
 
 		if playerFood[keys[0]] < 1 {
 			t.Errorf("expected at least %v of food type %v, got %v", 1, keys[0], playerFood[keys[0]])
@@ -627,25 +619,25 @@ func TestGame(t *testing.T) {
 		discardFood(t, p1, game)
 		discardFood(t, p2, game)
 
-		if err := game.PlayBird(p1, 169); err != nil {
+		if err := game.PayBirdCost(p1, 169, []pkg.FoodType{}, map[pkg.BirdID]int{}); err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
 		if err := game.PlayBird(p1, 4999); err == nil {
 			t.Error("Expected error, got nothing")
 		}
 
-		assertResponse(t, p1, pkg.BoardUpdated)
+		assertResponse(t, p1, pkg.BirdPlayed)
 
 		game.EndTurn()
 
-		if err := game.PlayBird(p2, 162); err != nil {
+		if err := game.PayBirdCost(p2, 162, []pkg.FoodType{}, map[pkg.BirdID]int{}); err != nil {
 			t.Errorf("Expected no error, got %v", err)
 		}
 		if err := game.PlayBird(p2, 4999); err == nil {
 			t.Error("Expected error, got nothing")
 		}
 
-		assertResponse(t, p2, pkg.BoardUpdated)
+		assertResponse(t, p2, pkg.BirdPlayed)
 	})
 
 	t.Run("lay egg on bird", func(t *testing.T) {
@@ -687,20 +679,22 @@ func TestGame(t *testing.T) {
 		if err := game.LayEggs(p1); err != nil {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
-		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{165: 2}); err != nil {
+
+		expected := map[pkg.BirdID]int{165: 2}
+		if err := game.LayEggsOnBirds(p1, expected); err != nil {
 			t.Fatalf("could not lay eggs on bird: %v", err)
 		}
 
 		response := assertResponse(t, p1, pkg.BirdUpdated)
 
-		var payload []*pkg.Bird
+		var payload map[pkg.BirdID]int
 		pkg.ParsePayload(response.Payload, &payload)
 
 		if len(payload) != 1 {
 			t.Errorf("expected len %v, got %v", 1, len(payload))
 		}
-		if payload[0].EggCount != 3 {
-			t.Errorf("expected %v eggs, got %v", 3, payload[0].EggCount)
+		if !reflect.DeepEqual(expected, payload) {
+			t.Errorf("expected %v, got %v", expected, payload)
 		}
 	})
 

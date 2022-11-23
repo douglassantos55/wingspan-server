@@ -189,8 +189,6 @@ func (g *Game) DrawFromDeck(socket Socket) error {
 		return true
 	})
 
-	// TODO: activate powers
-
 	return nil
 }
 
@@ -220,8 +218,6 @@ func (g *Game) DrawFromTray(socket Socket, birdIds []BirdID) error {
 		return true
 	})
 
-	// TODO: activate powers
-
 	return nil
 }
 
@@ -236,11 +232,12 @@ func (g *Game) ChooseFood(socket Socket, chosenFood map[FoodType]int) error {
 	}
 
 	g.Broadcast(Response{
-		Type:    FoodGained,
-		Payload: player.GetFood(),
+		Type: FoodGained,
+		Payload: map[string]any{
+			"player": player.ID,
+			"food":   chosenFood,
+		},
 	})
-
-	// TODO: activate powers
 
 	return nil
 }
@@ -295,10 +292,8 @@ func (g *Game) LayEggsOnBirds(socket Socket, chosen map[BirdID]int) error {
 
 	g.Broadcast(Response{
 		Type:    BirdUpdated,
-		Payload: birds,
+		Payload: chosen,
 	})
-
-	// TODO: activate powers
 
 	return nil
 }
@@ -316,7 +311,20 @@ func (g *Game) PayBirdCost(socket Socket, birdId BirdID, food []FoodType, eggs m
 	if err != nil {
 		return err
 	}
-	return player.PayBirdCost(birdId, food, eggs)
+
+	if err := player.PayBirdCost(birdId, food, eggs); err != nil {
+		return err
+	}
+
+	g.Broadcast(Response{
+		Type: BirdPlayed,
+		Payload: map[string]any{
+			"player": player.ID,
+			"bird":   player.board.GetBird(birdId),
+		},
+	})
+
+	return nil
 }
 
 func (g *Game) ActivatePower(socket Socket, birdId BirdID) error {
@@ -333,11 +341,9 @@ func (g *Game) ActivatePower(socket Socket, birdId BirdID) error {
 
 func (g *Game) StartRound() error {
 	g.mutex.Lock()
-
 	g.currTurn = 0
-	g.mutex.Unlock()
-
 	g.firstPlayer = g.turnOrder.Peek().(Socket)
+	g.mutex.Unlock()
 	return g.StartTurn()
 }
 

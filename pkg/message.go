@@ -27,7 +27,7 @@ const (
 	BirdUpdated      = "bird_updated"
 	PayBirdCost      = "pay_bird_cost"
 	FoodUpdated      = "food_updated"
-	BoardUpdated     = "board_updated"
+	BirdPlayed       = "bird_played"
 	ChooseFood       = "choose_food"
 	ChooseBirds      = "choose_birds"
 )
