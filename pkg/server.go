@@ -60,6 +60,10 @@ func (s *Server) handleMessage(socket *Sockt, message Message) {
 }
 
 func (s *Server) Serve(w http.ResponseWriter, r *http.Request) {
+	s.upgrader.CheckOrigin = func(r *http.Request) bool {
+		return true
+	}
+
 	c, err := s.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		return
