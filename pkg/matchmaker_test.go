@@ -9,13 +9,25 @@ import (
 )
 
 func TestMatchmaker(t *testing.T) {
+	t.Run("match found", func(t *testing.T) {
+		matchmaker := pkg.NewMatchmaker(time.Second)
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		matchmaker.CreateMatch(nil, []pkg.Socket{p1, p2})
+
+		assertResponse(t, p1, pkg.MatchFound)
+		assertResponse(t, p2, pkg.MatchFound)
+	})
+
 	t.Run("accept match", func(t *testing.T) {
 		matchmaker := pkg.NewMatchmaker(time.Second)
 
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
+		matchmaker.CreateMatch(nil, []pkg.Socket{p1, p2})
 		reply, err := matchmaker.Accept(p1)
 
 		if err != nil {
@@ -40,7 +52,7 @@ func TestMatchmaker(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
+		matchmaker.CreateMatch(nil, []pkg.Socket{p1, p2})
 
 		matchmaker.Accept(p1)
 		reply, err := matchmaker.Accept(p2)
@@ -70,7 +82,7 @@ func TestMatchmaker(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
+		matchmaker.CreateMatch(nil, []pkg.Socket{p1, p2})
 
 		if _, err := matchmaker.Decline(p1); err != nil {
 			t.Errorf("Expected no error, got %v", err)
@@ -114,7 +126,7 @@ func TestMatchmaker(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
+		matchmaker.CreateMatch(nil, []pkg.Socket{p1, p2})
 		matchmaker.Decline(p2)
 
 		_, err := matchmaker.Accept(p1)
@@ -131,11 +143,11 @@ func TestMatchmaker(t *testing.T) {
 
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
-		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
+		matchmaker.CreateMatch(nil, []pkg.Socket{p1, p2})
 
 		p3 := pkg.NewTestSocket()
 		p4 := pkg.NewTestSocket()
-		matchmaker.CreateMatch([]pkg.Socket{p3, p4})
+		matchmaker.CreateMatch(nil, []pkg.Socket{p3, p4})
 
 		matchmaker.Decline(p2)
 		if _, err := matchmaker.Accept(p1); err == nil {
@@ -158,7 +170,7 @@ func TestMatchmaker(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		matchmaker.CreateMatch([]pkg.Socket{p1, p2})
+		matchmaker.CreateMatch(nil, []pkg.Socket{p1, p2})
 		matchmaker.Accept(p2)
 		reply, _ := matchmaker.Decline(p1)
 		if reply == nil {
@@ -189,7 +201,7 @@ func TestMatchmaker(t *testing.T) {
 			pkg.NewTestSocket(),
 		}
 
-		matchmaker.CreateMatch(players)
+		matchmaker.CreateMatch(nil, players)
 		time.Sleep(2 * time.Millisecond)
 
 		for _, player := range players {
@@ -213,7 +225,7 @@ func TestMatchmaker(t *testing.T) {
 
 	t.Run("create without players", func(t *testing.T) {
 		matchmaker := pkg.NewMatchmaker(time.Second)
-		_, err := matchmaker.CreateMatch([]pkg.Socket{})
+		_, err := matchmaker.CreateMatch(nil, []pkg.Socket{})
 
 		if err == nil {
 			t.Fatal("Expected error trying to create match without players")
@@ -229,7 +241,7 @@ func TestMatchmaker(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		go matchmaker.CreateMatch([]pkg.Socket{p1, p2})
+		go matchmaker.CreateMatch(nil, []pkg.Socket{p1, p2})
 		go matchmaker.Accept(p1)
 		go matchmaker.Decline(p2)
 	})

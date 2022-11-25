@@ -108,7 +108,7 @@ func (m *Matchmaker) Decline(socket Socket) (*Message, error) {
 	return nil, nil
 }
 
-func (m *Matchmaker) CreateMatch(players []Socket) (*Message, error) {
+func (m *Matchmaker) CreateMatch(socket Socket, players []Socket) (*Message, error) {
 	if len(players) == 0 {
 		return nil, ErrNoPlayers
 	}
@@ -116,6 +116,7 @@ func (m *Matchmaker) CreateMatch(players []Socket) (*Message, error) {
 	match := NewMatch(players)
 	for _, player := range players {
 		m.matches.Store(player, match)
+		player.Send(Response{Type: MatchFound})
 	}
 
 	// Decline automatically after timeout
