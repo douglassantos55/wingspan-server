@@ -33,7 +33,7 @@ func NewSocket(conn *websocket.Conn) *Sockt {
 		for {
 			data, err := io.ReadAll(socket)
 			if err != nil {
-				continue
+				break
 			}
 			var message Message
 			if err := json.Unmarshal(data, &message); err != nil {
