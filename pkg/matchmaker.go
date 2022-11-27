@@ -55,12 +55,14 @@ func (m *Match) Accept(socket Socket) error {
 type Matchmaker struct {
 	timeout time.Duration
 	matches *sync.Map
+	timers  *sync.Map
 }
 
 func NewMatchmaker(timeout time.Duration) *Matchmaker {
 	return &Matchmaker{
 		timeout: timeout,
 		matches: new(sync.Map),
+		timers:  new(sync.Map),
 	}
 }
 
@@ -77,6 +79,10 @@ func (m *Matchmaker) Accept(socket Socket) (*Message, error) {
 
 	if match.Ready() {
 		m.matches.Delete(socket)
+
+		// Stop and removes match timer
+		timer, _ := m.timers.LoadAndDelete(match)
+		timer.(*time.Timer).Stop()
 
 		return &Message{
 			Method: "Game.Create",
@@ -116,14 +122,20 @@ func (m *Matchmaker) CreateMatch(socket Socket, players []Socket) (*Message, err
 	match := NewMatch(players)
 	for _, player := range players {
 		m.matches.Store(player, match)
-		player.Send(Response{Type: MatchFound})
+
+		player.Send(Response{
+			Type:    MatchFound,
+			Payload: m.timeout.Seconds(),
+		})
 	}
 
 	// Decline automatically after timeout
-	go func() {
-		<-time.After(m.timeout)
+	timer := time.AfterFunc(m.timeout, func() {
 		m.declineMatch(match)
-	}()
+	})
+
+	// Store match timer
+	m.timers.Store(match, timer)
 
 	return nil, nil
 }
