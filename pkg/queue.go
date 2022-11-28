@@ -36,6 +36,9 @@ func (q *Queue) Add(socket Socket, sockets []Socket) (*Message, error) {
 	}
 
 	for _, player := range sockets {
+		if player == nil {
+			continue
+		}
 		if _, ok := q.sockets[player]; !ok {
 			q.sockets[player] = q.players.PushBack(player)
 
