@@ -32,7 +32,7 @@ type Game struct {
 	deck         Deck
 	timer        *time.Timer
 	turnDuration time.Duration
-	turnOrder    *RingBuffer
+	turnOrder    *RingBuffer[Socket]
 	players      *sync.Map
 	birdTray     *BirdTray
 	birdFeeder   *Birdfeeder
@@ -68,7 +68,7 @@ func NewGame(sockets []Socket, turnDuration time.Duration) (*Game, error) {
 		turnDuration: turnDuration,
 		players:      players,
 		birdTray:     birdTray,
-		turnOrder:    NewRingBuffer(len(sockets)),
+		turnOrder:    NewRingBuffer[Socket](len(sockets)),
 		birdFeeder:   NewBirdfeeder(MAX_FOOD_FEEDER),
 	}, nil
 }
@@ -342,18 +342,18 @@ func (g *Game) ActivatePower(socket Socket, birdId BirdID) error {
 func (g *Game) StartRound() error {
 	g.mutex.Lock()
 	g.currTurn = 0
-	g.firstPlayer = g.turnOrder.Peek().(Socket)
+	g.firstPlayer = g.turnOrder.Peek()
 	g.mutex.Unlock()
 	return g.StartTurn()
 }
 
 func (g *Game) StartTurn() error {
-	socket, ok := g.turnOrder.Peek().(Socket)
-	if !ok {
+	socket := g.turnOrder.Peek()
+	if socket == nil {
 		return ErrNoPlayerReady
 	}
 
-	_, ok = g.players.Load(socket)
+	_, ok := g.players.Load(socket)
 	if !ok {
 		return ErrGameNotFound
 	}
@@ -462,8 +462,8 @@ func (g *Game) Birdfeeder() map[FoodType]int {
 }
 
 func (g *Game) validateSocket(socket Socket) (*Player, error) {
-	curr, ok := g.turnOrder.Peek().(Socket)
-	if !ok {
+	curr := g.turnOrder.Peek()
+	if curr == nil {
 		return nil, ErrNoPlayerReady
 	}
 

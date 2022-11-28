@@ -19,11 +19,11 @@ type Deck interface {
 
 type BirdDeck struct {
 	mutex sync.Mutex
-	cards *RingBuffer
+	cards *RingBuffer[*Bird]
 }
 
 func NewDeck(size int) *BirdDeck {
-	buf := NewRingBuffer(size)
+	buf := NewRingBuffer[*Bird](size)
 	for i := 0; i < size; i++ {
 		buf.Push(&Bird{
 			ID:       BirdID(i),
@@ -47,12 +47,7 @@ func (d *BirdDeck) Draw(qty int) ([]*Bird, error) {
 
 	cards := make([]*Bird, 0)
 	for i := 0; i < qty; i++ {
-		value := d.cards.Pop()
-		card, ok := value.(*Bird)
-		if !ok {
-			return nil, ErrUnexpectedValue
-		}
-		cards = append(cards, card)
+		cards = append(cards, d.cards.Pop())
 	}
 
 	return cards, nil

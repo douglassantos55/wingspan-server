@@ -64,8 +64,8 @@ func TestMatchmaker(t *testing.T) {
 			t.Errorf("Expected method %v, got %v", "Game.Create", reply.Method)
 		}
 
-		expected := []any{p1, p2}
-		confirmed := reply.Params.([]any)
+		expected := []pkg.Socket{p1, p2}
+		confirmed := reply.Params.([]pkg.Socket)
 		if !reflect.DeepEqual(confirmed, expected) {
 			t.Errorf("Expected %v, got %v", expected, confirmed)
 		}
@@ -175,8 +175,8 @@ func TestMatchmaker(t *testing.T) {
 			t.Errorf("Expected method %v, got %v", "Queue.Add", reply.Method)
 		}
 
-		expected := []any{p2}
-		confirmed := reply.Params.([]any)
+		expected := []pkg.Socket{p2, nil}
+		confirmed := reply.Params.([]pkg.Socket)
 		if !reflect.DeepEqual(confirmed, expected) {
 			t.Errorf("Expected %v, got %v", expected, confirmed)
 		}

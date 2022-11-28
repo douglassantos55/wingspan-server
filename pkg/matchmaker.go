@@ -14,7 +14,7 @@ var (
 
 type Match struct {
 	players   *sync.Map
-	confirmed *RingBuffer
+	confirmed *RingBuffer[Socket]
 }
 
 func NewMatch(players []Socket) *Match {
@@ -25,7 +25,7 @@ func NewMatch(players []Socket) *Match {
 
 	return &Match{
 		players:   sockets,
-		confirmed: NewRingBuffer(len(players)),
+		confirmed: NewRingBuffer[Socket](len(players)),
 	}
 }
 

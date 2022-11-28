@@ -2,38 +2,32 @@ package pkg
 
 import "sync"
 
-type RingBuffer struct {
+type RingBuffer[T any] struct {
 	mutex  sync.Mutex
-	values []any
+	values []T
 	head   int
 	tail   int
 	len    int
 }
 
-func NewRingBuffer(size int) *RingBuffer {
-	return &RingBuffer{
-		values: make([]any, size),
+func NewRingBuffer[T any](size int) *RingBuffer[T] {
+	return &RingBuffer[T]{
+		values: make([]T, size),
 	}
 }
 
-func (r *RingBuffer) Len() int {
+func (r *RingBuffer[T]) Len() int {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
 	return r.len
 }
 
-func (r *RingBuffer) Values() []any {
-	items := make([]any, 0)
-	for _, value := range r.values {
-		if value != nil {
-			items = append(items, value)
-		}
-	}
-	return items
+func (r *RingBuffer[T]) Values() []T {
+	return r.values
 }
 
-func (r *RingBuffer) Push(value any) {
+func (r *RingBuffer[T]) Push(value T) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -42,7 +36,7 @@ func (r *RingBuffer) Push(value any) {
 	r.tail = r.len % len(r.values)
 }
 
-func (r *RingBuffer) Pop() any {
+func (r *RingBuffer[T]) Pop() T {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -52,38 +46,38 @@ func (r *RingBuffer) Pop() any {
 	}
 
 	value := r.values[r.tail]
-	r.values[r.tail] = nil
+	r.values[r.tail] = *new(T)
 
 	return value
 }
 
-func (r *RingBuffer) Dequeue() any {
+func (r *RingBuffer[T]) Dequeue() T {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
 	value := r.values[r.head]
-	r.values[r.head] = nil
+	r.values[r.head] = *new(T)
 	r.head = (r.head + 1) % len(r.values)
 
 	return value
 }
 
-func (r *RingBuffer) Peek() any {
+func (r *RingBuffer[T]) Peek() T {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
 	return r.values[r.head]
 }
 
-func (r *RingBuffer) Full() bool {
+func (r *RingBuffer[T]) Full() bool {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
 	return r.len > 0 && r.head == r.tail
 }
 
-func (r *RingBuffer) expand() {
+func (r *RingBuffer[T]) expand() {
 	prev := r.values
-	r.values = make([]any, r.len*2)
+	r.values = make([]T, r.len*2)
 	copy(r.values, prev)
 }

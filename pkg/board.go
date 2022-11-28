@@ -13,12 +13,12 @@ var (
 )
 
 type Row struct {
-	columns *RingBuffer
+	columns *RingBuffer[*Bird]
 }
 
 func NewRow(size int) *Row {
 	return &Row{
-		columns: NewRingBuffer(size),
+		columns: NewRingBuffer[*Bird](size),
 	}
 }
 
@@ -35,20 +35,18 @@ func (r *Row) TotalEggs() int {
 }
 
 func (r *Row) GetBirds() []*Bird {
-	birds := make([]*Bird, 0)
-	for _, curr := range r.columns.Values() {
-		bird, ok := curr.(*Bird)
-		if ok {
-			birds = append(birds, bird)
+	items := make([]*Bird, 0)
+	for _, bird := range r.columns.Values() {
+		if bird != nil {
+			items = append(items, bird)
 		}
 	}
-	return birds
+	return items
 }
 
 func (r *Row) FindBird(id BirdID) *Bird {
-	for _, value := range r.columns.Values() {
-		bird, ok := value.(*Bird)
-		if ok && bird.ID == id {
+	for _, bird := range r.columns.Values() {
+		if bird != nil && bird.ID == id {
 			return bird
 		}
 	}
