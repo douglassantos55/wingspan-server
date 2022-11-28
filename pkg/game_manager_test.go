@@ -53,7 +53,7 @@ func TestGameManager(t *testing.T) {
 		manager := pkg.NewGameManager()
 
 		p1 := pkg.NewTestSocket()
-		manager.Create([]pkg.Socket{p1})
+		manager.Create(nil, []pkg.Socket{p1})
 
 		if _, err := manager.ChooseBirds(p1, []pkg.BirdID{169}); err != nil {
 			t.Errorf("Expecte no error, got %v", err)
@@ -71,7 +71,7 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		manager.Create([]pkg.Socket{p1, p2})
+		manager.Create(nil, []pkg.Socket{p1, p2})
 		response := assertResponse(t, p1, pkg.ChooseCards)
 
 		var payload pkg.ChooseResources
@@ -103,7 +103,7 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		manager.Create([]pkg.Socket{p1, p2})
+		manager.Create(nil, []pkg.Socket{p1, p2})
 		response := assertResponse(t, p1, pkg.ChooseCards)
 
 		var payload pkg.ChooseResources
@@ -129,7 +129,7 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		manager.Create([]pkg.Socket{p1, p2})
+		manager.Create(nil, []pkg.Socket{p1, p2})
 
 		discardFood(t, p1, manager)
 		discardFood(t, p2, manager)
@@ -144,7 +144,7 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		manager.Create([]pkg.Socket{p1, p2})
+		manager.Create(nil, []pkg.Socket{p1, p2})
 
 		discardFood(t, p1, manager)
 		discardFood(t, p2, manager)
@@ -163,8 +163,8 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		go manager.Create([]pkg.Socket{p1})
-		go manager.Create([]pkg.Socket{p2})
+		go manager.Create(nil, []pkg.Socket{p1})
+		go manager.Create(nil, []pkg.Socket{p2})
 
 		go manager.ChooseBirds(p1, []pkg.BirdID{0})
 		go manager.ChooseBirds(p2, []pkg.BirdID{0})
@@ -179,7 +179,7 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		manager.Create([]pkg.Socket{p1, p2})
+		manager.Create(nil, []pkg.Socket{p1, p2})
 
 		discardFood(t, p1, manager)
 		discardFood(t, p2, manager)
@@ -229,7 +229,7 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		manager.Create([]pkg.Socket{p1, p2})
+		manager.Create(nil, []pkg.Socket{p1, p2})
 
 		discardFood(t, p1, manager)
 		discardFood(t, p2, manager)
@@ -256,7 +256,7 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		manager.Create([]pkg.Socket{p1, p2})
+		manager.Create(nil, []pkg.Socket{p1, p2})
 
 		discardFood(t, p1, manager)
 		discardFood(t, p2, manager)
@@ -275,7 +275,7 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		manager.Create([]pkg.Socket{p1, p2})
+		manager.Create(nil, []pkg.Socket{p1, p2})
 		discardFood(t, p1, manager)
 		discardFood(t, p2, manager)
 
@@ -297,7 +297,7 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 
-		manager.Create([]pkg.Socket{p1, p2})
+		manager.Create(nil, []pkg.Socket{p1, p2})
 		discardFood(t, p1, manager)
 		discardFood(t, p2, manager)
 

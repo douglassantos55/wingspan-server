@@ -23,6 +23,16 @@ func (r *RingBuffer) Len() int {
 	return r.len
 }
 
+func (r *RingBuffer) Values() []any {
+	items := make([]any, 0)
+	for _, value := range r.values {
+		if value != nil {
+			items = append(items, value)
+		}
+	}
+	return items
+}
+
 func (r *RingBuffer) Push(value any) {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
@@ -70,10 +80,6 @@ func (r *RingBuffer) Full() bool {
 	defer r.mutex.Unlock()
 
 	return r.len > 0 && r.head == r.tail
-}
-
-func (r *RingBuffer) Iterate() Iterator[any] {
-	return NewSliceIterator(r.values)
 }
 
 func (r *RingBuffer) expand() {

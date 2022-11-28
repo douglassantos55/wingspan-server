@@ -86,7 +86,7 @@ func (m *Matchmaker) Accept(socket Socket) (*Message, error) {
 
 		return &Message{
 			Method: "Game.Create",
-			Params: match.confirmed,
+			Params: match.confirmed.Values(),
 		}, nil
 	}
 
@@ -104,10 +104,14 @@ func (m *Matchmaker) Decline(socket Socket) (*Message, error) {
 		return nil, err
 	}
 
+	// Stop and removes match timer
+	timer, _ := m.timers.LoadAndDelete(match)
+	timer.(*time.Timer).Stop()
+
 	if match.Confirmed() > 0 {
 		return &Message{
 			Method: "Queue.Add",
-			Params: match.confirmed,
+			Params: match.confirmed.Values(),
 		}, nil
 	}
 

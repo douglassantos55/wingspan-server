@@ -25,12 +25,7 @@ func NewGameManager() *GameManager {
 	}
 }
 
-func (g *GameManager) Create(socket Socket, buffer *RingBuffer) (*Message, error) {
-	players := make([]Socket, 0, buffer.Len())
-	for buffer.Peek() != nil {
-		players = append(players, buffer.Pop().(Socket))
-	}
-
+func (g *GameManager) Create(socket Socket, players []Socket) (*Message, error) {
 	game, err := NewGame(players, time.Minute)
 	if err != nil {
 		return nil, err

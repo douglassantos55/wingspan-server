@@ -36,25 +36,22 @@ func (r *Row) TotalEggs() int {
 
 func (r *Row) GetBirds() []*Bird {
 	birds := make([]*Bird, 0)
-	iterator := r.columns.Iterate()
-	for curr := iterator.Next(); curr != nil; curr = iterator.Next() {
-		birds = append(birds, curr.(*Bird))
+	for _, curr := range r.columns.Values() {
+		bird, ok := curr.(*Bird)
+		if ok {
+			birds = append(birds, bird)
+		}
 	}
 	return birds
 }
 
 func (r *Row) FindBird(id BirdID) *Bird {
-	iterator := r.columns.Iterate()
-	value := iterator.Next()
-
-	for value != nil {
+	for _, value := range r.columns.Values() {
 		bird, ok := value.(*Bird)
 		if ok && bird.ID == id {
 			return bird
 		}
-		value = iterator.Next()
 	}
-
 	return nil
 }
 
