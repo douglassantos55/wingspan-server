@@ -2,6 +2,7 @@ package pkg
 
 import (
 	"errors"
+	"fmt"
 	"sync"
 )
 
@@ -27,6 +28,7 @@ func NewDeck(size int) *BirdDeck {
 	for i := 0; i < size; i++ {
 		buf.Push(&Bird{
 			ID:       BirdID(i),
+			Name:     fmt.Sprintf("Bird %d", i),
 			EggLimit: size - i - 1,
 		})
 	}
