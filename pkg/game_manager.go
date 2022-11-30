@@ -39,12 +39,18 @@ func (g *GameManager) Create(socket Socket, players []Socket) (*Message, error) 
 	return nil, nil
 }
 
-func (g *GameManager) ChooseBirds(socket Socket, birds []BirdID) (*Message, error) {
+func (g *GameManager) ChooseBirds(socket Socket, birds []any) (*Message, error) {
 	game, err := g.GetSocketGame(socket)
 	if err != nil {
 		return nil, err
 	}
-	return nil, game.ChooseBirds(socket, birds)
+
+	var ids []BirdID
+	if err := ParsePayload(birds, &ids); err != nil {
+		return nil, err
+	}
+
+	return nil, game.ChooseBirds(socket, ids)
 }
 
 func (g *GameManager) DiscardFood(socket Socket, foodType FoodType, qty int) (*Message, error) {

@@ -55,12 +55,12 @@ func TestGameManager(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		manager.Create(nil, []pkg.Socket{p1})
 
-		if _, err := manager.ChooseBirds(p1, []pkg.BirdID{169}); err != nil {
+		if _, err := manager.ChooseBirds(p1, []any{169}); err != nil {
 			t.Errorf("Expecte no error, got %v", err)
 		}
 
 		p2 := pkg.NewTestSocket()
-		if _, err := manager.ChooseBirds(p2, []pkg.BirdID{1}); err == nil {
+		if _, err := manager.ChooseBirds(p2, []any{1}); err == nil {
 			t.Error("Expected error, got nothing")
 		}
 	})
@@ -111,7 +111,7 @@ func TestGameManager(t *testing.T) {
 			t.Fatalf("Error parsing payload: %v", err)
 		}
 
-		chosenBirds := []pkg.BirdID{payload.Birds[0].ID, payload.Birds[4].ID}
+		chosenBirds := []any{payload.Birds[0].ID, payload.Birds[4].ID}
 		if _, err := manager.ChooseBirds(p1, chosenBirds); err != nil {
 			t.Errorf("Error chosing birds: %v", err)
 		}
@@ -166,8 +166,8 @@ func TestGameManager(t *testing.T) {
 		go manager.Create(nil, []pkg.Socket{p1})
 		go manager.Create(nil, []pkg.Socket{p2})
 
-		go manager.ChooseBirds(p1, []pkg.BirdID{0})
-		go manager.ChooseBirds(p2, []pkg.BirdID{0})
+		go manager.ChooseBirds(p1, []any{0})
+		go manager.ChooseBirds(p2, []any{0})
 
 		go manager.DiscardFood(p1, pkg.Invertebrate, 0)
 		go manager.DiscardFood(p2, pkg.Invertebrate, 0)
