@@ -117,15 +117,17 @@ func (g *Game) ChooseBirds(socket Socket, birdsToKeep []BirdID) error {
 }
 
 // Discards food and returns whether every player is ready
-func (g *Game) DiscardFood(socket Socket, foodType FoodType, qty int) (bool, error) {
+func (g *Game) DiscardFood(socket Socket, chosenFood map[FoodType]int) (bool, error) {
 	value, ok := g.players.Load(socket)
 	if !ok {
 		return false, ErrGameNotFound
 	}
 
 	player := value.(*Player)
-	if err := player.DiscardFood(foodType, qty); err != nil {
-		return false, err
+	for foodType, qty := range chosenFood {
+		if err := player.DiscardFood(foodType, qty); err != nil {
+			return false, err
+		}
 	}
 
 	g.turnOrder.Push(socket)

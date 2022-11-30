@@ -1,6 +1,7 @@
 package pkg_test
 
 import (
+	"strconv"
 	"testing"
 
 	"git.internal.com/wingspan/pkg"
@@ -39,12 +40,12 @@ func TestGameManager(t *testing.T) {
 		var payload pkg.ChooseResources
 		pkg.ParsePayload(response.Payload, &payload)
 
-		keys := []pkg.FoodType{}
+		keys := []string{}
 		for k := range payload.Food {
-			keys = append(keys, k)
+			keys = append(keys, strconv.FormatInt(int64(k), 10))
 		}
 
-		if _, err := manager.DiscardFood(player, keys[0], 0); err != nil {
+		if _, err := manager.DiscardFood(player, map[string]any{keys[0]: 0}); err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
 	}
@@ -169,8 +170,8 @@ func TestGameManager(t *testing.T) {
 		go manager.ChooseBirds(p1, []any{0})
 		go manager.ChooseBirds(p2, []any{0})
 
-		go manager.DiscardFood(p1, pkg.Invertebrate, 0)
-		go manager.DiscardFood(p2, pkg.Invertebrate, 0)
+		go manager.DiscardFood(p1, map[string]any{})
+		go manager.DiscardFood(p2, map[string]any{})
 	})
 
 	t.Run("game over", func(t *testing.T) {

@@ -22,7 +22,7 @@ func TestGame(t *testing.T) {
 			keys = append(keys, k)
 		}
 
-		if _, err := game.DiscardFood(player, keys[0], 0); err != nil {
+		if _, err := game.DiscardFood(player, map[pkg.FoodType]int{keys[0]: 0}); err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
 	}
@@ -128,7 +128,7 @@ func TestGame(t *testing.T) {
 		p1 := pkg.NewTestSocket()
 		p2 := pkg.NewTestSocket()
 		game, _ := pkg.NewGame([]pkg.Socket{p1}, time.Second)
-		_, err := game.DiscardFood(p2, pkg.Fish, 1)
+		_, err := game.DiscardFood(p2, map[pkg.FoodType]int{pkg.Fish: 1})
 
 		if err == nil {
 			t.Fatal("expected error, got nothing")
@@ -154,11 +154,11 @@ func TestGame(t *testing.T) {
 		}
 
 		foodType := keys[0]
-		if _, err := game.DiscardFood(p1, foodType, payload.Food[foodType]); err != nil {
+		if _, err := game.DiscardFood(p1, map[pkg.FoodType]int{foodType: payload.Food[foodType]}); err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
 		foodType = keys[1]
-		if _, err := game.DiscardFood(p1, foodType, payload.Food[foodType]+1); err == nil {
+		if _, err := game.DiscardFood(p1, map[pkg.FoodType]int{foodType: payload.Food[foodType] + 1}); err == nil {
 			t.Error("expected error, got nothing")
 		}
 	})
@@ -179,7 +179,7 @@ func TestGame(t *testing.T) {
 			keys = append(keys, ft)
 		}
 
-		if _, err := game.DiscardFood(p1, keys[0], 1); err != nil {
+		if _, err := game.DiscardFood(p1, map[pkg.FoodType]int{keys[0]: 1}); err != nil {
 			t.Fatalf("expected no error, got %v", err)
 		}
 
@@ -212,7 +212,7 @@ func TestGame(t *testing.T) {
 				keys = append(keys, ft)
 			}
 
-			if _, err := game.DiscardFood(player, keys[0], 1); err != nil {
+			if _, err := game.DiscardFood(player, map[pkg.FoodType]int{keys[0]: 1}); err != nil {
 				t.Fatalf("expected no error, got %v", err)
 			}
 		}
@@ -310,7 +310,7 @@ func TestGame(t *testing.T) {
 				keys = append(keys, k)
 			}
 
-			if _, err := game.DiscardFood(player, keys[0], 0); err != nil {
+			if _, err := game.DiscardFood(player, map[pkg.FoodType]int{keys[0]: 0}); err != nil {
 				t.Fatalf("expected no error, got %v", err)
 			}
 		}
@@ -337,8 +337,8 @@ func TestGame(t *testing.T) {
 		go game.ChooseBirds(p1, []pkg.BirdID{0})
 		go game.ChooseBirds(p2, []pkg.BirdID{0})
 
-		go game.DiscardFood(p1, 0, 0)
-		go game.DiscardFood(p2, 0, 0)
+		go game.DiscardFood(p1, nil)
+		go game.DiscardFood(p2, nil)
 
 		go game.StartTurn()
 		go game.EndTurn()
