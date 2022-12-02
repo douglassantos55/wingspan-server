@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"encoding/json"
 	"errors"
 	"sync"
 	"sync/atomic"
@@ -101,6 +102,10 @@ func NewBirdTray(size int32) *BirdTray {
 		size:  size,
 		birds: new(sync.Map),
 	}
+}
+
+func (t *BirdTray) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.Birds())
 }
 
 func (t *BirdTray) Reset(source Deck) error {

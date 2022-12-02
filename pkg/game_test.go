@@ -222,9 +222,35 @@ func TestGame(t *testing.T) {
 		// check turn responses
 		for i, player := range players {
 			if i == 0 {
-				assertResponse(t, player.(*pkg.TestSocket), pkg.StartTurn)
+				response := assertResponse(t, player.(*pkg.TestSocket), pkg.StartTurn)
+
+				var payload pkg.StartTurnPayload
+				pkg.ParsePayload(response.Payload, &payload)
+
+				if payload.BirdTray == nil {
+					t.Error("should include bird tray")
+				}
+				if payload.BirdFeeder == nil {
+					t.Error("should include bird feeder")
+				}
+				if payload.Board == nil {
+					t.Error("should include board")
+				}
 			} else {
-				assertResponse(t, player.(*pkg.TestSocket), pkg.WaitTurn)
+				response := assertResponse(t, player.(*pkg.TestSocket), pkg.WaitTurn)
+
+				var payload pkg.StartTurnPayload
+				pkg.ParsePayload(response.Payload, &payload)
+
+				if payload.BirdTray == nil {
+					t.Error("should include bird tray")
+				}
+				if payload.BirdFeeder == nil {
+					t.Error("should include bird feeder")
+				}
+				if payload.Board == nil {
+					t.Error("should include board")
+				}
 			}
 		}
 	})

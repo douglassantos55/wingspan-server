@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"encoding/json"
 	"errors"
 	"sync"
 )
@@ -20,6 +21,10 @@ func NewRow(size int) *Row {
 	return &Row{
 		columns: NewRingBuffer[*Bird](size),
 	}
+}
+
+func (r *Row) MarshalJSON() ([]byte, error) {
+	return json.Marshal(r.columns.Values())
 }
 
 func (r *Row) IsFull() bool {
@@ -77,6 +82,15 @@ func NewBoard() *Board {
 	rows.Store(Wetland, NewRow(MAX_ROW_COLUMNS))
 
 	return &Board{rows: rows}
+}
+
+func (b *Board) MarshalJSON() ([]byte, error) {
+	rows := map[Habitat]*Row{}
+	b.rows.Range(func(key, value any) bool {
+		rows[key.(Habitat)] = value.(*Row)
+		return true
+	})
+	return json.Marshal(rows)
 }
 
 // places the bird on the leftmost exposed

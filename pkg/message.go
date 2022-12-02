@@ -42,8 +42,16 @@ type Message struct {
 	Params any
 }
 
+type StartTurnPayload struct {
+	Birds      []*Bird
+	Board      *Board
+	BirdTray   *BirdTray
+	BirdFeeder *Birdfeeder
+}
+
 type ChooseResources struct {
 	Birds []*Bird
+	Time  float64
 	Food  map[FoodType]int
 }
 

@@ -1,6 +1,7 @@
 package pkg
 
 import (
+	"encoding/json"
 	"math/rand"
 	"sync"
 	"sync/atomic"
@@ -31,6 +32,10 @@ func NewBirdfeeder(size int) *Birdfeeder {
 	}
 	feeder.Refill()
 	return feeder
+}
+
+func (f *Birdfeeder) MarshalJSON() ([]byte, error) {
+	return json.Marshal(f.List())
 }
 
 func (f *Birdfeeder) GetAll(foodType FoodType) (int, error) {

@@ -361,12 +361,29 @@ func (g *Game) StartTurn() error {
 		return ErrGameNotFound
 	}
 
-	g.players.Range(func(key, _ any) bool {
+	g.players.Range(func(key, val any) bool {
 		s := key.(Socket)
+		player := val.(*Player)
 		if s == socket {
-			s.Send(Response{Type: StartTurn})
+			s.Send(Response{
+				Type: StartTurn,
+				Payload: StartTurnPayload{
+					Birds:      player.birds.Birds(),
+					Board:      player.board,
+					BirdTray:   g.birdTray,
+					BirdFeeder: g.birdFeeder,
+				},
+			})
 		} else {
-			s.Send(Response{Type: WaitTurn})
+			s.Send(Response{
+				Type: WaitTurn,
+				Payload: StartTurnPayload{
+					Birds:      player.birds.Birds(),
+					Board:      player.board,
+					BirdTray:   g.birdTray,
+					BirdFeeder: g.birdFeeder,
+				},
+			})
 		}
 		return true
 	})
