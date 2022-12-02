@@ -81,6 +81,7 @@ func (g *Game) Start(timeout time.Duration) {
 		socket.Send(Response{
 			Type: ChooseCards,
 			Payload: ChooseResources{
+				Time:  timeout.Seconds(),
 				Food:  player.GetFood(),
 				Birds: player.GetBirdCards(),
 			},
