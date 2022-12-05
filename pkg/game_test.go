@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"git.internal.com/wingspan/pkg"
+	"github.com/google/uuid"
 )
 
 func TestGame(t *testing.T) {
@@ -227,29 +228,26 @@ func TestGame(t *testing.T) {
 				var payload pkg.StartTurnPayload
 				pkg.ParsePayload(response.Payload, &payload)
 
-				if payload.BirdTray == nil {
-					t.Error("should include bird tray")
+				if payload.Duration != time.Minute.Seconds() {
+					t.Errorf("expected %v duration, got %v", time.Minute.Seconds(), payload.Duration)
 				}
-				if payload.BirdFeeder == nil {
-					t.Error("should include bird feeder")
-				}
-				if payload.Board == nil {
-					t.Error("should include board")
+				if payload.Turn != 0 {
+					t.Errorf("expected turn %v, got %v", 0, payload.Turn)
 				}
 			} else {
 				response := assertResponse(t, player.(*pkg.TestSocket), pkg.WaitTurn)
 
-				var payload pkg.StartTurnPayload
+				var payload pkg.WaitTurnPayload
 				pkg.ParsePayload(response.Payload, &payload)
 
-				if payload.BirdTray == nil {
-					t.Error("should include bird tray")
+				if payload.Duration != time.Minute.Seconds() {
+					t.Errorf("expected %v duration, got %v", time.Minute.Seconds(), payload.Duration)
 				}
-				if payload.BirdFeeder == nil {
-					t.Error("should include bird feeder")
+				if payload.Turn != 0 {
+					t.Errorf("expected turn %v, got %v", 0, payload.Turn)
 				}
-				if payload.Board == nil {
-					t.Error("should include board")
+				if payload.Current == uuid.Nil {
+					t.Error("should include current player's id")
 				}
 			}
 		}

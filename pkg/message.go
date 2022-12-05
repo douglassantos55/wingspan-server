@@ -3,6 +3,8 @@ package pkg
 import (
 	"encoding/json"
 	"errors"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -45,10 +47,14 @@ type Message struct {
 }
 
 type StartTurnPayload struct {
-	Birds      []*Bird
-	Board      *Board
-	BirdTray   *BirdTray
-	BirdFeeder *Birdfeeder
+	Turn     int
+	Duration float64
+}
+
+type WaitTurnPayload struct {
+	Turn     int
+	Duration float64
+	Current  uuid.UUID
 }
 
 type RoundStartedPayload struct {

@@ -371,6 +371,8 @@ func (g *Game) StartTurn() error {
 		return ErrGameNotFound
 	}
 
+	g.mutex.Lock()
+
 	g.players.Range(func(key, val any) bool {
 		s := key.(Socket)
 		player := val.(*Player)
@@ -378,27 +380,23 @@ func (g *Game) StartTurn() error {
 			s.Send(Response{
 				Type: StartTurn,
 				Payload: StartTurnPayload{
-					Birds:      player.birds.Birds(),
-					Board:      player.board,
-					BirdTray:   g.birdTray,
-					BirdFeeder: g.birdFeeder,
+					Turn:     g.currTurn,
+					Duration: g.turnDuration.Seconds(),
 				},
 			})
 		} else {
 			s.Send(Response{
 				Type: WaitTurn,
-				Payload: StartTurnPayload{
-					Birds:      player.birds.Birds(),
-					Board:      player.board,
-					BirdTray:   g.birdTray,
-					BirdFeeder: g.birdFeeder,
+				Payload: WaitTurnPayload{
+					Current:  player.ID,
+					Turn:     g.currTurn,
+					Duration: g.turnDuration.Seconds(),
 				},
 			})
 		}
 		return true
 	})
 
-	g.mutex.Lock()
 	defer g.mutex.Unlock()
 
 	g.timer = time.AfterFunc(g.turnDuration, func() {
