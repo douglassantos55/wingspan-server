@@ -70,6 +70,8 @@ func (g *GameManager) DiscardFood(socket Socket, params map[string]any) (*Messag
 	}
 
 	if ready {
+		game.Broadcast(Response{Type: GameStarted})
+
 		if err := game.StartRound(); err != nil {
 			return nil, err
 		}

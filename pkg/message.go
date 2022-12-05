@@ -21,6 +21,7 @@ const (
 	StartTurn        = "start_turn"
 	WaitTurn         = "wait_turn"
 	RoundEnded       = "round_ended"
+	GameStarted      = "game_started"
 	GameOver         = "game_over"
 	FoodGained       = "food_gained"
 	BirdsDrawn       = "birds_drawn"
