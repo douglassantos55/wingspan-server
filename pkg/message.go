@@ -21,6 +21,7 @@ const (
 	StartTurn        = "start_turn"
 	WaitTurn         = "wait_turn"
 	RoundEnded       = "round_ended"
+	RoundStarted     = "round_started"
 	GameStarted      = "game_started"
 	GameOver         = "game_over"
 	FoodGained       = "food_gained"
@@ -48,6 +49,12 @@ type StartTurnPayload struct {
 	Board      *Board
 	BirdTray   *BirdTray
 	BirdFeeder *Birdfeeder
+}
+
+type RoundStartedPayload struct {
+	Round     int
+	Turns     int
+	TurnOrder []*Player
 }
 
 type ChooseResources struct {

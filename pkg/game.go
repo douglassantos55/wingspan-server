@@ -346,6 +346,16 @@ func (g *Game) StartRound() error {
 	g.mutex.Lock()
 	g.currTurn = 0
 	g.firstPlayer = g.turnOrder.Peek()
+
+	g.Broadcast(Response{
+		Type: RoundStarted,
+		Payload: RoundStartedPayload{
+			Round:     g.currRound,
+			TurnOrder: g.TurnOrder(),
+			Turns:     MAX_TURNS - g.currRound,
+		},
+	})
+
 	g.mutex.Unlock()
 	return g.StartTurn()
 }
@@ -479,6 +489,19 @@ func (g *Game) BirdTray() []*Bird {
 
 func (g *Game) Birdfeeder() map[FoodType]int {
 	return g.birdFeeder.List()
+}
+
+func (g *Game) TurnOrder() []*Player {
+	players := make([]*Player, 0)
+	sockets := g.turnOrder.Values()
+	for _, socket := range sockets {
+		value, ok := g.players.Load(socket)
+		if !ok {
+			continue
+		}
+		players = append(players, value.(*Player))
+	}
+	return players
 }
 
 func (g *Game) validateSocket(socket Socket) (*Player, error) {
