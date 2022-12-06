@@ -4,6 +4,8 @@ import (
 	"errors"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -158,6 +160,47 @@ func (g *GameManager) ActivatePower(socket Socket, birdId BirdID) (*Message, err
 		return nil, err
 	}
 	return nil, game.ActivatePower(socket, birdId)
+}
+
+func (g *GameManager) PlayerInfo(socket Socket, playerId string) (*Message, error) {
+	game, err := g.GetSocketGame(socket)
+	if err != nil {
+		return nil, err
+	}
+
+	uuid, err := uuid.Parse(playerId)
+	if err != nil {
+		return nil, err
+	}
+
+	player := game.GetPlayer(uuid)
+	if player == nil {
+		return nil, ErrPlayerNotFound
+	}
+
+	current, err := game.CurrentPlayer()
+	if err != nil {
+		return nil, err
+	}
+
+	socket.Send(Response{
+		Type: PlayerInfo,
+		Payload: PlayerInfoPayload{
+			Board:      player.board,
+			Food:       player.GetFood(),
+			Birds:      player.birds.Birds(),
+			Current:    current.ID,
+			Turn:       game.currTurn,
+			Round:      game.currRound,
+			BirdTray:   game.BirdTray(),
+			TurnOrder:  game.TurnOrder(),
+			BirdFeeder: game.Birdfeeder(),
+			MaxTurns:   MAX_TURNS - game.currRound,
+			Duration:   game.turnDuration.Seconds(),
+		},
+	})
+
+	return nil, nil
 }
 
 func (g *GameManager) EndTurn(socket Socket) (*Message, error) {

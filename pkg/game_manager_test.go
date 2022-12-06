@@ -1,6 +1,7 @@
 package pkg_test
 
 import (
+	"reflect"
 	"strconv"
 	"testing"
 
@@ -310,6 +311,69 @@ func TestGameManager(t *testing.T) {
 		}
 		if _, err := manager.ActivatePower(p1, pkg.BirdID(169)); err != nil {
 			t.Errorf("could not activate power: %v", err)
+		}
+	})
+
+	t.Run("player info", func(t *testing.T) {
+		manager := pkg.NewGameManager()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		manager.Create(nil, []pkg.Socket{p1, p2})
+		discardFood(t, p1, manager)
+		discardFood(t, p2, manager)
+
+		game, _ := manager.GetSocketGame(p1)
+		players := game.TurnOrder()
+
+		if _, err := manager.PlayerInfo(p1, players[1].ID.String()); err != nil {
+			t.Fatalf("could not get player info: %v", err)
+		}
+
+		response := assertResponse(t, p1, pkg.PlayerInfo)
+
+		var payload pkg.PlayerInfoPayload
+		pkg.ParsePayload(response.Payload, &payload)
+
+	tray_outer:
+		for _, bird := range game.BirdTray() {
+			for _, received := range payload.BirdTray {
+				if received.ID == bird.ID {
+					continue tray_outer
+				}
+			}
+			t.Errorf("did not find %v", bird.ID)
+		}
+
+		if !reflect.DeepEqual(payload.BirdFeeder, game.Birdfeeder()) {
+			t.Errorf("expected %v, got %v", game.Birdfeeder(), payload.BirdFeeder)
+		}
+
+	player_outer:
+		for _, player := range game.TurnOrder() {
+			for _, received := range payload.TurnOrder {
+				if received.ID == player.ID {
+					continue player_outer
+				}
+			}
+			t.Errorf("did not find player %v", player.ID)
+		}
+
+		if payload.Current != players[0].ID {
+			t.Errorf("expected %v, got %v", players[0].ID, payload.Current)
+		}
+		if payload.Duration != 60 {
+			t.Errorf("expected %v, got %v", 60, payload.Duration)
+		}
+		if payload.Round != 0 {
+			t.Errorf("expected %v, got %v", 0, payload.Round)
+		}
+		if payload.Turn != 0 {
+			t.Errorf("expected %v, got %v", 0, payload.Turn)
+		}
+		if payload.MaxTurns != pkg.MAX_TURNS {
+			t.Errorf("expected %v, got %v", pkg.MAX_TURNS, payload.MaxTurns)
 		}
 	})
 }

@@ -24,8 +24,8 @@ func (r *RingBuffer[T]) Len() int {
 }
 
 func (r *RingBuffer[T]) Values() []T {
-    r.mutex.Lock()
-    defer r.mutex.Unlock()
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
 
 	return r.values
 }

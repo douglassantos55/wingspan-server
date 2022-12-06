@@ -5,6 +5,8 @@ import (
 	"math/rand"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -487,6 +489,34 @@ func (g *Game) BirdTray() []*Bird {
 
 func (g *Game) Birdfeeder() map[FoodType]int {
 	return g.birdFeeder.List()
+}
+
+func (g *Game) CurrentPlayer() (*Player, error) {
+	socket := g.turnOrder.Peek()
+	value, ok := g.players.Load(socket)
+	if !ok {
+		return nil, ErrPlayerNotFound
+	}
+
+	player, ok := value.(*Player)
+	if !ok {
+		return nil, ErrPlayerNotFound
+	}
+
+	return player, nil
+}
+
+func (g *Game) GetPlayer(id uuid.UUID) *Player {
+	var out *Player
+	g.players.Range(func(_, value any) bool {
+		player, ok := value.(*Player)
+		if ok && player.ID == id {
+			out = player
+			return false
+		}
+		return true
+	})
+	return out
 }
 
 func (g *Game) TurnOrder() []*Player {

@@ -34,6 +34,7 @@ const (
 	BirdPlayed       = "bird_played"
 	ChooseFood       = "choose_food"
 	ChooseBirds      = "choose_birds"
+	PlayerInfo       = "player_info"
 )
 
 type Response struct {
@@ -79,6 +80,23 @@ type AvailableResources struct {
 type GainFood struct {
 	Amount    int
 	Available map[FoodType]int
+}
+
+type PlayerInfoPayload struct {
+	// Game generics
+	Turn       int
+	Round      int
+	MaxTurns   int
+	Duration   float64
+	Current    uuid.UUID
+	BirdTray   []*Bird
+	TurnOrder  []*Player
+	BirdFeeder map[FoodType]int
+
+	// Player specifics
+	Birds []*Bird
+	Board *Board
+	Food  map[FoodType]int
 }
 
 func ParsePayload(payload any, dest any) error {
