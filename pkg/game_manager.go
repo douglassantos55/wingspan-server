@@ -72,7 +72,12 @@ func (g *GameManager) DiscardFood(socket Socket, params map[string]any) (*Messag
 	}
 
 	if ready {
-		game.Broadcast(Response{Type: GameStarted})
+		for _, player := range game.TurnOrder() {
+			player.socket.Send(Response{
+				Type:    GameStarted,
+				Payload: player.ID,
+			})
+		}
 
 		if err := game.StartRound(); err != nil {
 			return nil, err
