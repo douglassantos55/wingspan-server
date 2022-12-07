@@ -376,4 +376,32 @@ func TestGameManager(t *testing.T) {
 			t.Errorf("expected %v, got %v", pkg.MAX_TURNS, payload.MaxTurns)
 		}
 	})
+
+	t.Run("player info new socket", func(t *testing.T) {
+		manager := pkg.NewGameManager()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+		socket := pkg.NewTestSocket()
+
+		manager.Create(nil, []pkg.Socket{p1, p2})
+		discardFood(t, p1, manager)
+		discardFood(t, p2, manager)
+
+		game, _ := manager.GetSocketGame(p1)
+		players := game.TurnOrder()
+
+		if _, err := manager.PlayerInfo(socket, players[1].ID.String()); err != nil {
+			t.Fatalf("could not get player info: %v", err)
+		}
+
+		assertResponse(t, socket, pkg.PlayerInfo)
+
+		if _, err := manager.EndTurn(socket); err != nil {
+			t.Errorf("should end turn, got: %v", err)
+		}
+
+		game.Broadcast(pkg.Response{Type: pkg.MatchFound})
+		assertResponse(t, socket, pkg.MatchFound)
+	})
 }

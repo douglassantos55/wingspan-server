@@ -18,23 +18,29 @@ var (
 )
 
 type GameManager struct {
-	games *sync.Map
+	games   *sync.Map
+	players *sync.Map
 }
 
 func NewGameManager() *GameManager {
 	return &GameManager{
-		games: new(sync.Map),
+		games:   new(sync.Map),
+		players: new(sync.Map),
 	}
 }
 
-func (g *GameManager) Create(socket Socket, players []Socket) (*Message, error) {
-	game, err := NewGame(players, time.Minute)
+func (g *GameManager) Create(socket Socket, sockets []Socket) (*Message, error) {
+	game, err := NewGame(sockets, time.Minute)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, player := range players {
-		g.games.Store(player, game)
+	for _, socket := range sockets {
+		value, _ := game.players.Load(socket)
+		player := value.(*Player)
+
+		g.games.Store(socket, game)
+		g.players.Store(player.ID, game)
 	}
 
 	game.Start(time.Minute)
@@ -168,17 +174,25 @@ func (g *GameManager) ActivatePower(socket Socket, birdId BirdID) (*Message, err
 }
 
 func (g *GameManager) PlayerInfo(socket Socket, playerId string) (*Message, error) {
-	game, err := g.GetSocketGame(socket)
-	if err != nil {
-		return nil, err
-	}
-
 	uuid, err := uuid.Parse(playerId)
 	if err != nil {
 		return nil, err
 	}
 
+	value, ok := g.players.Load(uuid)
+	if !ok {
+		return nil, ErrGameNotFound
+	}
+
+	game := value.(*Game)
 	player := game.GetPlayer(uuid)
+
+	// if this socket points to no games, store it for the game found
+	if _, ok := g.games.Load(socket); !ok {
+		g.games.Store(socket, game)
+		game.players.Store(socket, player)
+	}
+
 	if player == nil {
 		return nil, ErrPlayerNotFound
 	}
@@ -232,8 +246,9 @@ func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 				})
 			}
 
-			game.players.Range(func(socket, _ any) bool {
+			game.players.Range(func(socket, value any) bool {
 				g.games.Delete(socket.(Socket))
+				g.players.Delete(value.(*Player).ID)
 				return true
 			})
 		}

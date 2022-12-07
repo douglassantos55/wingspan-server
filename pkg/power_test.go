@@ -125,7 +125,7 @@ func TestCacheFoodPower(t *testing.T) {
 
 	t.Run("cache food from birdfeeder", func(t *testing.T) {
 		bird := &pkg.Bird{}
-		feeder := pkg.NewBirdfeeder(30)
+		feeder := pkg.NewBirdfeeder(50)
 		power := pkg.NewCacheFoodPower(pkg.Rodent, 2, feeder)
 
 		if err := power.Execute(bird, nil); err != nil {
@@ -311,7 +311,7 @@ func TestFishingPower(t *testing.T) {
 
 	t.Run("successfull", func(t *testing.T) {
 		bird := &pkg.Bird{}
-		power := pkg.NewFishingPower(1, pkg.Seed)
+		power := pkg.NewFishingPower(1, pkg.Fruit)
 
 		if err := power.Execute(bird, nil); err != nil {
 			t.Fatalf("could not hunt: %v", err)
