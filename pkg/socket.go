@@ -11,7 +11,7 @@ import (
 )
 
 type Socket interface {
-	io.ReadWriter
+	io.ReadWriteCloser
 	// Helper to send responses instead of handling io
 	Send(response Response) (int, error)
 }
@@ -30,6 +30,7 @@ func NewSocket(conn *websocket.Conn) *Sockt {
 	}
 
 	go func() {
+		defer socket.Close()
 		for {
 			data, err := io.ReadAll(socket)
 			if err != nil {
@@ -53,6 +54,12 @@ func (s *Sockt) Send(response Response) (int, error) {
 		return 0, err
 	}
 	return s.Write(data)
+}
+
+func (s *Sockt) Close() error {
+	close(s.Incoming)
+	close(s.Outgoing)
+	return s.conn.Close()
 }
 
 func (s *Sockt) Write(data []byte) (int, error) {
@@ -89,6 +96,10 @@ func NewTestSocket() *TestSocket {
 	return &TestSocket{
 		buf: new(bytes.Buffer),
 	}
+}
+
+func (t *TestSocket) Close() error {
+	return nil
 }
 
 func (t *TestSocket) Read(p []byte) (int, error) {

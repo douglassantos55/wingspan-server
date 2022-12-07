@@ -69,7 +69,6 @@ func (s *Server) Serve(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	defer c.Close()
 	socket := NewSocket(c)
 
 	for message := range socket.Incoming {
