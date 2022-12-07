@@ -368,7 +368,7 @@ func (g *Game) StartTurn() error {
 		return ErrNoPlayerReady
 	}
 
-	_, ok := g.players.Load(socket)
+	current, ok := g.players.Load(socket)
 	if !ok {
 		return ErrGameNotFound
 	}
@@ -377,7 +377,6 @@ func (g *Game) StartTurn() error {
 
 	g.players.Range(func(key, val any) bool {
 		s := key.(Socket)
-		player := val.(*Player)
 		if s == socket {
 			s.Send(Response{
 				Type: StartTurn,
@@ -390,7 +389,7 @@ func (g *Game) StartTurn() error {
 			s.Send(Response{
 				Type: WaitTurn,
 				Payload: WaitTurnPayload{
-					Current:  player.ID,
+					Current:  current.(*Player).ID,
 					Turn:     g.currTurn,
 					Duration: g.turnDuration.Seconds(),
 				},
