@@ -48,10 +48,10 @@ func (s *Server) Listen(addr string) {
 func (s *Server) handleMessage(socket *Sockt, message Message) {
 	reply, err := s.Dispatch(socket, message)
 	if err != nil {
-		socket.Outgoing <- Response{
+		socket.Send(Response{
 			Type:    Error,
 			Payload: err.Error(),
-		}
+		})
 		return
 	}
 	if reply != nil {
