@@ -393,14 +393,8 @@ func TestGameManager(t *testing.T) {
 		game, _ := manager.GetSocketGame(p1)
 		players := game.TurnOrder()
 
-		game.Disconnect(p2)
-
-		if _, err := manager.PlayerInfo(socket, players[0].ID.String()); err == nil {
+		if _, err := manager.PlayerInfo(socket, players[0].ID.String()); err != nil {
 			t.Error("should not be able to attach to an existing socket")
-		}
-
-		if _, err := manager.PlayerInfo(socket, players[1].ID.String()); err != nil {
-			t.Errorf("could not attach to player: %v", err)
 		}
 	})
 

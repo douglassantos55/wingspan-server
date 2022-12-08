@@ -498,21 +498,19 @@ func (g *Game) CurrentPlayer() (*Player, error) {
 	return player, nil
 }
 
-func (g *Game) GetPlayer(id uuid.UUID) (Socket, *Player) {
+func (g *Game) GetPlayer(id uuid.UUID) *Player {
 	var player *Player
-	var socket Socket
 
 	g.sockets.Range(func(key, val any) bool {
 		p, ok := key.(*Player)
 		if ok && p.ID == id {
 			player = p
-			socket = val.(Socket)
 			return false
 		}
 		return true
 	})
 
-	return socket, player
+	return player
 }
 
 func (g *Game) TurnOrder() []*Player {

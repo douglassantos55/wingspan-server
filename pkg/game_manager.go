@@ -185,18 +185,15 @@ func (g *GameManager) PlayerInfo(socket Socket, playerId string) (*Message, erro
 	}
 
 	game := value.(*Game)
-	sockt, player := game.GetPlayer(uuid)
+	player := game.GetPlayer(uuid)
 
 	if player == nil {
 		return nil, ErrPlayerNotFound
 	}
 
-	if _, ok := game.players.Load(sockt); ok {
-		return nil, ErrPlayerNotFound
-	}
-
 	// if this socket points to no games, store it for the game found
 	if _, ok := g.games.Load(socket); !ok {
+		player.socket = socket
 		g.games.Store(socket, game)
 		game.players.Store(socket, player)
 		game.sockets.Store(player, socket)
