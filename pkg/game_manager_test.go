@@ -426,5 +426,9 @@ func TestGameManager(t *testing.T) {
 
 		game.Broadcast(pkg.Response{Type: pkg.MatchFound})
 		assertResponse(t, socket, pkg.MatchFound)
+
+		if res, err := p2.GetResponse(); err == nil && res.Type == pkg.MatchFound {
+			t.Errorf("removed socket should not receive responses, got %v", res)
+		}
 	})
 }
