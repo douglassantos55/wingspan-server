@@ -311,7 +311,7 @@ func TestFishingPower(t *testing.T) {
 
 	t.Run("successfull", func(t *testing.T) {
 		bird := &pkg.Bird{}
-		power := pkg.NewFishingPower(1, pkg.Fruit)
+		power := pkg.NewFishingPower(1, pkg.Seed)
 
 		if err := power.Execute(bird, nil); err != nil {
 			t.Fatalf("could not hunt: %v", err)

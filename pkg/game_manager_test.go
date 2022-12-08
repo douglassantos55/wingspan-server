@@ -327,6 +327,8 @@ func TestGameManager(t *testing.T) {
 		game, _ := manager.GetSocketGame(p1)
 		players := game.TurnOrder()
 
+		game.Disconnect(p2)
+
 		if _, err := manager.PlayerInfo(p1, players[1].ID.String()); err != nil {
 			t.Fatalf("could not get player info: %v", err)
 		}
@@ -377,7 +379,7 @@ func TestGameManager(t *testing.T) {
 		}
 	})
 
-	t.Run("player info new socket", func(t *testing.T) {
+	t.Run("player info connected socket", func(t *testing.T) {
 		manager := pkg.NewGameManager()
 
 		p1 := pkg.NewTestSocket()
@@ -390,6 +392,33 @@ func TestGameManager(t *testing.T) {
 
 		game, _ := manager.GetSocketGame(p1)
 		players := game.TurnOrder()
+
+		game.Disconnect(p2)
+
+		if _, err := manager.PlayerInfo(socket, players[0].ID.String()); err == nil {
+			t.Error("should not be able to attach to an existing socket")
+		}
+
+		if _, err := manager.PlayerInfo(socket, players[1].ID.String()); err != nil {
+			t.Errorf("could not attach to player: %v", err)
+		}
+	})
+
+	t.Run("player info new socket", func(t *testing.T) {
+		manager := pkg.NewGameManager()
+
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+		socket := pkg.NewTestSocket()
+
+		manager.Create(nil, []pkg.Socket{p1, p2})
+		discardFood(t, p1, manager)
+		discardFood(t, p2, manager)
+
+		game, _ := manager.GetSocketGame(p2)
+		players := game.TurnOrder()
+
+		game.Disconnect(p2)
 
 		if _, err := manager.PlayerInfo(socket, players[1].ID.String()); err != nil {
 			t.Fatalf("could not get player info: %v", err)
