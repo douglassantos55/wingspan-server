@@ -268,7 +268,11 @@ func (g *GameManager) Disconnect(socket Socket) (*Message, error) {
 	if err != nil {
 		return nil, err
 	}
-	return nil, game.Disconnect(socket)
+	if err := game.Disconnect(socket); err != nil {
+		return nil, err
+	}
+	g.games.Delete(socket)
+	return nil, nil
 }
 
 func (g *GameManager) GetSocketGame(socket Socket) (*Game, error) {
