@@ -30,11 +30,12 @@ type Game struct {
 	mutex        sync.Mutex
 	currRound    int
 	currTurn     int
-	firstPlayer  Socket
+	firstPlayer  *Player
 	deck         Deck
 	timer        *time.Timer
 	turnDuration time.Duration
-	turnOrder    *RingBuffer[Socket]
+	turnOrder    *RingBuffer[*Player]
+	sockets      *sync.Map
 	players      *sync.Map
 	birdTray     *BirdTray
 	birdFeeder   *Birdfeeder
@@ -46,6 +47,8 @@ func NewGame(sockets []Socket, turnDuration time.Duration) (*Game, error) {
 	}
 
 	players := new(sync.Map)
+	gameSockets := new(sync.Map)
+
 	deck := NewDeck(MAX_DECK_SIZE)
 
 	for _, socket := range sockets {
@@ -60,6 +63,7 @@ func NewGame(sockets []Socket, turnDuration time.Duration) (*Game, error) {
 			return nil, err
 		}
 		players.Store(socket, player)
+		gameSockets.Store(player, socket)
 	}
 
 	birdTray := NewBirdTray(MAX_BIRDS_TRAY)
@@ -69,8 +73,9 @@ func NewGame(sockets []Socket, turnDuration time.Duration) (*Game, error) {
 		deck:         deck,
 		turnDuration: turnDuration,
 		players:      players,
+		sockets:      gameSockets,
 		birdTray:     birdTray,
-		turnOrder:    NewRingBuffer[Socket](len(sockets)),
+		turnOrder:    NewRingBuffer[*Player](len(sockets)),
 		birdFeeder:   NewBirdfeeder(MAX_FOOD_FEEDER),
 	}, nil
 }
@@ -133,7 +138,7 @@ func (g *Game) DiscardFood(socket Socket, chosenFood map[FoodType]int) (bool, er
 		}
 	}
 
-	g.turnOrder.Push(socket)
+	g.turnOrder.Push(player)
 
 	g.mutex.Lock()
 	defer g.mutex.Unlock()
@@ -363,22 +368,17 @@ func (g *Game) StartRound() error {
 }
 
 func (g *Game) StartTurn() error {
-	socket := g.turnOrder.Peek()
-	if socket == nil {
+	if g.turnOrder.Len() == 0 {
 		return ErrNoPlayerReady
 	}
 
-	current, ok := g.players.Load(socket)
-	if !ok {
-		return ErrGameNotFound
-	}
-
+	current := g.turnOrder.Peek()
 	g.mutex.Lock()
 
 	g.players.Range(func(key, val any) bool {
-		s := key.(Socket)
-		if s == socket {
-			s.Send(Response{
+		player := val.(*Player)
+		if player == current {
+			player.socket.Send(Response{
 				Type: StartTurn,
 				Payload: StartTurnPayload{
 					Turn:     g.currTurn,
@@ -386,10 +386,10 @@ func (g *Game) StartTurn() error {
 				},
 			})
 		} else {
-			s.Send(Response{
+			player.socket.Send(Response{
 				Type: WaitTurn,
 				Payload: WaitTurnPayload{
-					Current:  current.(*Player).ID,
+					Current:  current.ID,
 					Turn:     g.currTurn,
 					Duration: g.turnDuration.Seconds(),
 				},
@@ -491,44 +491,40 @@ func (g *Game) Birdfeeder() map[FoodType]int {
 }
 
 func (g *Game) CurrentPlayer() (*Player, error) {
-	socket := g.turnOrder.Peek()
-	value, ok := g.players.Load(socket)
-	if !ok {
+	player := g.turnOrder.Peek()
+	if player == nil {
 		return nil, ErrPlayerNotFound
 	}
-
-	player, ok := value.(*Player)
-	if !ok {
-		return nil, ErrPlayerNotFound
-	}
-
 	return player, nil
 }
 
-func (g *Game) GetPlayer(id uuid.UUID) *Player {
-	var out *Player
-	g.players.Range(func(_, value any) bool {
-		player, ok := value.(*Player)
-		if ok && player.ID == id {
-			out = player
+func (g *Game) GetPlayer(id uuid.UUID) (Socket, *Player) {
+	var player *Player
+	var socket Socket
+
+	g.sockets.Range(func(key, val any) bool {
+		p, ok := key.(*Player)
+		if ok && p.ID == id {
+			player = p
+			socket = val.(Socket)
 			return false
 		}
 		return true
 	})
-	return out
+
+	return socket, player
 }
 
 func (g *Game) TurnOrder() []*Player {
-	players := make([]*Player, 0)
-	sockets := g.turnOrder.Values()
-	for _, socket := range sockets {
-		value, ok := g.players.Load(socket)
-		if !ok {
-			continue
-		}
-		players = append(players, value.(*Player))
+	return g.turnOrder.Values()
+}
+
+func (g *Game) Disconnect(socket Socket) error {
+	_, ok := g.players.LoadAndDelete(socket)
+	if !ok {
+		return ErrPlayerNotFound
 	}
-	return players
+	return nil
 }
 
 func (g *Game) validateSocket(socket Socket) (*Player, error) {
@@ -537,14 +533,14 @@ func (g *Game) validateSocket(socket Socket) (*Player, error) {
 		return nil, ErrNoPlayerReady
 	}
 
-	if socket != curr {
-		return nil, ErrPlayerNotFound
-	}
-
 	value, ok := g.players.Load(socket)
 	if !ok {
 		return nil, ErrGameNotFound
 	}
 
-	return value.(*Player), nil
+	if value.(*Player) != curr {
+		return nil, ErrPlayerNotFound
+	}
+
+	return curr, nil
 }

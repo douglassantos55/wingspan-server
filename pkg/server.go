@@ -74,6 +74,16 @@ func (s *Server) Serve(w http.ResponseWriter, r *http.Request) {
 	for message := range socket.Incoming {
 		s.handleMessage(socket, message)
 	}
+
+	for _, service := range s.services {
+		method, ok := service.methods["Disconnect"]
+		if ok {
+			method.Func.Call([]reflect.Value{
+				reflect.ValueOf(service.recv),
+				reflect.ValueOf(socket),
+			})
+		}
+	}
 }
 
 func (s *Server) Dispatch(socket *Sockt, message Message) (*Message, error) {
