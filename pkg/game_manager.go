@@ -266,6 +266,14 @@ func (g *GameManager) EndTurn(socket Socket) (*Message, error) {
 	return nil, err
 }
 
+func (g *GameManager) Disconnect(socket Socket) (*Message, error) {
+	game, err := g.GetSocketGame(socket)
+	if err != nil {
+		return nil, err
+	}
+	return nil, game.Disconnect(socket)
+}
+
 func (g *GameManager) GetSocketGame(socket Socket) (*Game, error) {
 	value, ok := g.games.Load(socket)
 	if !ok {
