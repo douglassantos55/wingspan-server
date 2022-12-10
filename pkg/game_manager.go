@@ -109,11 +109,17 @@ func (g *GameManager) DrawFromDeck(socket Socket) (*Message, error) {
 	return nil, game.DrawFromDeck(socket)
 }
 
-func (g *GameManager) DrawFromTray(socket Socket, ids []BirdID) (*Message, error) {
+func (g *GameManager) DrawFromTray(socket Socket, birds []any) (*Message, error) {
 	game, err := g.GetSocketGame(socket)
 	if err != nil {
 		return nil, err
 	}
+
+	var ids []BirdID
+	if err := ParsePayload(birds, &ids); err != nil {
+		return nil, err
+	}
+
 	return nil, game.DrawFromTray(socket, ids)
 }
 

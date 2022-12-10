@@ -585,12 +585,16 @@ func TestGame(t *testing.T) {
 			t.Fatalf("could not parse payload: %v", err)
 		}
 
-		if len(payload) != 6 {
-			t.Errorf("expected len %v, got %v", 6, len(payload))
+		if len(payload) != 1 {
+			t.Errorf("expected len %v, got %v", 1, len(payload))
 		}
 
 		response = assertResponse(t, p2, pkg.BirdsDrawn)
-		if response.Payload.(float64) != 1 {
+		if err := pkg.ParsePayload(response.Payload, &payload); err != nil {
+			t.Fatalf("could not parse payload: %v", err)
+		}
+
+		if len(payload) != 1 {
 			t.Errorf("expected len %v, got %v", 1, len(payload))
 		}
 
