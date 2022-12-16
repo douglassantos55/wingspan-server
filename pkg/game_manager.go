@@ -188,12 +188,12 @@ func (g *GameManager) PayBirdCost(socket Socket, payload map[string]any) (*Messa
 	return nil, game.PayBirdCost(socket, data.BirdID, data.Food, data.Eggs)
 }
 
-func (g *GameManager) ActivatePower(socket Socket, birdId BirdID) (*Message, error) {
+func (g *GameManager) ActivatePower(socket Socket, birdId float64) (*Message, error) {
 	game, err := g.GetSocketGame(socket)
 	if err != nil {
 		return nil, err
 	}
-	return nil, game.ActivatePower(socket, birdId)
+	return nil, game.ActivatePower(socket, BirdID(birdId))
 }
 
 func (g *GameManager) PlayerInfo(socket Socket, playerId string) (*Message, error) {
