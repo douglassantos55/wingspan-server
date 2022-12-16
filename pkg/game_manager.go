@@ -169,12 +169,23 @@ func (g *GameManager) PlayCard(socket Socket, birdId float64) (*Message, error) 
 	return nil, game.PlayBird(socket, BirdID(birdId))
 }
 
-func (g *GameManager) PayBirdCost(socket Socket, birdId BirdID, food []FoodType, eggs map[BirdID]int) (*Message, error) {
+func (g *GameManager) PayBirdCost(socket Socket, payload map[string]any) (*Message, error) {
 	game, err := g.GetSocketGame(socket)
 	if err != nil {
 		return nil, err
 	}
-	return nil, game.PayBirdCost(socket, birdId, food, eggs)
+
+	var data struct {
+		BirdID BirdID
+		Food   []FoodType
+		Eggs   map[BirdID]int
+	}
+
+	if err := ParsePayload(payload, &data); err != nil {
+		return nil, err
+	}
+
+	return nil, game.PayBirdCost(socket, data.BirdID, data.Food, data.Eggs)
 }
 
 func (g *GameManager) ActivatePower(socket Socket, birdId BirdID) (*Message, error) {
