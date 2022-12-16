@@ -172,8 +172,6 @@ func TestPlayer(t *testing.T) {
 		if err := player.PlayBird(2); err == nil {
 			t.Error("expected error, got nothing")
 		}
-
-		assertResponse(t, socket, pkg.FoodUpdated)
 	})
 
 	t.Run("count eggs to lay", func(t *testing.T) {
@@ -295,8 +293,6 @@ func TestPlayer(t *testing.T) {
 		if !reflect.DeepEqual(expected, player.GetFood()) {
 			t.Errorf("Expected food %v, got %v", expected, player.GetFood())
 		}
-
-		assertResponse(t, socket, pkg.FoodUpdated)
 	})
 
 	t.Run("not enough food", func(t *testing.T) {
@@ -359,8 +355,6 @@ func TestPlayer(t *testing.T) {
 		if !reflect.DeepEqual(expected, player.GetFood()) {
 			t.Errorf("Expected food %v, got %v", expected, player.GetFood())
 		}
-
-		assertResponse(t, socket, pkg.FoodUpdated)
 	})
 
 	t.Run("food cost or multiple", func(t *testing.T) {
@@ -380,7 +374,7 @@ func TestPlayer(t *testing.T) {
 		player.GainFood(pkg.Fish, 1)
 		player.GainFood(pkg.Rodent, 2)
 
-		if err := player.PlayBird(bird.ID); err != nil {
+		if err := player.PlayBird(bird.ID); err != pkg.ErrChooseResources {
 			t.Errorf("expected no error, got %v", err)
 		}
 
@@ -404,7 +398,7 @@ func TestPlayer(t *testing.T) {
 		player.GainFood(pkg.Fish, 1)
 		player.GainFood(pkg.Rodent, 2)
 
-		if err := player.PlayBird(bird.ID); err != nil {
+		if err := player.PlayBird(bird.ID); err != pkg.ErrChooseResources {
 			t.Errorf("expected no error, got %v", err)
 		}
 
@@ -442,8 +436,6 @@ func TestPlayer(t *testing.T) {
 		if !reflect.DeepEqual(remaining, player.GetFood()) {
 			t.Errorf("expected %v, got %v", remaining, player.GetFood())
 		}
-
-		assertResponse(t, socket, pkg.FoodUpdated)
 	})
 
 	t.Run("egg cost choice", func(t *testing.T) {
@@ -484,7 +476,7 @@ func TestPlayer(t *testing.T) {
 		}
 
 		player.GainBird(bird3)
-		if err := player.PlayBird(bird3.ID); err != nil {
+		if err := player.PlayBird(bird3.ID); err != pkg.ErrChooseResources {
 			t.Fatalf("error: %v", err)
 		}
 
@@ -531,8 +523,6 @@ func TestPlayer(t *testing.T) {
 
 		player.GainBird(bird2)
 		player.PlayBird(bird2.ID)
-
-		assertResponse(t, socket, pkg.FoodUpdated)
 	})
 
 	t.Run("pay egg cost", func(t *testing.T) {
@@ -573,7 +563,7 @@ func TestPlayer(t *testing.T) {
 		}
 
 		player.GainBird(bird3)
-		if err := player.PlayBird(bird3.ID); err != nil {
+		if err := player.PlayBird(bird3.ID); err != pkg.ErrChooseResources {
 			t.Fatalf("error: %v", err)
 		}
 
@@ -585,8 +575,6 @@ func TestPlayer(t *testing.T) {
 		if err := player.PayBirdCost(payload.BirdID, nil, map[pkg.BirdID]int{1: 1}); err != nil {
 			t.Fatalf("could not pay bird cost: %v", err)
 		}
-
-		assertResponse(t, socket, pkg.BirdUpdated)
 
 		bird4 := &pkg.Bird{
 			ID:            pkg.BirdID(4),
@@ -603,7 +591,6 @@ func TestPlayer(t *testing.T) {
 		pkg.ParsePayload(response.Payload, &payload)
 
 		player.PayBirdCost(payload.BirdID, nil, map[pkg.BirdID]int{1: 1, 2: 1})
-		assertResponse(t, socket, pkg.BirdUpdated)
 
 		if bird1.EggCount != 1 {
 			t.Errorf("expected %v eggs, got %v", 1, bird1.EggCount)
@@ -623,8 +610,6 @@ func TestPlayer(t *testing.T) {
 		if err := player.PlayBird(bird.ID); err != nil {
 			t.Errorf("expected no error, got %v", err)
 		}
-
-		assertResponse(t, socket, pkg.FoodUpdated)
 	})
 
 	t.Run("total score", func(t *testing.T) {
