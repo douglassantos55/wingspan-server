@@ -17,6 +17,7 @@ var (
 	ErrNotEnoughFood    = errors.New("Not enough food")
 	ErrNotEnoughEggs    = errors.New("Not enough eggs")
 	ErrBirdCardNotFound = errors.New("Bird card not found")
+	ErrChooseResources  = errors.New("Choose resources")
 )
 
 const (
@@ -308,7 +309,25 @@ func (g *Game) PlayBird(socket Socket, birdId BirdID) error {
 	if err != nil {
 		return err
 	}
-	return player.PlayBird(birdId)
+
+	err = player.PlayBird(birdId)
+
+	if err != nil {
+		if err == ErrChooseResources {
+			return nil
+		}
+		return err
+	}
+
+	g.Broadcast(Response{
+		Type: BirdPlayed,
+		Payload: map[string]any{
+			"player": player.ID,
+			"bird":   player.board.GetBird(birdId),
+		},
+	})
+
+	return nil
 }
 
 func (g *Game) PayBirdCost(socket Socket, birdId BirdID, food []FoodType, eggs map[BirdID]int) error {

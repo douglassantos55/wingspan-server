@@ -139,7 +139,11 @@ func (p *Player) PlayBird(birdId BirdID) error {
 		return ErrNotEnoughEggs
 	}
 
-	payload := AvailableResources{BirdID: bird.ID}
+	payload := AvailableResources{
+		BirdID: bird.ID,
+		Birds:  map[BirdID]int{},
+		Food:   make([]FoodType, 0),
+	}
 
 	birdsWithEggs := p.board.GetBirdsWithEggs()
 	if eggCost > 0 && p.board.TotalEggs() > eggCost && len(birdsWithEggs) > 1 {
@@ -157,12 +161,13 @@ func (p *Player) PlayBird(birdId BirdID) error {
 		}
 	}
 
-	if payload.Food != nil || payload.EggCost != 0 {
-		_, err := p.socket.Send(Response{
+	if len(payload.Food) > 0 || payload.EggCost != 0 {
+		p.socket.Send(Response{
 			Type:    PayBirdCost,
 			Payload: payload,
 		})
-		return err
+
+		return ErrChooseResources
 	}
 
 	eggs := make(map[BirdID]int)
