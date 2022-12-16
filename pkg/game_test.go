@@ -685,11 +685,11 @@ func TestGame(t *testing.T) {
 			t.Errorf("expected error %v, got %v", pkg.ErrBirdCardNotFound, err)
 		}
 
-		if err := game.PlayBird(p1, 165); err != nil {
+		if err := game.PlayBird(p1, 168); err != nil {
 			t.Fatalf("could not play bird: %v", err)
 		}
 
-		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{165: 2}); err != nil {
+		if err := game.LayEggsOnBirds(p1, map[pkg.BirdID]int{168: 1}); err != nil {
 			t.Fatalf("could not lay eggs on bird: %v", err)
 		}
 
@@ -708,7 +708,7 @@ func TestGame(t *testing.T) {
 			t.Fatalf("could not lay eggs: %v", err)
 		}
 
-		expected := map[pkg.BirdID]int{165: 2}
+		expected := map[pkg.BirdID]int{168: 1}
 		if err := game.LayEggsOnBirds(p1, expected); err != nil {
 			t.Fatalf("could not lay eggs on bird: %v", err)
 		}
@@ -760,6 +760,67 @@ func TestGame(t *testing.T) {
 		}
 		if err := game.ActivatePower(p1, pkg.BirdID(169)); err != nil {
 			t.Errorf("could not activate power: %v", err)
+		}
+	})
+
+	t.Run("broadcasts bird updated", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
+
+		if err := game.PlayBird(p1, 168); err != nil {
+			t.Fatalf("could not play bird: %v", err)
+		}
+
+		eggs := make(map[pkg.BirdID]int)
+		eggs[pkg.BirdID(168)] = 1
+
+		if err := game.PayBirdCost(p1, 169, []pkg.FoodType{}, eggs); err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+
+		assertResponse(t, p1, pkg.BirdPlayed)
+		assertResponse(t, p1, pkg.FoodUpdated)
+		response := assertResponse(t, p1, pkg.BirdUpdated)
+
+		var payload map[pkg.BirdID]int
+		pkg.ParsePayload(response.Payload, &payload)
+
+		if payload[pkg.BirdID(168)] != -1 {
+			t.Errorf("expected %v eggs, got %v", -1, payload[pkg.BirdID(168)])
+		}
+	})
+
+	t.Run("broadcasts food updated", func(t *testing.T) {
+		p1 := pkg.NewTestSocket()
+		p2 := pkg.NewTestSocket()
+
+		game, _ := pkg.NewGame([]pkg.Socket{p1, p2}, time.Second)
+		game.Start(time.Second)
+
+		discardFood(t, p1, game)
+		discardFood(t, p2, game)
+
+		player, _ := game.CurrentPlayer()
+		initial := player.GetFood()
+
+		if err := game.PayBirdCost(p1, 165, []pkg.FoodType{pkg.Fish}, map[pkg.BirdID]int{}); err != nil {
+			t.Errorf("Expected no error, got %v", err)
+		}
+
+		assertResponse(t, p1, pkg.BirdPlayed)
+		response := assertResponse(t, p1, pkg.FoodUpdated)
+
+		var payload map[pkg.FoodType]int
+		pkg.ParsePayload(response.Payload, &payload)
+
+		if payload[pkg.Fish] != initial[pkg.Fish]-1 {
+			t.Errorf("expected %v food, got %v", initial[pkg.Fish]-1, payload[pkg.Fish])
 		}
 	})
 }

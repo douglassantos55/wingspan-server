@@ -26,11 +26,17 @@ type BirdDeck struct {
 func NewDeck(size int) *BirdDeck {
 	buf := NewRingBuffer[*Bird](size)
 	for i := 0; i < size; i++ {
-		buf.Push(&Bird{
+		bird := &Bird{
 			ID:       BirdID(i),
 			Name:     fmt.Sprintf("Bird %d", i),
 			EggLimit: size - i - 1,
-		})
+		}
+
+		if i == 165 {
+			bird.FoodCost = map[FoodType]int{Fish: 1}
+		}
+
+		buf.Push(bird)
 	}
 
 	return &BirdDeck{

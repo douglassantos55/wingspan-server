@@ -340,6 +340,21 @@ func (g *Game) PayBirdCost(socket Socket, birdId BirdID, food []FoodType, eggs m
 		return err
 	}
 
+	for birdID := range eggs {
+		bird := player.board.GetBird(birdID)
+		eggs[birdID] = bird.EggCount
+	}
+
+	g.Broadcast(Response{
+		Type:    BirdUpdated,
+		Payload: eggs,
+	})
+
+	g.Broadcast(Response{
+		Type:    FoodUpdated,
+		Payload: player.GetFood(),
+	})
+
 	g.Broadcast(Response{
 		Type: BirdPlayed,
 		Payload: map[string]any{

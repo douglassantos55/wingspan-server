@@ -72,6 +72,13 @@ func (r *RingBuffer[T]) Peek() T {
 	return r.values[r.head]
 }
 
+func (r *RingBuffer[T]) Last() T {
+	r.mutex.Lock()
+	defer r.mutex.Unlock()
+
+	return r.values[r.tail-1]
+}
+
 func (r *RingBuffer[T]) Full() bool {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()

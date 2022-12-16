@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"log"
-	"sync"
 
 	"github.com/gorilla/websocket"
 )
@@ -88,13 +87,12 @@ func (s *Sockt) Read(data []byte) (int, error) {
 }
 
 type TestSocket struct {
-	buf *bytes.Buffer
-	mut sync.Mutex
+	buf *RingBuffer[*bytes.Buffer]
 }
 
 func NewTestSocket() *TestSocket {
 	return &TestSocket{
-		buf: new(bytes.Buffer),
+		buf: NewRingBuffer[*bytes.Buffer](10),
 	}
 }
 
@@ -103,20 +101,18 @@ func (t *TestSocket) Close() error {
 }
 
 func (t *TestSocket) Read(p []byte) (int, error) {
-	t.mut.Lock()
-	defer t.mut.Unlock()
-
-	return t.buf.Read(p)
+	buffer := t.buf.Last()
+	if buffer == nil {
+		return 0, io.EOF
+	}
+	return buffer.Read(p)
 }
 
 func (t *TestSocket) Write(p []byte) (int, error) {
-	t.mut.Lock()
-	defer t.mut.Unlock()
-
-	// overwrites previous message so it's easier to test
-	t.buf.Reset()
-
-	return t.buf.Write(p)
+	buffer := new(bytes.Buffer)
+	n, err := buffer.Write(p)
+	t.buf.Push(buffer)
+	return n, err
 }
 
 func (t *TestSocket) Send(response Response) (int, error) {
@@ -129,6 +125,7 @@ func (t *TestSocket) Send(response Response) (int, error) {
 
 // Helper to receive responses instead of handling io
 func (t *TestSocket) GetResponse() (*Response, error) {
+	defer t.buf.Pop()
 	data, err := io.ReadAll(t)
 	if err != nil {
 		return nil, err

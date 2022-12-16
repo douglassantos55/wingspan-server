@@ -226,11 +226,6 @@ func (p *Player) PayEggCost(cost int, chosenEggs map[BirdID]int) error {
 		bird.EggCount -= qty
 	}
 
-	p.socket.Send(Response{
-		Type:    BirdUpdated,
-		Payload: chosenEggs,
-	})
-
 	return nil
 }
 
@@ -248,11 +243,6 @@ func (p *Player) PayFoodCost(cost map[FoodType]int, chosen []FoodType) error {
 			p.food.Store(food, value.(int)-qty)
 		}
 	}
-
-	p.socket.Send(Response{
-		Type:    FoodUpdated,
-		Payload: p.GetFood(),
-	})
 
 	return nil
 }
