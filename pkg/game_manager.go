@@ -161,12 +161,12 @@ func (g *GameManager) LayEggsOnBirds(socket Socket, chosen map[BirdID]int) (*Mes
 	return nil, game.LayEggsOnBirds(socket, chosen)
 }
 
-func (g *GameManager) PlayCard(socket Socket, birdId BirdID) (*Message, error) {
+func (g *GameManager) PlayCard(socket Socket, birdId float64) (*Message, error) {
 	game, err := g.GetSocketGame(socket)
 	if err != nil {
 		return nil, err
 	}
-	return nil, game.PlayBird(socket, birdId)
+	return nil, game.PlayBird(socket, BirdID(birdId))
 }
 
 func (g *GameManager) PayBirdCost(socket Socket, birdId BirdID, food []FoodType, eggs map[BirdID]int) (*Message, error) {
