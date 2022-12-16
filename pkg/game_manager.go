@@ -131,11 +131,17 @@ func (g *GameManager) GainFood(socket Socket) (*Message, error) {
 	return nil, game.GainFood(socket)
 }
 
-func (g *GameManager) ChooseFood(socket Socket, chosen map[FoodType]int) (*Message, error) {
+func (g *GameManager) ChooseFood(socket Socket, payload map[string]any) (*Message, error) {
 	game, err := g.GetSocketGame(socket)
 	if err != nil {
 		return nil, err
 	}
+
+	var chosen map[FoodType]int
+	if err := ParsePayload(payload, &chosen); err != nil {
+		return nil, err
+	}
+
 	return nil, game.ChooseFood(socket, chosen)
 }
 
