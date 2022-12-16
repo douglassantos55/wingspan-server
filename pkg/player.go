@@ -199,6 +199,8 @@ func (p *Player) PayBirdCost(birdID BirdID, food []FoodType, eggs map[BirdID]int
 		return err
 	}
 
+	p.birds.Delete(bird.ID)
+
 	if err := bird.CastPower(WhenPlayed, p); err != nil {
 		return err
 	}
