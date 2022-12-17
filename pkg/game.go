@@ -388,6 +388,7 @@ func (g *Game) StartRound() error {
 		Payload: RoundStartedPayload{
 			Round:     g.currRound,
 			TurnOrder: g.TurnOrder(),
+			BirdTray:  g.birdTray,
 			Turns:     MAX_TURNS - g.currRound,
 		},
 	})
@@ -411,6 +412,7 @@ func (g *Game) StartTurn() error {
 				Type: StartTurn,
 				Payload: StartTurnPayload{
 					Turn:     g.currTurn,
+					BirdTray: g.birdTray,
 					Duration: g.turnDuration.Seconds(),
 				},
 			})
@@ -420,6 +422,7 @@ func (g *Game) StartTurn() error {
 				Payload: WaitTurnPayload{
 					Current:  current.ID,
 					Turn:     g.currTurn,
+					BirdTray: g.birdTray,
 					Duration: g.turnDuration.Seconds(),
 				},
 			})

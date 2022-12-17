@@ -49,18 +49,21 @@ type Message struct {
 
 type StartTurnPayload struct {
 	Turn     int
+	BirdTray *BirdTray
 	Duration float64
 }
 
 type WaitTurnPayload struct {
 	Turn     int
 	Duration float64
+	BirdTray *BirdTray
 	Current  uuid.UUID
 }
 
 type RoundStartedPayload struct {
 	Round     int
 	Turns     int
+	BirdTray  *BirdTray
 	TurnOrder []*Player
 }
 
