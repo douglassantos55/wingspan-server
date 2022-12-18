@@ -241,6 +241,7 @@ func (g *GameManager) PlayerInfo(socket Socket, playerId string) (*Message, erro
 			BirdFeeder: game.Birdfeeder(),
 			MaxTurns:   MAX_TURNS - game.currRound,
 			Duration:   game.turnDuration.Seconds(),
+			TimeLeft:   game.turnDuration.Seconds() - time.Since(game.turnStart).Seconds(),
 		},
 	})
 

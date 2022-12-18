@@ -34,6 +34,7 @@ type Game struct {
 	firstPlayer  *Player
 	deck         Deck
 	timer        *time.Timer
+	turnStart    time.Time
 	turnDuration time.Duration
 	turnOrder    *RingBuffer[*Player]
 	sockets      *sync.Map
@@ -405,6 +406,8 @@ func (g *Game) StartTurn() error {
 	current := g.turnOrder.Peek()
 	g.mutex.Lock()
 
+	g.turnStart = time.Now()
+
 	g.players.Range(func(key, val any) bool {
 		player := val.(*Player)
 		if player == current {
@@ -414,6 +417,7 @@ func (g *Game) StartTurn() error {
 					Turn:     g.currTurn,
 					BirdTray: g.birdTray,
 					Duration: g.turnDuration.Seconds(),
+					TimeLeft: g.turnDuration.Seconds(),
 				},
 			})
 		} else {
@@ -424,6 +428,7 @@ func (g *Game) StartTurn() error {
 					Turn:     g.currTurn,
 					BirdTray: g.birdTray,
 					Duration: g.turnDuration.Seconds(),
+					TimeLeft: g.turnDuration.Seconds(),
 				},
 			})
 		}

@@ -51,11 +51,13 @@ type StartTurnPayload struct {
 	Turn     int
 	BirdTray *BirdTray
 	Duration float64
+	TimeLeft float64
 }
 
 type WaitTurnPayload struct {
 	Turn     int
 	Duration float64
+	TimeLeft float64
 	BirdTray *BirdTray
 	Current  uuid.UUID
 }
@@ -91,6 +93,7 @@ type PlayerInfoPayload struct {
 	Round      int
 	MaxTurns   int
 	Duration   float64
+	TimeLeft   float64
 	Current    uuid.UUID
 	BirdTray   []*Bird
 	TurnOrder  []*Player

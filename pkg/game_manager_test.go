@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"strconv"
 	"testing"
+	"time"
 
 	"git.internal.com/wingspan/pkg"
 )
@@ -329,6 +330,8 @@ func TestGameManager(t *testing.T) {
 
 		game.Disconnect(p2)
 
+		time.Sleep(100 * time.Millisecond)
+
 		if _, err := manager.PlayerInfo(p1, players[1].ID.String()); err != nil {
 			t.Fatalf("could not get player info: %v", err)
 		}
@@ -367,6 +370,9 @@ func TestGameManager(t *testing.T) {
 		}
 		if payload.Duration != 60 {
 			t.Errorf("expected %v, got %v", 60, payload.Duration)
+		}
+		if payload.TimeLeft == 60 {
+			t.Errorf("expected less than %v, got %v", 60, payload.TimeLeft)
 		}
 		if payload.Round != 0 {
 			t.Errorf("expected %v, got %v", 0, payload.Round)
